@@ -11,11 +11,6 @@ const alertTypes = [
 export function ComprehensiveAlerts() {
   const motionAlerts = 30;
   const totalCapacity = 360;
-  const percentage = (motionAlerts / totalCapacity) * 100;
-  
-  // Calculate stroke dasharray for donut chart
-  const circumference = 2 * Math.PI * 16;
-  const strokeDasharray = `${(percentage / 100) * circumference} ${circumference}`;
 
   return (
     <div className="dashboard-card p-4 sm:p-5 animate-fade-in" style={{ animationDelay: "0.45s" }}>
@@ -44,45 +39,58 @@ export function ComprehensiveAlerts() {
         {/* Circular Chart */}
         <div className="flex flex-col items-center justify-center flex-shrink-0 pt-2 sm:pt-0">
           <div className="relative w-24 h-24 sm:w-28 sm:h-28">
-            <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
-              {/* Background circle */}
+            <svg viewBox="0 0 36 36" className="w-full h-full">
+              {/* Background circle (gray remaining) */}
               <circle
                 cx="18"
                 cy="18"
-                r="16"
+                r="14"
                 fill="none"
                 stroke="hsl(var(--muted))"
-                strokeWidth="3"
+                strokeWidth="5"
               />
-              {/* Primary segment (motion alerts) */}
+              {/* Navy/Dark blue segment - top right */}
               <circle
                 cx="18"
                 cy="18"
-                r="16"
+                r="14"
                 fill="none"
-                stroke="hsl(var(--primary))"
-                strokeWidth="3"
-                strokeDasharray={strokeDasharray}
-                strokeLinecap="round"
+                stroke="#1e3a5f"
+                strokeWidth="5"
+                strokeDasharray="22 88"
+                strokeDashoffset="22"
+                className="transition-all duration-500"
               />
-              {/* Secondary segment */}
+              {/* Orange segment - right side */}
               <circle
                 cx="18"
                 cy="18"
-                r="16"
+                r="14"
                 fill="none"
                 stroke="hsl(var(--warning))"
-                strokeWidth="3"
-                strokeDasharray={`${(15 / totalCapacity) * circumference} ${circumference}`}
-                strokeDashoffset={`-${(percentage / 100) * circumference}`}
-                strokeLinecap="round"
+                strokeWidth="5"
+                strokeDasharray="18 88"
+                strokeDashoffset="-2"
+                className="transition-all duration-500"
+              />
+              {/* Primary blue segment - bottom/left */}
+              <circle
+                cx="18"
+                cy="18"
+                r="14"
+                fill="none"
+                stroke="hsl(var(--primary))"
+                strokeWidth="5"
+                strokeDasharray="30 88"
+                strokeDashoffset="-22"
+                className="transition-all duration-500"
               />
             </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center rotate-0">
-              <span className="text-base sm:text-lg font-bold text-foreground">{motionAlerts} / {totalCapacity}</span>
-            </div>
           </div>
-          <p className="text-xs text-muted-foreground text-center mt-2">Motion alerts</p>
+          <div className="text-center mt-2">
+            <span className="text-base sm:text-lg font-bold text-foreground">{motionAlerts} / {totalCapacity}</span>
+            <p className="text-xs text-muted-foreground">Motion alerts</p>
+          </div>
         </div>
       </div>
 
