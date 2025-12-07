@@ -33,11 +33,11 @@ interface SidebarProps {
 
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   return (
-    <aside className="fixed left-0 top-0 z-40 h-screen w-[72px] bg-[#0a1628] flex flex-col">
+    <aside className="fixed left-0 top-14 z-40 h-[calc(100vh-56px)] w-[72px] bg-[#0a1628] flex flex-col">
       {/* Logo */}
-      <div className="flex items-center justify-center py-5">
+      <div className="flex items-center justify-center py-4">
         <div className="w-7 h-7 flex items-center justify-center">
-          <LayoutDashboard className="w-6 h-6 text-white/80" strokeWidth={1.5} />
+          <LayoutDashboard className="w-5 h-5 text-white/80" strokeWidth={1.5} />
         </div>
       </div>
 
