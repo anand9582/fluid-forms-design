@@ -1,4 +1,4 @@
-import { Cpu, HardDrive, Database, ExternalLink } from "lucide-react";
+import { Cpu, HardDrive, Database, ArrowRight } from "lucide-react";
 
 interface GaugeProps {
   value: number;
@@ -8,29 +8,29 @@ interface GaugeProps {
 }
 
 function MiniGauge({ value, label, icon: Icon, color }: GaugeProps) {
-  const radius = 28;
+  const radius = 24;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (value / 100) * circumference;
 
   return (
     <div className="flex flex-col items-center">
       <div className="relative">
-        <svg width="70" height="70" viewBox="0 0 70 70">
+        <svg width="60" height="60" viewBox="0 0 60 60">
           <circle
-            cx="35"
-            cy="35"
+            cx="30"
+            cy="30"
             r={radius}
             fill="none"
-            stroke="hsl(var(--muted))"
-            strokeWidth="6"
+            stroke="#e5e7eb"
+            strokeWidth="5"
           />
           <circle
-            cx="35"
-            cy="35"
+            cx="30"
+            cy="30"
             r={radius}
             fill="none"
             stroke={color}
-            strokeWidth="6"
+            strokeWidth="5"
             strokeDasharray={circumference}
             strokeDashoffset={strokeDashoffset}
             className="gauge-ring"
@@ -38,43 +38,41 @@ function MiniGauge({ value, label, icon: Icon, color }: GaugeProps) {
           />
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
-          <Icon className="w-5 h-5 text-muted-foreground" />
+          <Icon className="w-4 h-4 text-gray-400" />
         </div>
       </div>
-      <span className="text-lg font-bold text-foreground mt-1">{value}%</span>
-      <span className="text-xs text-muted-foreground">{label}</span>
+      <span className="text-sm font-bold text-gray-900 mt-1">{value}%</span>
+      <span className="text-[10px] text-gray-500">{label}</span>
     </div>
   );
 }
 
 export function SystemHealth() {
   return (
-    <div className="dashboard-card p-4 animate-fade-in" style={{ animationDelay: "0.25s" }}>
+    <div className="bg-white rounded-xl p-4 shadow-sm animate-fade-in" style={{ animationDelay: "0.25s" }}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-foreground">SYSTEM HEALTH</h3>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
-            Uptime 14d 2h 12m
-          </span>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="font-semibold text-gray-900 text-sm">SYSTEM HEALTH</h3>
+        <div className="flex items-center gap-1.5 text-xs text-gray-500">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          Uptime 14d 2h 12m
         </div>
       </div>
 
       {/* Gauges */}
-      <div className="grid grid-cols-3 gap-4 mb-4">
-        <MiniGauge value={37} label="CPU Load" icon={Cpu} color="hsl(var(--chart-green))" />
-        <MiniGauge value={76} label="Memory" icon={Database} color="hsl(var(--chart-orange))" />
-        <MiniGauge value={22} label="Disk" icon={HardDrive} color="hsl(var(--chart-blue))" />
+      <div className="grid grid-cols-3 gap-2 mb-3">
+        <MiniGauge value={37} label="CPU Load" icon={Cpu} color="#22c55e" />
+        <MiniGauge value={76} label="Memory" icon={Database} color="#f97316" />
+        <MiniGauge value={22} label="Disk" icon={HardDrive} color="#3b82f6" />
       </div>
 
       {/* Link */}
       <a
         href="#"
-        className="flex items-center gap-1 text-sm text-primary hover:text-primary/80 transition-colors"
+        className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-600 transition-colors"
       >
         View Diagnostics
-        <ExternalLink className="w-3 h-3" />
+        <ArrowRight className="w-3 h-3" />
       </a>
     </div>
   );

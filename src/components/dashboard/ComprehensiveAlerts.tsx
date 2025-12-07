@@ -1,11 +1,11 @@
 import { ArrowRight } from "lucide-react";
 
 const alertTypes = [
-  { label: "Motion detection alerts", count: 30, borderColor: "border-primary", iconBg: "bg-primary/20", iconColor: "text-primary" },
-  { label: "Intrusion alerts", count: 22, borderColor: "border-destructive", iconBg: "bg-destructive/20", iconColor: "text-destructive" },
-  { label: "Temperature monitoring", count: 15, borderColor: "border-warning", iconBg: "bg-warning/20", iconColor: "text-warning" },
-  { label: "Unauthorized access attempts", count: 2, borderColor: "border-primary", iconBg: "bg-primary/20", iconColor: "text-primary" },
-  { label: "System performance issues", count: 1, borderColor: "border-primary", iconBg: "bg-primary/20", iconColor: "text-primary" },
+  { label: "Motion detection alerts", count: 30, dotColor: "bg-blue-500" },
+  { label: "Intrusion alerts", count: 22, dotColor: "bg-red-500" },
+  { label: "Temperature monitoring", count: 15, dotColor: "bg-orange-500" },
+  { label: "Unauthorized access attempts", count: 2, dotColor: "bg-blue-500" },
+  { label: "System performance issues", count: 1, dotColor: "bg-red-500" },
 ];
 
 export function ComprehensiveAlerts() {
@@ -13,43 +13,52 @@ export function ComprehensiveAlerts() {
   const totalCapacity = 360;
 
   return (
-    <div className="dashboard-card p-4 sm:p-5 animate-fade-in" style={{ animationDelay: "0.45s" }}>
+    <div className="bg-white rounded-xl p-4 shadow-sm animate-fade-in" style={{ animationDelay: "0.45s" }}>
       {/* Header */}
-      <h3 className="font-semibold text-foreground mb-4 text-sm sm:text-base">COMPREHENSIVE ALERTS</h3>
+      <h3 className="font-semibold text-gray-900 text-sm mb-3">COMPREHENSIVE ALERTS</h3>
 
-      {/* Content - Stack on mobile, side by side on larger screens */}
-      <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+      {/* Content */}
+      <div className="flex gap-4">
         {/* Alert List */}
-        <div className="flex-1 space-y-2.5">
+        <div className="flex-1 space-y-2">
           {alertTypes.map((alert, index) => (
             <div 
               key={index} 
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/30 border-l-4 ${alert.borderColor}`}
+              className="flex items-center gap-2 px-2 py-1.5 rounded bg-gray-50"
             >
-              <div className={`w-5 h-5 rounded-full ${alert.iconBg} flex items-center justify-center flex-shrink-0`}>
-                <span className={`text-[10px] font-bold ${alert.iconColor}`}>!</span>
-              </div>
-              <span className="text-xs sm:text-sm text-foreground">
-                <span className="font-semibold">{alert.count}</span> {alert.label}
+              <div className={`w-2 h-2 rounded-full ${alert.dotColor} flex-shrink-0`} />
+              <span className="text-[10px] text-gray-700">
+                <span className="font-semibold text-gray-900">{alert.count}</span> {alert.label}
               </span>
             </div>
           ))}
         </div>
 
         {/* Circular Chart */}
-        <div className="flex flex-col items-center justify-center flex-shrink-0 pt-2 sm:pt-0">
-          <div className="relative w-24 h-24 sm:w-28 sm:h-28">
-            <svg viewBox="0 0 36 36" className="w-full h-full">
-              {/* Background circle (gray remaining) */}
+        <div className="flex flex-col items-center justify-center flex-shrink-0">
+          <div className="relative w-24 h-24">
+            <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
+              {/* Background circle */}
               <circle
                 cx="18"
                 cy="18"
                 r="14"
                 fill="none"
-                stroke="hsl(var(--muted))"
+                stroke="#e5e7eb"
                 strokeWidth="5"
               />
-              {/* Navy/Dark blue segment - top right */}
+              {/* Blue segment */}
+              <circle
+                cx="18"
+                cy="18"
+                r="14"
+                fill="none"
+                stroke="#3b82f6"
+                strokeWidth="5"
+                strokeDasharray="44 88"
+                strokeDashoffset="0"
+              />
+              {/* Dark navy segment */}
               <circle
                 cx="18"
                 cy="18"
@@ -58,38 +67,24 @@ export function ComprehensiveAlerts() {
                 stroke="#1e3a5f"
                 strokeWidth="5"
                 strokeDasharray="22 88"
-                strokeDashoffset="22"
-                className="transition-all duration-500"
+                strokeDashoffset="-44"
               />
-              {/* Orange segment - right side */}
+              {/* Orange segment */}
               <circle
                 cx="18"
                 cy="18"
                 r="14"
                 fill="none"
-                stroke="hsl(var(--warning))"
+                stroke="#f97316"
                 strokeWidth="5"
                 strokeDasharray="18 88"
-                strokeDashoffset="-2"
-                className="transition-all duration-500"
-              />
-              {/* Primary blue segment - bottom/left */}
-              <circle
-                cx="18"
-                cy="18"
-                r="14"
-                fill="none"
-                stroke="hsl(var(--primary))"
-                strokeWidth="5"
-                strokeDasharray="30 88"
-                strokeDashoffset="-22"
-                className="transition-all duration-500"
+                strokeDashoffset="-66"
               />
             </svg>
           </div>
-          <div className="text-center mt-2">
-            <span className="text-base sm:text-lg font-bold text-foreground">{motionAlerts} / {totalCapacity}</span>
-            <p className="text-xs text-muted-foreground">Motion alerts</p>
+          <div className="text-center mt-1">
+            <span className="text-sm font-bold text-gray-900">{motionAlerts} / {totalCapacity}</span>
+            <p className="text-[10px] text-gray-500">Motion alerts</p>
           </div>
         </div>
       </div>
@@ -97,10 +92,10 @@ export function ComprehensiveAlerts() {
       {/* Link */}
       <a
         href="#"
-        className="flex items-center justify-center gap-1.5 text-sm text-primary hover:text-primary/80 transition-colors mt-5 font-medium"
+        className="flex items-center justify-end gap-1 text-xs text-blue-500 hover:text-blue-600 transition-colors mt-3 font-medium"
       >
         View All
-        <ArrowRight className="w-4 h-4" />
+        <ArrowRight className="w-3 h-3" />
       </a>
     </div>
   );
