@@ -16,35 +16,35 @@ const data = [
 
 export function NetworkThroughput() {
   return (
-    <div className="dashboard-card p-4 animate-fade-in" style={{ animationDelay: "0.4s" }}>
+    <div className="bg-white rounded-xl p-4 shadow-sm animate-fade-in" style={{ animationDelay: "0.4s" }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-foreground">NETWORK THROUGHPUT</h3>
-        <button className="text-muted-foreground hover:text-foreground transition-colors">
+        <h3 className="font-semibold text-gray-900 text-sm">NETWORK THROUGHPUT</h3>
+        <button className="text-gray-400 hover:text-gray-600 transition-colors">
           <ExternalLink className="w-4 h-4" />
         </button>
       </div>
 
       {/* Chart */}
-      <div className="h-36">
+      <div className="h-32">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data}>
             <XAxis
               dataKey="time"
               axisLine={false}
               tickLine={false}
-              tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+              tick={{ fontSize: 10, fill: "#9ca3af" }}
             />
             <YAxis
               axisLine={false}
               tickLine={false}
-              tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+              tick={{ fontSize: 10, fill: "#9ca3af" }}
               width={35}
             />
             <Tooltip
               contentStyle={{
-                background: "hsl(var(--card))",
-                border: "1px solid hsl(var(--border))",
+                background: "#fff",
+                border: "1px solid #e5e7eb",
                 borderRadius: "8px",
                 fontSize: "12px",
               }}
@@ -52,14 +52,14 @@ export function NetworkThroughput() {
             <Line
               type="monotone"
               dataKey="inbound"
-              stroke="hsl(var(--chart-green))"
+              stroke="#22c55e"
               strokeWidth={2}
               dot={false}
             />
             <Line
               type="monotone"
               dataKey="outbound"
-              stroke="hsl(var(--chart-blue))"
+              stroke="#3b82f6"
               strokeWidth={2}
               dot={false}
             />
@@ -70,12 +70,12 @@ export function NetworkThroughput() {
       {/* Legend */}
       <div className="flex items-center justify-center gap-6 mt-2">
         <div className="flex items-center gap-2">
-          <div className="w-3 h-0.5 bg-chart-green rounded" />
-          <span className="text-xs text-muted-foreground">Inbound : 850</span>
+          <div className="w-3 h-0.5 bg-emerald-500 rounded" />
+          <span className="text-[10px] text-gray-500">Inbound : 850</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-0.5 bg-chart-blue rounded" />
-          <span className="text-xs text-muted-foreground">Outbound : 140</span>
+          <div className="w-3 h-0.5 bg-blue-500 rounded" />
+          <span className="text-[10px] text-gray-500">Outbound : 140</span>
         </div>
       </div>
     </div>
