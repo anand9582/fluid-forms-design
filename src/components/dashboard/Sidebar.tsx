@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   LayoutDashboard,
   Video,
@@ -16,7 +15,7 @@ import { cn } from "@/lib/utils";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", active: true },
-  { icon: Video, label: "Live View" },
+  { icon: Video, label: "Live view" },
   { icon: PlayCircle, label: "Playback" },
   { icon: Bell, label: "Alerts" },
   { icon: Map, label: "Emap" },
@@ -39,20 +38,14 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
     <aside
       className={cn(
         "fixed left-0 top-0 z-40 h-screen bg-sidebar transition-all duration-300 flex flex-col",
-        collapsed ? "w-16" : "w-56"
+        collapsed ? "w-20" : "w-56"
       )}
     >
       {/* Logo */}
-      <div className="flex items-center gap-2 px-4 py-4 border-b border-sidebar-border">
+      <div className="flex items-center justify-center px-4 py-4 border-b border-sidebar-border">
         <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-          <span className="text-primary-foreground font-bold text-sm">CP</span>
+          <LayoutDashboard className="w-4 h-4 text-primary-foreground" />
         </div>
-        {!collapsed && (
-          <div className="flex items-center gap-1">
-            <span className="text-sidebar-foreground font-semibold">CamPulse</span>
-            <span className="text-primary text-xs font-bold bg-primary/20 px-1 rounded">TAi</span>
-          </div>
-        )}
       </div>
 
       {/* Main Menu */}
@@ -62,14 +55,14 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             <li key={item.label}>
               <button
                 className={cn(
-                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors",
+                  "w-full flex flex-col items-center gap-1 px-2 py-3 rounded-lg transition-colors",
                   item.active
                     ? "bg-sidebar-accent text-sidebar-primary"
                     : "text-sidebar-muted hover:bg-sidebar-accent hover:text-sidebar-foreground"
                 )}
               >
                 <item.icon className="w-5 h-5 flex-shrink-0" />
-                {!collapsed && <span className="text-sm font-medium">{item.label}</span>}
+                <span className="text-[10px] font-medium text-center leading-tight">{item.label}</span>
               </button>
             </li>
           ))}
@@ -81,9 +74,9 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         <ul className="space-y-1 px-2">
           {bottomItems.map((item) => (
             <li key={item.label}>
-              <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-muted hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors">
+              <button className="w-full flex flex-col items-center gap-1 px-2 py-3 rounded-lg text-sidebar-muted hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors">
                 <item.icon className="w-5 h-5 flex-shrink-0" />
-                {!collapsed && <span className="text-sm font-medium">{item.label}</span>}
+                <span className="text-[10px] font-medium text-center leading-tight">{item.label}</span>
               </button>
             </li>
           ))}
