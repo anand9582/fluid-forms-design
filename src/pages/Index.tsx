@@ -25,26 +25,26 @@ const Index = () => {
         <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
 
         {/* Main Content */}
-        <div className="flex-1 ml-[72px] transition-all duration-300">
+        <div className="flex-1 md:ml-[72px] transition-all duration-300 pb-20 md:pb-0">
           {/* Dashboard Grid */}
-          <main className="p-3 lg:p-4">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 lg:gap-4">
+          <main className="p-2 sm:p-3 lg:p-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-2 sm:gap-3 lg:gap-4">
               {/* Left Column */}
-              <div className="lg:col-span-3 space-y-3 lg:space-y-4">
+              <div className="lg:col-span-3 space-y-2 sm:space-y-3 lg:space-y-4">
                 <SystemStatus />
                 <SystemHealth />
                 <StorageVolumes />
               </div>
 
               {/* Middle Column */}
-              <div className="lg:col-span-6 space-y-3 lg:space-y-4">
+              <div className="lg:col-span-6 space-y-2 sm:space-y-3 lg:space-y-4">
                 <LiveMonitor />
                 <FacilityMap />
                 <NetworkThroughput />
               </div>
 
               {/* Right Column */}
-              <div className="lg:col-span-3 space-y-3 lg:space-y-4">
+              <div className="md:col-span-2 lg:col-span-3 space-y-2 sm:space-y-3 lg:space-y-4">
                 <QuickActions />
                 <AIAlerts />
                 <ComprehensiveAlerts />
