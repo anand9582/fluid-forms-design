@@ -1,19 +1,24 @@
-import { Search, Wifi, FileText, Globe, ChevronDown, Menu } from "lucide-react";
+import { Search, Wifi, FileText, Globe, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
+import { useTheme } from "@/context/ThemeContext";
 
 export function Header() {
   const [searchOpen, setSearchOpen] = useState(false);
+  const { isAltTheme, toggleTheme } = useTheme();
+
+  const headerBg = isAltTheme ? "bg-gradient-to-r from-purple-900 to-indigo-900" : "bg-[#0a1628]";
+  const primaryColor = isAltTheme ? "bg-purple-500" : "bg-primary";
 
   return (
-    <header className="h-14 bg-[#0a1628] flex items-center justify-between px-3 md:px-4 lg:px-6 relative">
-      {/* Logo */}
+    <header className={`h-14 ${headerBg} flex items-center justify-between px-3 md:px-4 lg:px-6 relative sticky top-0 z-50 transition-colors duration-300`}>
+      {/* Logo - Clickable to toggle theme */}
       <div className="flex items-center gap-2">
-        <div className="flex items-center gap-2">
+        <button onClick={toggleTheme} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <span className="text-white font-semibold text-base md:text-lg">CamPulse</span>
-          <span className="text-primary text-[10px] md:text-xs font-bold bg-primary/20 px-1.5 py-0.5 rounded">TAi</span>
-        </div>
+          <span className={`text-white text-[10px] md:text-xs font-bold ${isAltTheme ? "bg-purple-500/30" : "bg-primary/20"} px-1.5 py-0.5 rounded`}>TAi</span>
+        </button>
       </div>
 
       {/* Search - Desktop */}
@@ -37,7 +42,7 @@ export function Header() {
 
       {/* Mobile Search Overlay */}
       {searchOpen && (
-        <div className="md:hidden absolute top-full left-0 right-0 bg-[#0a1628] p-3 border-b border-white/10 z-50">
+        <div className={`md:hidden absolute top-full left-0 right-0 ${headerBg} p-3 border-b border-white/10 z-50`}>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input
@@ -58,7 +63,7 @@ export function Header() {
         </div>
 
         {/* AI Report Button */}
-        <Button className="bg-primary hover:bg-primary/90 text-white gap-2 h-8 rounded-md px-2 md:px-3">
+        <Button className={`${primaryColor} hover:opacity-90 text-white gap-2 h-8 rounded-md px-2 md:px-3 transition-colors duration-300`}>
           <FileText className="w-4 h-4" />
           <span className="hidden sm:inline text-sm">AI Report</span>
         </Button>

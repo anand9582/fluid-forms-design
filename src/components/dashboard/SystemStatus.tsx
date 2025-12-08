@@ -1,11 +1,16 @@
 import { Monitor, WifiOff, PlayCircle, ChevronDown, ArrowRight } from "lucide-react";
+import { useTheme } from "@/context/ThemeContext";
 
 export function SystemStatus() {
+  const { isAltTheme } = useTheme();
   const totalCameras = 142;
   const percentage = 100;
   const radius = 50;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
+
+  const chartColor = isAltTheme ? "#8b5cf6" : "#3b82f6";
+  const accentColor = isAltTheme ? "text-purple-500" : "text-blue-500";
 
   return (
     <div className="bg-white rounded-xl p-4 shadow-sm animate-fade-in">
@@ -37,11 +42,11 @@ export function SystemStatus() {
               cy="65"
               r={radius}
               fill="none"
-              stroke="#3b82f6"
+              stroke={chartColor}
               strokeWidth="12"
               strokeDasharray={circumference}
               strokeDashoffset={strokeDashoffset}
-              className="gauge-ring"
+              className="gauge-ring transition-all duration-300"
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -63,8 +68,8 @@ export function SystemStatus() {
           <span className="text-lg font-bold text-gray-900">04</span>
           <span className="text-[10px] text-gray-500">Offline</span>
         </div>
-        <div className="flex flex-col items-center p-2 bg-gray-50 rounded-lg">
-          <PlayCircle className="w-4 h-4 text-blue-500 mb-1" />
+        <div className={`flex flex-col items-center p-2 ${isAltTheme ? "bg-purple-50" : "bg-gray-50"} rounded-lg transition-colors duration-300`}>
+          <PlayCircle className={`w-4 h-4 ${accentColor} mb-1 transition-colors duration-300`} />
           <span className="text-lg font-bold text-gray-900">135</span>
           <span className="text-[10px] text-gray-500">Rec</span>
         </div>
@@ -73,7 +78,7 @@ export function SystemStatus() {
       {/* Link */}
       <a
         href="#"
-        className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-600 transition-colors"
+        className={`flex items-center gap-1 text-xs ${accentColor} hover:opacity-80 transition-colors duration-300`}
       >
         View 4 Offline Cameras
         <ArrowRight className="w-3 h-3" />
