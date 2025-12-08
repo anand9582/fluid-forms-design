@@ -1,41 +1,66 @@
-import { Search, Wifi, FileText, Globe, ChevronDown } from "lucide-react";
+import { Search, Wifi, FileText, Globe, ChevronDown, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useState } from "react";
 
 export function Header() {
+  const [searchOpen, setSearchOpen] = useState(false);
+
   return (
-    <header className="h-14 bg-[#0a1628] flex items-center justify-between px-4 lg:px-6">
+    <header className="h-14 bg-[#0a1628] flex items-center justify-between px-3 md:px-4 lg:px-6 relative">
       {/* Logo */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         <div className="flex items-center gap-2">
-          <span className="text-white font-semibold text-lg">CamPulse</span>
-          <span className="text-primary text-xs font-bold bg-primary/20 px-1.5 py-0.5 rounded">TAi</span>
+          <span className="text-white font-semibold text-base md:text-lg">CamPulse</span>
+          <span className="text-primary text-[10px] md:text-xs font-bold bg-primary/20 px-1.5 py-0.5 rounded">TAi</span>
         </div>
       </div>
 
-      {/* Search */}
-      <div className="flex-1 max-w-lg mx-6">
-        <div className="relative">
+      {/* Search - Desktop */}
+      <div className="hidden md:flex flex-1 max-w-lg mx-6">
+        <div className="relative w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <Input
-            placeholder="Search  Cameras, event, location or device IDs..."
-            className="pl-10 bg-[#1a2a42] border-[#2a3a52] text-white placeholder:text-gray-400 h-9 rounded-full"
+            placeholder="Search Cameras, event, location or device IDs..."
+            className="pl-10 bg-[#1a2a42] border-[#2a3a52] text-white placeholder:text-gray-400 h-9 rounded-full w-full"
           />
         </div>
       </div>
 
+      {/* Mobile Search Button */}
+      <button 
+        onClick={() => setSearchOpen(!searchOpen)}
+        className="md:hidden p-2 text-white/70"
+      >
+        <Search className="w-5 h-5" />
+      </button>
+
+      {/* Mobile Search Overlay */}
+      {searchOpen && (
+        <div className="md:hidden absolute top-full left-0 right-0 bg-[#0a1628] p-3 border-b border-white/10 z-50">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Input
+              placeholder="Search..."
+              className="pl-10 bg-[#1a2a42] border-[#2a3a52] text-white placeholder:text-gray-400 h-9 rounded-full w-full"
+              autoFocus
+            />
+          </div>
+        </div>
+      )}
+
       {/* Right Side */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 md:gap-4">
         {/* Device Status */}
-        <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-[#1a2a42] rounded-full">
+        <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-[#1a2a42] rounded-full">
           <Wifi className="w-4 h-4 text-emerald-400" />
           <span className="text-sm text-white">138 / 142 device online</span>
         </div>
 
         {/* AI Report Button */}
-        <Button className="bg-primary hover:bg-primary/90 text-white gap-2 h-8 rounded-md">
+        <Button className="bg-primary hover:bg-primary/90 text-white gap-2 h-8 rounded-md px-2 md:px-3">
           <FileText className="w-4 h-4" />
-          <span className="hidden sm:inline">AI Report</span>
+          <span className="hidden sm:inline text-sm">AI Report</span>
         </Button>
 
         {/* Language */}
@@ -46,8 +71,8 @@ export function Header() {
         </button>
 
         {/* User Profile */}
-        <div className="flex items-center gap-3 pl-4 border-l border-white/10">
-          <div className="hidden sm:block text-right">
+        <div className="flex items-center gap-2 md:gap-3 pl-2 md:pl-4 border-l border-white/10">
+          <div className="hidden md:block text-right">
             <p className="text-sm font-medium text-white">Kate Russell</p>
             <p className="text-xs text-white/50">Project Manager</p>
           </div>
