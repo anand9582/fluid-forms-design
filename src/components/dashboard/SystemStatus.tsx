@@ -1,4 +1,4 @@
-import { Monitor, WifiOff, PlayCircle, ChevronDown, ArrowRight } from "lucide-react";
+import { Video, VideoOff, CirclePlay, ChevronDown, ArrowRight } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 
 export function SystemStatus() {
@@ -59,17 +59,17 @@ export function SystemStatus() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-2 mb-3">
         <div className="flex flex-col items-center p-2 bg-gray-50 rounded-lg">
-          <Monitor className="w-4 h-4 text-emerald-500 mb-1" />
+          <Video className="w-5 h-5 text-gray-600 mb-1" />
           <span className="text-lg font-bold text-gray-900">138</span>
           <span className="text-[10px] text-gray-500">Online</span>
         </div>
         <div className="flex flex-col items-center p-2 bg-red-50 rounded-lg">
-          <WifiOff className="w-4 h-4 text-red-500 mb-1" />
+          <VideoOff className="w-5 h-5 text-red-400 mb-1" />
           <span className="text-lg font-bold text-gray-900">04</span>
           <span className="text-[10px] text-gray-500">Offline</span>
         </div>
         <div className={`flex flex-col items-center p-2 ${isAltTheme ? "bg-purple-50" : "bg-gray-50"} rounded-lg transition-colors duration-300`}>
-          <PlayCircle className={`w-4 h-4 ${accentColor} mb-1 transition-colors duration-300`} />
+          <CirclePlay className={`w-5 h-5 ${accentColor} mb-1 transition-colors duration-300`} />
           <span className="text-lg font-bold text-gray-900">135</span>
           <span className="text-[10px] text-gray-500">Rec</span>
         </div>
