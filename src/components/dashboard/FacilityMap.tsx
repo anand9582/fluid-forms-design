@@ -1,22 +1,25 @@
-import { ExternalLink, ChevronDown, Camera } from "lucide-react";
+import { ExternalLink, ChevronDown } from "lucide-react";
+import facilityFloorPlan from "@/assets/facility-floor-plan.png";
 
 export function FacilityMap() {
+  // Camera positions based on floor plan - blue for normal, red for alert
   const cameras = [
-    { x: 20, y: 30 },
-    { x: 35, y: 25 },
-    { x: 50, y: 40 },
-    { x: 65, y: 35 },
-    { x: 25, y: 55 },
-    { x: 40, y: 60 },
-    { x: 55, y: 55 },
-    { x: 70, y: 50 },
-    { x: 30, y: 75 },
-    { x: 45, y: 80 },
-    { x: 60, y: 70 },
-    { x: 75, y: 65 },
-    { x: 80, y: 40 },
-    { x: 85, y: 55 },
-    { x: 15, y: 45 },
+    { x: 12, y: 8, status: "normal" },
+    { x: 8, y: 32, status: "normal" },
+    { x: 8, y: 48, status: "normal" },
+    { x: 8, y: 62, status: "alert" },
+    { x: 12, y: 78, status: "normal" },
+    { x: 22, y: 88, status: "normal" },
+    { x: 32, y: 58, status: "normal" },
+    { x: 48, y: 12, status: "normal" },
+    { x: 52, y: 38, status: "normal" },
+    { x: 58, y: 52, status: "normal" },
+    { x: 52, y: 72, status: "normal" },
+    { x: 62, y: 88, status: "normal" },
+    { x: 72, y: 38, status: "normal" },
+    { x: 78, y: 58, status: "normal" },
+    { x: 88, y: 72, status: "normal" },
+    { x: 92, y: 88, status: "normal" },
   ];
 
   return (
@@ -43,47 +46,28 @@ export function FacilityMap() {
 
       {/* Map */}
       <div className="relative rounded-lg overflow-hidden bg-gray-50 aspect-[4/3]">
-        {/* Grid pattern background */}
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage: `
-              linear-gradient(to right, #e5e7eb 1px, transparent 1px),
-              linear-gradient(to bottom, #e5e7eb 1px, transparent 1px)
-            `,
-            backgroundSize: "20px 20px",
-          }}
+        {/* Floor plan image */}
+        <img 
+          src={facilityFloorPlan} 
+          alt="Facility Floor Plan" 
+          className="w-full h-full object-contain"
         />
-
-        {/* Room outlines */}
-        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-          {/* Main areas */}
-          <rect x="10" y="20" width="30" height="25" fill="none" stroke="#d1d5db" strokeWidth="0.5" />
-          <rect x="45" y="20" width="25" height="25" fill="none" stroke="#d1d5db" strokeWidth="0.5" />
-          <rect x="75" y="20" width="15" height="25" fill="none" stroke="#d1d5db" strokeWidth="0.5" />
-          <rect x="10" y="50" width="20" height="30" fill="none" stroke="#d1d5db" strokeWidth="0.5" />
-          <rect x="35" y="50" width="30" height="30" fill="none" stroke="#d1d5db" strokeWidth="0.5" />
-          <rect x="70" y="50" width="20" height="30" fill="none" stroke="#d1d5db" strokeWidth="0.5" />
-          
-          {/* Labels */}
-          <text x="20" y="35" className="text-[3px]" fill="#9ca3af">Reception</text>
-          <text x="52" y="35" className="text-[3px]" fill="#9ca3af">The Canopy</text>
-          <text x="77" y="35" className="text-[3px]" fill="#9ca3af">Patio</text>
-          <text x="15" y="65" className="text-[3px]" fill="#9ca3af">Gym</text>
-          <text x="45" y="65" className="text-[3px]" fill="#9ca3af">Café</text>
-        </svg>
 
         {/* Camera markers */}
         {cameras.map((cam, index) => (
           <div
             key={index}
-            className="absolute w-4 h-4 transform -translate-x-1/2 -translate-y-1/2"
+            className="absolute w-5 h-5 transform -translate-x-1/2 -translate-y-1/2"
             style={{ left: `${cam.x}%`, top: `${cam.y}%` }}
           >
-            <div className="w-full h-full rounded-full bg-emerald-100 flex items-center justify-center">
-              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex items-center justify-center">
-                <Camera className="w-1.5 h-1.5 text-white" />
-              </div>
+            <div 
+              className={`w-full h-full rounded-full flex items-center justify-center ${
+                cam.status === "alert" 
+                  ? "bg-red-500" 
+                  : "bg-blue-500"
+              }`}
+            >
+              <div className="w-2 h-2 rounded-full bg-white" />
             </div>
           </div>
         ))}
