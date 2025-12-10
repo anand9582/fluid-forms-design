@@ -1,9 +1,9 @@
 import {
-  LayoutDashboard,
-  Video,
-  PlayCircle,
+  LayoutGrid,
+  MonitorPlay,
+  CirclePlay,
   Bell,
-  Users,
+  User,
   Activity,
   Sparkles,
   Settings,
@@ -12,11 +12,11 @@ import {
 import { cn } from "@/lib/utils";
 
 const menuItems = [
-  { icon: LayoutDashboard, label: "Dashboard", active: true },
-  { icon: Video, label: "Live view" },
-  { icon: PlayCircle, label: "Playback" },
+  { icon: LayoutGrid, label: "Dashboard", active: true },
+  { icon: MonitorPlay, label: "Live view" },
+  { icon: CirclePlay, label: "Playback" },
   { icon: Bell, label: "Alerts" },
-  { icon: Users, label: "Emap" },
+  { icon: User, label: "Emap" },
   { icon: Activity, label: "Health" },
 ];
 
@@ -39,7 +39,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         {/* Logo */}
         <div className="flex items-center justify-center py-4">
           <div className="w-7 h-7 flex items-center justify-center">
-            <LayoutDashboard className="w-5 h-5 text-white/80" strokeWidth={1.5} />
+            <LayoutGrid className="w-5 h-5 text-white/80" strokeWidth={1.5} />
           </div>
         </div>
 
