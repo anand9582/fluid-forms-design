@@ -80,29 +80,23 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       </aside>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0a1628] border-t border-white/10 safe-area-bottom">
-        <ul className="flex items-center justify-around py-2">
-          {menuItems.slice(0, 5).map((item) => (
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0a1628] safe-area-bottom">
+        <ul className="flex items-center justify-around py-3">
+          {menuItems.map((item) => (
             <li key={item.label}>
               <button
                 className={cn(
-                  "flex flex-col items-center gap-1 px-3 py-2 transition-colors",
+                  "flex flex-col items-center gap-1.5 px-2 py-1 transition-colors",
                   item.active
                     ? "text-white"
-                    : "text-white/50"
+                    : "text-white/50 hover:text-white/80"
                 )}
               >
                 <item.icon className="w-5 h-5" strokeWidth={1.5} />
-                <span className="text-[9px] font-normal">{item.label}</span>
+                <span className="text-[10px] font-normal tracking-wide">{item.label}</span>
               </button>
             </li>
           ))}
-          <li>
-            <button className="flex flex-col items-center gap-1 px-3 py-2 text-white/50">
-              <Settings className="w-5 h-5" strokeWidth={1.5} />
-              <span className="text-[9px] font-normal">More</span>
-            </button>
-          </li>
         </ul>
       </nav>
     </>
