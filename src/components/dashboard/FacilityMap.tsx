@@ -60,8 +60,12 @@ export function FacilityMap() {
             className="absolute w-5 h-5 transform -translate-x-1/2 -translate-y-1/2"
             style={{ left: `${cam.x}%`, top: `${cam.y}%` }}
           >
+            {/* Pulse ring for alert cameras */}
+            {cam.status === "alert" && (
+              <div className="absolute inset-0 rounded-full bg-red-500 animate-ping opacity-75" />
+            )}
             <div 
-              className={`w-full h-full rounded-full flex items-center justify-center ${
+              className={`relative w-full h-full rounded-full flex items-center justify-center ${
                 cam.status === "alert" 
                   ? "bg-red-500" 
                   : "bg-blue-500"
