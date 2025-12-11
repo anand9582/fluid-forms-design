@@ -1,4 +1,4 @@
-import { ExternalLink, User, AlertTriangle, Car, Footprints } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 
 const alerts = [
   {
@@ -6,54 +6,48 @@ const alerts = [
     location: "Lobby Entrance",
     description: "Watchlist match: 85% confidence.",
     time: "11:57:36 AM",
-    icon: User,
     color: "text-blue-500",
-    bgColor: "bg-blue-100",
+    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face",
   },
   {
     type: "INTRUSION",
     location: "Perimeter North",
     description: "Human detected in restricted zone",
     time: "11:57:36 AM",
-    icon: AlertTriangle,
     color: "text-red-500",
-    bgColor: "bg-red-100",
+    image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop&crop=face",
   },
   {
     type: "LOITERING",
     location: "Parking Garage B",
     description: "Vehicle stationary for > 20 min.",
     time: "11:57:36 AM",
-    icon: Car,
     color: "text-orange-500",
-    bgColor: "bg-orange-100",
+    image: "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=100&h=100&fit=crop",
   },
   {
     type: "FACE MATCH",
     location: "Lobby Entrance",
     description: "Watchlist match: 85% confidence.",
     time: "11:57:36 AM",
-    icon: User,
     color: "text-blue-500",
-    bgColor: "bg-blue-100",
+    image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face",
   },
   {
     type: "INTRUSION",
     location: "Perimeter North",
     description: "Human detected in restricted zone",
     time: "11:57:36 AM",
-    icon: AlertTriangle,
     color: "text-red-500",
-    bgColor: "bg-red-100",
+    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face",
   },
   {
     type: "LOITERING",
     location: "Parking Garage B",
     description: "Vehicle stationary for > 20 min.",
     time: "11:57:36 AM",
-    icon: Footprints,
     color: "text-orange-500",
-    bgColor: "bg-orange-100",
+    image: "https://images.unsplash.com/photo-1489824904134-891ab64532f1?w=100&h=100&fit=crop",
   },
 ];
 
@@ -77,9 +71,13 @@ export function AIAlerts() {
       <div className="space-y-2 max-h-[400px] overflow-y-auto scrollbar-thin pr-1">
         {alerts.map((alert, index) => (
           <div key={index} className="flex items-start gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors">
-            {/* Thumbnail */}
-            <div className={`w-12 h-12 rounded-lg ${alert.bgColor} flex-shrink-0 flex items-center justify-center`}>
-              <alert.icon className={`w-5 h-5 ${alert.color}`} />
+            {/* Thumbnail Image */}
+            <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
+              <img 
+                src={alert.image} 
+                alt={alert.type}
+                className="w-full h-full object-cover"
+              />
             </div>
 
             {/* Content */}
