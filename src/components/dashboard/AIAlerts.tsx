@@ -1,4 +1,10 @@
 import { ExternalLink } from "lucide-react";
+import alertFace1 from "@/assets/alert-face-1.jpg";
+import alertIntrusion1 from "@/assets/alert-intrusion-1.jpg";
+import alertVehicle1 from "@/assets/alert-vehicle-1.jpg";
+import alertFace2 from "@/assets/alert-face-2.jpg";
+import alertIntrusion2 from "@/assets/alert-intrusion-2.jpg";
+import alertVehicle2 from "@/assets/alert-vehicle-2.jpg";
 
 const alerts = [
   {
@@ -7,7 +13,7 @@ const alerts = [
     description: "Watchlist match: 85% confidence.",
     time: "11:57:36 AM",
     color: "text-blue-500",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face",
+    image: alertFace1,
   },
   {
     type: "INTRUSION",
@@ -15,7 +21,7 @@ const alerts = [
     description: "Human detected in restricted zone",
     time: "11:57:36 AM",
     color: "text-red-500",
-    image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop&crop=face",
+    image: alertIntrusion1,
   },
   {
     type: "LOITERING",
@@ -23,7 +29,7 @@ const alerts = [
     description: "Vehicle stationary for > 20 min.",
     time: "11:57:36 AM",
     color: "text-orange-500",
-    image: "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=100&h=100&fit=crop",
+    image: alertVehicle1,
   },
   {
     type: "FACE MATCH",
@@ -31,7 +37,7 @@ const alerts = [
     description: "Watchlist match: 85% confidence.",
     time: "11:57:36 AM",
     color: "text-blue-500",
-    image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face",
+    image: alertFace2,
   },
   {
     type: "INTRUSION",
@@ -39,7 +45,7 @@ const alerts = [
     description: "Human detected in restricted zone",
     time: "11:57:36 AM",
     color: "text-red-500",
-    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face",
+    image: alertIntrusion2,
   },
   {
     type: "LOITERING",
@@ -47,7 +53,7 @@ const alerts = [
     description: "Vehicle stationary for > 20 min.",
     time: "11:57:36 AM",
     color: "text-orange-500",
-    image: "https://images.unsplash.com/photo-1489824904134-891ab64532f1?w=100&h=100&fit=crop",
+    image: alertVehicle2,
   },
 ];
 
