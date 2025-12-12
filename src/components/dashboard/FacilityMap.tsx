@@ -1,4 +1,4 @@
-import { ExternalLink, ChevronDown } from "lucide-react";
+import { ExternalLink, ChevronDown, Camera, Plus, Minus, ChevronLeft, ChevronRight } from "lucide-react";
 import facilityFloorPlan from "@/assets/facility-floor-plan.png";
 
 export function FacilityMap() {
@@ -7,7 +7,7 @@ export function FacilityMap() {
     { x: 12, y: 8, status: "normal" },
     { x: 8, y: 32, status: "normal" },
     { x: 8, y: 48, status: "normal" },
-    { x: 8, y: 62, status: "alert" },
+    { x: 8, y: 62, status: "alert", message: "Camera connection lost" },
     { x: 12, y: 78, status: "normal" },
     { x: 22, y: 88, status: "normal" },
     { x: 32, y: 58, status: "normal" },
@@ -57,24 +57,52 @@ export function FacilityMap() {
         {cameras.map((cam, index) => (
           <div
             key={index}
-            className="absolute w-5 h-5 transform -translate-x-1/2 -translate-y-1/2"
+            className="absolute transform -translate-x-1/2 -translate-y-1/2 group"
             style={{ left: `${cam.x}%`, top: `${cam.y}%` }}
           >
+            {/* Tooltip for alert cameras */}
+            {cam.status === "alert" && cam.message && (
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-white rounded shadow-lg text-xs text-gray-700 whitespace-nowrap border border-gray-200 z-10">
+                {cam.message}
+                <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-white" />
+              </div>
+            )}
+            
             {/* Pulse ring for alert cameras */}
             {cam.status === "alert" && (
-              <div className="absolute inset-0 rounded-full bg-red-500 animate-ping opacity-75" />
+              <div className="absolute inset-0 w-6 h-6 -m-0.5 rounded-full bg-red-500 animate-ping opacity-75" />
             )}
+            
             <div 
-              className={`relative w-full h-full rounded-full flex items-center justify-center ${
+              className={`relative w-5 h-5 rounded-full flex items-center justify-center ${
                 cam.status === "alert" 
                   ? "bg-red-500" 
                   : "bg-blue-500"
               }`}
             >
-              <div className="w-2 h-2 rounded-full bg-white" />
+              <Camera className="w-2.5 h-2.5 text-white" />
             </div>
           </div>
         ))}
+
+        {/* Bottom Navigation Controls */}
+        <div className="absolute bottom-3 left-3 flex items-center gap-1">
+          <button className="w-7 h-7 bg-white rounded border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors shadow-sm">
+            <Minus className="w-3.5 h-3.5 text-gray-600" />
+          </button>
+          <button className="w-7 h-7 bg-white rounded border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors shadow-sm">
+            <Plus className="w-3.5 h-3.5 text-gray-600" />
+          </button>
+        </div>
+
+        <div className="absolute bottom-3 right-3 flex items-center gap-1">
+          <button className="w-7 h-7 bg-white rounded border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors shadow-sm">
+            <ChevronLeft className="w-3.5 h-3.5 text-gray-600" />
+          </button>
+          <button className="w-7 h-7 bg-white rounded border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors shadow-sm">
+            <ChevronRight className="w-3.5 h-3.5 text-gray-600" />
+          </button>
+        </div>
       </div>
     </div>
   );
