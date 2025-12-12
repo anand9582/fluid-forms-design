@@ -60,9 +60,9 @@ export function FacilityMap() {
             className="absolute transform -translate-x-1/2 -translate-y-1/2 group"
             style={{ left: `${cam.x}%`, top: `${cam.y}%` }}
           >
-            {/* Tooltip for alert cameras */}
+            {/* Tooltip for alert cameras - shows on hover */}
             {cam.status === "alert" && cam.message && (
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-white rounded shadow-lg text-xs text-gray-700 whitespace-nowrap border border-gray-200 z-10">
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-white rounded shadow-lg text-xs text-gray-700 whitespace-nowrap border border-gray-200 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
                 {cam.message}
                 <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-white" />
               </div>
