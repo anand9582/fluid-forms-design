@@ -1,7 +1,11 @@
+import { useState } from "react";
 import { ExternalLink, ChevronDown, Camera, Plus, Minus, ChevronLeft, ChevronRight } from "lucide-react";
 import facilityFloorPlan from "@/assets/facility-floor-plan.png";
 
 export function FacilityMap() {
+  const [zoom, setZoom] = useState(1);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+
   // Camera positions based on floor plan - blue for normal, red for alert
   const cameras = [
     { x: 12, y: 8, status: "normal" },
@@ -21,6 +25,30 @@ export function FacilityMap() {
     { x: 88, y: 72, status: "normal" },
     { x: 92, y: 88, status: "normal" },
   ];
+
+  const handleZoomIn = () => {
+    setZoom((prev) => Math.min(prev + 0.25, 3));
+  };
+
+  const handleZoomOut = () => {
+    setZoom((prev) => {
+      const newZoom = Math.max(prev - 0.25, 1);
+      if (newZoom === 1) setPosition({ x: 0, y: 0 });
+      return newZoom;
+    });
+  };
+
+  const handleSlideLeft = () => {
+    if (zoom > 1) {
+      setPosition((prev) => ({ ...prev, x: Math.min(prev.x + 15, (zoom - 1) * 50) }));
+    }
+  };
+
+  const handleSlideRight = () => {
+    if (zoom > 1) {
+      setPosition((prev) => ({ ...prev, x: Math.max(prev.x - 15, -(zoom - 1) * 50) }));
+    }
+  };
 
   return (
     <div className="bg-white rounded-xl p-4 shadow-sm animate-fade-in" style={{ animationDelay: "0.35s" }}>
@@ -46,60 +74,80 @@ export function FacilityMap() {
 
       {/* Map */}
       <div className="relative rounded-lg overflow-hidden bg-gray-50 aspect-[4/3]">
-        {/* Floor plan image */}
-        <img 
-          src={facilityFloorPlan} 
-          alt="Facility Floor Plan" 
-          className="w-full h-full object-contain"
-        />
+        {/* Floor plan image with zoom and pan */}
+        <div
+          className="w-full h-full transition-transform duration-300 ease-out"
+          style={{
+            transform: `scale(${zoom}) translate(${position.x}%, ${position.y}%)`,
+            transformOrigin: "center center",
+          }}
+        >
+          <img 
+            src={facilityFloorPlan} 
+            alt="Facility Floor Plan" 
+            className="w-full h-full object-contain"
+          />
 
-        {/* Camera markers */}
-        {cameras.map((cam, index) => (
-          <div
-            key={index}
-            className="absolute transform -translate-x-1/2 -translate-y-1/2 group"
-            style={{ left: `${cam.x}%`, top: `${cam.y}%` }}
-          >
-            {/* Tooltip for alert cameras - shows on hover */}
-            {cam.status === "alert" && cam.message && (
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-white rounded shadow-lg text-xs text-gray-700 whitespace-nowrap border border-gray-200 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-                {cam.message}
-                <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-white" />
-              </div>
-            )}
-            
-            {/* Pulse ring for alert cameras */}
-            {cam.status === "alert" && (
-              <div className="absolute inset-0 w-6 h-6 -m-0.5 rounded-full bg-red-500 animate-ping opacity-75" />
-            )}
-            
-            <div 
-              className={`relative w-5 h-5 rounded-full flex items-center justify-center ${
-                cam.status === "alert" 
-                  ? "bg-red-500" 
-                  : "bg-blue-500"
-              }`}
+          {/* Camera markers */}
+          {cameras.map((cam, index) => (
+            <div
+              key={index}
+              className="absolute transform -translate-x-1/2 -translate-y-1/2 group"
+              style={{ left: `${cam.x}%`, top: `${cam.y}%` }}
             >
-              <Camera className="w-2.5 h-2.5 text-white" />
+              {/* Tooltip for alert cameras - shows on hover */}
+              {cam.status === "alert" && cam.message && (
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-white rounded shadow-lg text-xs text-gray-700 whitespace-nowrap border border-gray-200 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                  {cam.message}
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-white" />
+                </div>
+              )}
+              
+              {/* Pulse ring for alert cameras */}
+              {cam.status === "alert" && (
+                <div className="absolute inset-0 w-6 h-6 -m-0.5 rounded-full bg-red-500 animate-ping opacity-75" />
+              )}
+              
+              <div 
+                className={`relative w-5 h-5 rounded-full flex items-center justify-center ${
+                  cam.status === "alert" 
+                    ? "bg-red-500" 
+                    : "bg-blue-500"
+                }`}
+              >
+                <Camera className="w-2.5 h-2.5 text-white" />
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
 
         {/* Bottom Navigation Controls */}
         <div className="absolute bottom-3 left-3 flex items-center gap-1">
-          <button className="w-7 h-7 bg-white rounded border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors shadow-sm">
+          <button 
+            onClick={handleZoomOut}
+            className="w-7 h-7 bg-white rounded border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors shadow-sm"
+          >
             <Minus className="w-3.5 h-3.5 text-gray-600" />
           </button>
-          <button className="w-7 h-7 bg-white rounded border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors shadow-sm">
+          <button 
+            onClick={handleZoomIn}
+            className="w-7 h-7 bg-white rounded border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors shadow-sm"
+          >
             <Plus className="w-3.5 h-3.5 text-gray-600" />
           </button>
         </div>
 
         <div className="absolute bottom-3 right-3 flex items-center gap-1">
-          <button className="w-7 h-7 bg-white rounded border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors shadow-sm">
+          <button 
+            onClick={handleSlideLeft}
+            className="w-7 h-7 bg-white rounded border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors shadow-sm"
+          >
             <ChevronLeft className="w-3.5 h-3.5 text-gray-600" />
           </button>
-          <button className="w-7 h-7 bg-white rounded border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors shadow-sm">
+          <button 
+            onClick={handleSlideRight}
+            className="w-7 h-7 bg-white rounded border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors shadow-sm"
+          >
             <ChevronRight className="w-3.5 h-3.5 text-gray-600" />
           </button>
         </div>
