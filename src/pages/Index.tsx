@@ -15,7 +15,7 @@ const Index = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
 
   return (
-    <div className="min-h-screen bg-[#f0f4f8]">
+    <div className="min-h-screen bg-white">
       {/* Header - Full Width at Top */}
       <Header />
 
@@ -31,9 +31,9 @@ const Index = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-2 sm:gap-3 lg:gap-4">
               {/* Left Column */}
               <div className="lg:col-span-3 space-y-2 sm:space-y-3 lg:space-y-4">
-                <SystemStatus />
-                <SystemHealth />
-                <StorageVolumes />
+                  <SystemStatus />
+                  <SystemHealth />
+                  <StorageVolumes />
               </div>
 
               {/* Middle Column */}

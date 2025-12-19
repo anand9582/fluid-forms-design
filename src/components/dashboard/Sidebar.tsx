@@ -1,4 +1,5 @@
 import {
+  LayoutGrid,
   LayoutDashboard,
   Video,
   PlayCircle,
@@ -35,13 +36,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex fixed left-0 top-14 z-40 h-[calc(100vh-56px)] w-[72px] bg-[#0a1628] flex-col">
-        {/* Logo */}
-        <div className="flex items-center justify-center py-4">
-          <div className="w-7 h-7 flex items-center justify-center">
-            <LayoutDashboard className="w-5 h-5 text-white/80" strokeWidth={1.5} />
-          </div>
-        </div>
+      <aside className="hidden md:flex fixed left-0 top-14 z-40 h-[calc(100vh-56px)] w-[72px] bg-[#FFFFFF] flex-col border-r">
 
         {/* Main Menu */}
         <nav className="flex-1 py-2">
@@ -52,12 +47,18 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                   className={cn(
                     "w-full flex flex-col items-center gap-1.5 py-3 transition-colors",
                     item.active
-                      ? "text-white"
-                      : "text-white/50 hover:text-white/80"
+                      ? "text-black"         
+                      : "text-gray-500 hover:text-gray-700" 
                   )}
                 >
-                  <item.icon className="w-5 h-5" strokeWidth={1.5} />
-                  <span className="text-[10px] font-normal tracking-wide">{item.label}</span>
+                <item.icon
+                className={cn(
+                  "w-7 h-7 p-1 rounded",
+                  item.active ? "bg-[#E2E8F0] text-black" : "text-gray-500"
+                )}
+                strokeWidth={1.5}
+              />
+                  <span className="text-[12px] tracking-wide font-roboto font-medium text-black">{item.label}</span>
                 </button>
               </li>
             ))}
@@ -93,7 +94,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 )}
               >
                 <item.icon className="w-5 h-5" strokeWidth={1.5} />
-                <span className="text-[9px] font-normal">{item.label}</span>
+                  <span className="text-[9px] font-normal">{item.label}</span>
               </button>
             </li>
           ))}

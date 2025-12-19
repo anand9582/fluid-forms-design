@@ -1,88 +1,91 @@
-import { Monitor, WifiOff, PlayCircle, ChevronDown, ArrowRight } from "lucide-react";
-import { useTheme } from "@/context/ThemeContext";
+import React from "react";
+import { Cctv,ChevronDown } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import DonutChart from "./DonutChart";
+import StatCard from "./StatCard";
 
-export function SystemStatus() {
-  const { isAltTheme } = useTheme();
-  const totalCameras = 142;
-  const percentage = 100;
-  const radius = 50;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (percentage / 100) * circumference;
-
-  const chartColor = isAltTheme ? "#8b5cf6" : "#3b82f6";
-  const accentColor = isAltTheme ? "text-purple-500" : "text-blue-500";
+export const SystemStatus = () => {
+  const stats = {
+    total: 142,
+    online: 138,
+    offline:9,
+    recording: 135,
+  };
 
   return (
-    <div className="bg-white rounded-xl p-4 shadow-sm animate-fade-in">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-gray-900 text-sm">SYSTEM STATUS</h3>
-        <button className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 transition-colors bg-gray-100 px-2 py-1 rounded">
-          <span>Device: Camera</span>
-          <ChevronDown className="w-3 h-3" />
+    <Card className=" border-border/80 shadow-none">
+      <CardHeader className="flex flex-row items-center justify-between pb-2 bg-bgprimary border-b p-2 rounded-t-sm">
+        <CardTitle className="text-sm font-roboto font-semibold font-medium  uppercase tracking-wide text-textgray">
+            System Status 
+        </CardTitle>
+
+        <Select defaultValue="camera">
+          <SelectTrigger className="w-[140px] h-8 text-xs">
+             <SelectValue placeholder="Select device" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="camera">Device: Camera</SelectItem>
+            <SelectItem value="sensor">Device: Sensor</SelectItem>
+            <SelectItem value="nvr">Device: NVR</SelectItem>
+          </SelectContent>
+        </Select>
+      </CardHeader>
+
+      <CardContent className="space-y-4 p-3">
+        {/* Donut Chart */}
+        <div className="flex justify-center py-4">
+          <DonutChart
+            total={stats.total}
+            online={stats.online}
+            offline={stats.offline}
+            label="Cameras"
+          />
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-3 gap-3">
+          <StatCard
+            value={stats.online}
+            label="Online"
+            icon={<Cctv className="w-5 h-5" />}
+           variant="statusbg"
+          />
+          <StatCard
+            value={String(stats.offline).padStart(2, "0")}
+            label="Offline"
+                icon={
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 20H12.01" stroke="#525252" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M8.5 16.429C9.43464 15.5128 10.6912 14.9997 12 14.9997C13.3088 14.9997 14.5654 15.5128 15.5 16.429" stroke="#525252" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M5 12.859C6.41803 11.4689 8.21781 10.5325 10.17 10.169" stroke="#525252" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M19 12.859C18.3979 12.2687 17.7236 11.757 16.993 11.336" stroke="#525252" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M2 8.82C3.2366 7.71408 4.64809 6.82095 6.177 6.177" stroke="#525252" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M22 8.81997C20.4748 7.45579 18.6865 6.41812 16.7452 5.77081C14.804 5.12349 12.7508 4.88023 10.712 5.05597" stroke="#525252" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M2 2L22 22" stroke="#525252" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                }
+            variant="danger"
+          />
+          <StatCard
+                value={stats.recording}
+                label="Rec"
+                icon={
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#525252" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M10 8L16 12L10 16V8Z" stroke="#525252" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                }
+                variant="statusbg"
+              />
+        </div>
+
+        {/* View offline cameras */}
+        <button className="w-full text-center text-sm text-red-600 hover:text-primary/80 transition-colors flex items-center justify-center gap-1 pt-2">
+          View {stats.offline} Offline Cameras
+           <ChevronDown className="w-4 h-4 rotate-[-90deg]" />
         </button>
-      </div>
-
-      {/* Gauge */}
-      <div className="flex justify-center mb-4">
-        <div className="relative">
-          <svg width="130" height="130" viewBox="0 0 130 130">
-            {/* Background circle */}
-            <circle
-              cx="65"
-              cy="65"
-              r={radius}
-              fill="none"
-              stroke="#e5e7eb"
-              strokeWidth="12"
-            />
-            {/* Progress circle */}
-            <circle
-              cx="65"
-              cy="65"
-              r={radius}
-              fill="none"
-              stroke={chartColor}
-              strokeWidth="12"
-              strokeDasharray={circumference}
-              strokeDashoffset={strokeDashoffset}
-              className="gauge-ring transition-all duration-300"
-            />
-          </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-3xl font-bold text-gray-900">{totalCameras}</span>
-            <span className="text-[10px] text-gray-500 uppercase tracking-wider">Cameras</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-2 mb-3">
-        <div className="flex flex-col items-center p-2 bg-gray-50 rounded-lg">
-          <Monitor className="w-4 h-4 text-emerald-500 mb-1" />
-          <span className="text-lg font-bold text-gray-900">138</span>
-          <span className="text-[10px] text-gray-500">Online</span>
-        </div>
-        <div className="flex flex-col items-center p-2 bg-red-50 rounded-lg">
-          <WifiOff className="w-4 h-4 text-red-500 mb-1" />
-          <span className="text-lg font-bold text-gray-900">04</span>
-          <span className="text-[10px] text-gray-500">Offline</span>
-        </div>
-        <div className={`flex flex-col items-center p-2 ${isAltTheme ? "bg-purple-50" : "bg-gray-50"} rounded-lg transition-colors duration-300`}>
-          <PlayCircle className={`w-4 h-4 ${accentColor} mb-1 transition-colors duration-300`} />
-          <span className="text-lg font-bold text-gray-900">135</span>
-          <span className="text-[10px] text-gray-500">Rec</span>
-        </div>
-      </div>
-
-      {/* Link */}
-      <a
-        href="#"
-        className={`flex items-center gap-1 text-xs ${accentColor} hover:opacity-80 transition-colors duration-300`}
-      >
-        View 4 Offline Cameras
-        <ArrowRight className="w-3 h-3" />
-      </a>
-    </div>
+      </CardContent>
+    </Card>
   );
-}
+};

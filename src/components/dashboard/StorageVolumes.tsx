@@ -1,96 +1,117 @@
-import { ChevronRight, ChevronDown, HardDrive, Cloud, ArrowRight } from "lucide-react";
-import { useState } from "react";
-import { cn } from "@/lib/utils";
+  import {
+    ChevronRight,
+    ChevronDown,
+    ArrowRight,
+    Database,
+    HardDrive,
+  } from "lucide-react";
+  import { useState } from "react";
+  import { cn } from "@/lib/utils";
+  import { CardHeader, CardTitle } from "@/components/ui/card";
 
-interface StorageItem {
-  name: string;
-  percentage: number;
-  used?: string;
-  total?: string;
-  color: string;
-  children?: StorageItem[];
-}
+  /* ---------------- TYPES ---------------- */
+  interface StorageItem {
+    name: string;
+    percentage: number;
+    used?: string;
+    total?: string;
+    children?: StorageItem[];
+  }
 
-const storageData: StorageItem[] = [
-  { name: "CAMPulse Cloud", percentage: 54, color: "bg-blue-500" },
-  { name: "NAS-01 (Pri)", percentage: 90, color: "bg-red-500" },
-  {
-    name: "NAS-02 (Pri)",
-    percentage: 54,
-    color: "bg-blue-500",
-    children: [
-      { name: "Bay 1 (HDD)", percentage: 53, used: "32/60TB", total: "32/60TB", color: "bg-blue-500" },
-      { name: "Bay 2 (HDD)", percentage: 53, used: "32/60TB", total: "32/60TB", color: "bg-blue-500" },
-    ],
-  },
-  { name: "Local HDD Array", percentage: 95, color: "bg-red-500" },
-];
+  /* ---------------- DATA ---------------- */
+  const storageData: StorageItem[] = [
+    { name: "CAMPulse Cloud", percentage: 54 },
+    { name: "NAS-01 (Pri)", percentage: 90 },
+    {
+      name: "NAS-02 (Pri)",
+      percentage: 54,
+      children: [
+        { name: "Bay 1 (HDD)", percentage: 53, total: "32/60TB" },
+        { name: "Bay 2 (HDD)", percentage: 53, total: "32/60TB" },
+      ],
+    },
+    { name: "Local HDD Array", percentage: 95 },
+  ];
 
-function StorageRow({ item, level = 0 }: { item: StorageItem; level?: number }) {
+  /* ---------------- ROW ---------------- */
+ function StorageRow({ item, level = 0 }: { item: StorageItem; level?: number }) {
   const [expanded, setExpanded] = useState(item.name === "NAS-02 (Pri)");
+  const hasChildren = !!item.children;
 
   return (
     <div>
+      {/* ROW */}
       <div
         className={cn(
-          "flex items-center gap-2 py-2 hover:bg-gray-50 rounded px-2 cursor-pointer transition-colors",
-          level > 0 && "ml-4"
+          "flex items-center gap-2 py-2 rounded",
+          hasChildren ? "cursor-pointer hover:bg-gray-50" : "cursor-default"
         )}
-        onClick={() => item.children && setExpanded(!expanded)}
+        onClick={() => {
+          if (hasChildren) setExpanded(!expanded);
+        }}
       >
-        {item.children ? (
-          expanded ? (
-            <ChevronDown className="w-4 h-4 text-gray-400" />
+        {/* ✅ ARROW (ALL ROWS SAME) */}
+        {expanded && hasChildren ? (
+          <ChevronDown className="w-4 h-4 text-gray-400" />
+        ) : (
+          <ChevronRight
+            className={cn(
+              "w-4 h-4",
+              hasChildren ? "text-gray-400" : "text-gray-300"
+            )}
+          />
+        )}
+
+        {/* ICON */}
+        <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center">
+          {level > 0 ? (
+            <HardDrive className="w-4 h-4 text-gray-500" />
           ) : (
-            <ChevronRight className="w-4 h-4 text-gray-400" />
-          )
-        ) : (
-          <div className="w-4" />
-        )}
+            <Database className="w-4 h-4 text-gray-500" />
+          )}
+        </div>
 
-        {level > 0 ? (
-          <HardDrive className="w-4 h-4 text-gray-400" />
-        ) : item.name.includes("Cloud") ? (
-          <Cloud className="w-4 h-4 text-blue-500" />
-        ) : (
-          <HardDrive className="w-4 h-4 text-gray-400" />
-        )}
+        {/* NAME */}
+        <span className="flex-1 text-sm text-gray-800">{item.name}</span>
 
-        <span className="flex-1 text-xs text-gray-900">{item.name}</span>
-
+        {/* SIZE */}
         {item.total && (
-          <span className="text-[10px] text-gray-500 mr-2">{item.total}</span>
+          <span className="text-xs text-gray-500 mr-2">{item.total}</span>
         )}
 
+        {/* % */}
         <span
           className={cn(
-            "text-xs font-medium",
-            item.percentage >= 90 ? "text-red-500" : "text-gray-900"
+            "text-sm font-semibold",
+            item.percentage >= 90 ? "text-orange-500" : "text-gray-600"
           )}
         >
           {item.percentage}%
         </span>
       </div>
 
-      {/* Progress bar for main items */}
-      {!item.children && level === 0 && (
-        <div className="ml-10 mr-2 mb-2">
+      {/* PROGRESS BAR (TOP LEVEL ONLY) */}
+      {level === 0 && (
+        <div className="ml-14 mr-4 mb-2">
           <div className="h-1 bg-gray-200 rounded-full overflow-hidden">
             <div
-              className={cn("h-full rounded-full transition-all", item.color)}
+              className={cn(
+                "h-full rounded-full",
+                item.percentage >= 90 ? "bg-orange-500" : "bg-blue-500"
+              )}
               style={{ width: `${item.percentage}%` }}
             />
           </div>
         </div>
       )}
 
-      {/* Children */}
-      {item.children && expanded && (
-        <div className="border-l border-gray-200 ml-4">
-          <p className="text-[10px] text-gray-400 uppercase tracking-wide px-4 py-1">
+      {/* CHILDREN */}
+      {hasChildren && expanded && (
+        <div className="ml-6 border-l border-gray-200 pl-2">
+          <p className="text-[11px] text-gray-400 uppercase py-1">
             Mounted disks
           </p>
-          {item.children.map((child) => (
+          {item.children!.map((child) => (
             <StorageRow key={child.name} item={child} level={level + 1} />
           ))}
         </div>
@@ -99,54 +120,63 @@ function StorageRow({ item, level = 0 }: { item: StorageItem; level?: number }) 
   );
 }
 
-export function StorageVolumes() {
-  return (
-    <div className="bg-white rounded-xl p-4 shadow-sm animate-fade-in" style={{ animationDelay: "0.3s" }}>
-      {/* Header */}
-      <h3 className="font-semibold text-gray-900 text-sm mb-3">STORAGE VOLUMES</h3>
 
-      {/* Summary */}
-      <div className="grid grid-cols-3 gap-3 mb-3 p-3 bg-blue-50 rounded-lg">
-        <div>
-          <p className="text-[10px] text-gray-500 mb-0.5">Total Space</p>
-          <p className="text-lg font-bold text-gray-900">
-            780<span className="text-xs font-normal text-gray-500">TB</span>
-          </p>
-        </div>
-        <div>
-          <p className="text-[10px] text-gray-500 mb-0.5">USED</p>
-          <p className="text-lg font-bold text-blue-500">
-            331<span className="text-xs font-normal text-gray-500">TB</span>
-          </p>
-        </div>
-        <div>
-          <p className="text-[10px] text-gray-500 mb-0.5">FREE</p>
-          <p className="text-lg font-bold text-emerald-500">
-            58<span className="text-xs font-normal text-gray-500">%</span>
-          </p>
+  /* ---------------- MAIN ---------------- */
+  export function StorageVolumes() {
+    return (
+      <div className="bg-white rounded-xl shadow-sm ">
+        {/* HEADER */}
+        <CardHeader className="flex flex-row items-center justify-between pb-2 bg-bgprimary border-b p-2 rounded-t-sm">
+          <CardTitle className="text-sm font-roboto font-medium  uppercase text-gray-600 text">
+            Storage Volumes 
+          </CardTitle>
+        </CardHeader>
+
+        <div className="border shadow-sm bg-white p-4 rounded-none">
+          {/* STATS */}
+          <div className="grid grid-cols-3 gap-4 mb-3">
+            <div>
+              <p className="text-xs text-gray-500 uppercase text-sm font-semibold">Total Space </p>
+              <p className="text-lg font-bold">
+                780<span className="text-xs ml-1 text-gray-500">TB</span>
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 uppercase font-semibold">Used</p>
+              <p className="text-lg font-bold">
+                331<span className="text-xs ml-1 text-gray-500">TB</span>
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 uppercase font-semibold">Free</p>
+              <p className="text-lg font-bold text-[#365314]">58%</p>
+            </div>
+          </div>
+
+          {/* TOTAL BAR */}
+          <div className="h-2 bg-gray-200 rounded-full overflow-hidden mb-4">
+            <div
+              className="h-full rounded-full bg-blue-600"
+              style={{ width: "42%" }}
+            />
+          </div>
+
+          {/* LIST */}
+          <div className="space-y-1">
+            {storageData.map((item) => (
+              <StorageRow key={item.name} item={item} />
+            ))}
+          </div>
+
+          {/* LINK */}
+          <a
+            href="#"
+            className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-600 mt-3"
+          >
+            Manage Volumes
+            <ArrowRight className="w-3 h-3" />
+          </a>
         </div>
       </div>
-
-      {/* Progress bar */}
-      <div className="h-2 bg-gray-200 rounded-full overflow-hidden mb-3">
-        <div className="h-full bg-blue-500 rounded-full" style={{ width: "42%" }} />
-      </div>
-
-      {/* Storage List */}
-      <div className="space-y-0.5 max-h-44 overflow-y-auto scrollbar-thin">
-        {storageData.map((item) => (
-          <StorageRow key={item.name} item={item} />
-        ))}
-      </div>
-
-      {/* Link */}
-      <a
-        href="#"
-        className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-600 transition-colors mt-3"
-      >
-        Manage Volumes
-        <ArrowRight className="w-3 h-3" />
-      </a>
-    </div>
-  );
-}
+    );
+  }

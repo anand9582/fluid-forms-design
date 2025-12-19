@@ -13,15 +13,39 @@ export default {
       },
     },
     extend: {
-      fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-      },
+       fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        gujarati: ['"Noto Sans Gujarati"', 'sans-serif'],
+        roboto: ['"Roboto"', 'sans-serif'],
+        lato: ['"Lato"', 'sans-serif'],
+        mulish: ['"Mulish"', 'sans-serif'],
+        poppins: ['"Poppins"', 'sans-serif'],
+        helvetica: ['"Helvetica"', 'Arial', 'sans-serif'],
+      },fontSize: {
+          'fontSize12px': '12px',
+          'fontSize13px': '13px',
+          'fontSize14px': '14px',
+          'fontSize15px': '15px',
+          'custom-16px': '16px',
+          'custom-18px': '18px',
+          'custom-20px': '20px',
+          'custom-22px': '22px',
+          'custom-24px': '24px',
+          'custom-40px': '36px',
+          'custom-21px': '21px', 
+          'custom-48px': '48px',
+          'custom-56px': '56px',
+          'custom-60px': '60px', 
+        },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        bgprimary: '#f1f5f9',
+        textgray:"#3e4a5d",
+        textpar:"#475569",
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
@@ -108,5 +132,4 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
 } satisfies Config;

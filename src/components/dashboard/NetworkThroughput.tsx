@@ -1,83 +1,120 @@
-import { ExternalLink } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
+import { ExternalLink } from 'lucide-react';
+import { Card, CardContent,CardHeader, CardTitle } from "@/components/ui/card";
 
 const data = [
-  { time: "10:00", inbound: 400, outbound: 100 },
-  { time: "10:05", inbound: 500, outbound: 120 },
-  { time: "10:10", inbound: 450, outbound: 110 },
-  { time: "10:15", inbound: 600, outbound: 130 },
-  { time: "10:20", inbound: 550, outbound: 125 },
-  { time: "10:25", inbound: 700, outbound: 140 },
-  { time: "10:30", inbound: 750, outbound: 145 },
-  { time: "10:35", inbound: 800, outbound: 150 },
-  { time: "10:40", inbound: 850, outbound: 140 },
-  { time: "10:45", inbound: 850, outbound: 140 },
+  { time: '10:00', inbound: 450, outbound: 120 },
+  { time: '10:05', inbound: 480, outbound: 130 },
+  { time: '10:10', inbound: 520, outbound: 140 },
+  { time: '10:15', inbound: 850, outbound: 140 },
+  { time: '10:20', inbound: 460, outbound: 130 },
+  { time: '10:25', inbound: 470, outbound: 125 },
+  { time: '10:30', inbound: 480, outbound: 120 },
+  { time: '10:35', inbound: 465, outbound: 115 },
+  { time: '10:40', inbound: 455, outbound: 110 },
+  { time: '10:45', inbound: 450, outbound: 105 },
 ];
 
-export function NetworkThroughput() {
-  return (
-    <div className="bg-white rounded-xl p-4 shadow-sm animate-fade-in" style={{ animationDelay: "0.4s" }}>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-gray-900 text-sm">NETWORK THROUGHPUT</h3>
-        <button className="text-gray-400 hover:text-gray-600 transition-colors">
-          <ExternalLink className="w-4 h-4" />
-        </button>
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white rounded-lg shadow-lg border border-border/50 px-4 py-3">
+        <p className="text-sm font-semibold text-foreground mb-1">{label}</p>
+        <p className="text-sm text-primary">
+          inbound : <span className="font-medium">{payload[0]?.value}</span>
+        </p>
+        <p className="text-sm text-muted-foreground">
+          outbound : <span className="font-medium">{payload[1]?.value}</span>
+        </p>
       </div>
+    );
+  }
+  return null;
+};
 
-      {/* Chart */}
-      <div className="h-32">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data}>
-            <XAxis
-              dataKey="time"
-              axisLine={false}
-              tickLine={false}
-              tick={{ fontSize: 10, fill: "#9ca3af" }}
-            />
-            <YAxis
-              axisLine={false}
-              tickLine={false}
-              tick={{ fontSize: 10, fill: "#9ca3af" }}
-              width={35}
-            />
-            <Tooltip
-              contentStyle={{
-                background: "#fff",
-                border: "1px solid #e5e7eb",
-                borderRadius: "8px",
-                fontSize: "12px",
-              }}
-            />
-            <Line
-              type="monotone"
-              dataKey="inbound"
-              stroke="#22c55e"
-              strokeWidth={2}
-              dot={false}
-            />
-            <Line
-              type="monotone"
-              dataKey="outbound"
-              stroke="#3b82f6"
-              strokeWidth={2}
-              dot={false}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* Legend */}
-      <div className="flex items-center justify-center gap-6 mt-2">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-0.5 bg-emerald-500 rounded" />
-          <span className="text-[10px] text-gray-500">Inbound : 850</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-0.5 bg-blue-500 rounded" />
-          <span className="text-[10px] text-gray-500">Outbound : 140</span>
-        </div>
-      </div>
-    </div>
-  );
+interface NetworkThroughputChartProps {
+  title?: string;
+  threshold?: number;
+  onExpand?: () => void;
 }
+
+export const NetworkThroughput  = ({ 
+  title = "NETWORK THROUGHPUT",
+  threshold = 800,
+  onExpand 
+}: NetworkThroughputChartProps) => {
+  return (
+        <Card className="border-border/80 shadow-none">
+          
+           <CardHeader className="flex flex-row items-center justify-between bg-bgprimary pt-4 pb-4 rounded-t border-b">
+                <CardTitle className="text-sm font-medium uppercase tracking-wide text-textgray">
+                    {title}
+                </CardTitle>
+                <button className="text-gray-500 hover:text-gray-700 transition-colors">
+                      {onExpand && (
+                        <button 
+                          onClick={onExpand}
+                          className="text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                        </button>
+                      )}
+                </button>
+            </CardHeader>
+
+       <CardContent>
+        <div className="h-[260px] w-full px-3 pt-2">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={data} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+              <CartesianGrid 
+                strokeDasharray="0" 
+                vertical={false} 
+                stroke="hsl(var(--border))" 
+                strokeOpacity={0.5}
+              />
+              <XAxis 
+                dataKey="time" 
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                dy={10}
+              />
+              <YAxis 
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                ticks={[0, 250, 500, 750, 1000]}
+                domain={[0, 1000]}
+                dx={-10}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <ReferenceLine 
+                y={threshold} 
+                stroke="hsl(var(--destructive))" 
+                strokeDasharray="8 4" 
+                strokeOpacity={0.6}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="inbound" 
+                stroke="hsl(var(--primary))" 
+                strokeWidth={2}
+                dot={false}
+                activeDot={{ r: 4, fill: 'hsl(var(--primary))' }}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="outbound" 
+                stroke="hsl(var(--muted-foreground))" 
+                strokeWidth={2}
+                dot={false}
+                activeDot={{ r: 4, fill: 'hsl(var(--muted-foreground))' }}
+                strokeOpacity={0.6}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+         </CardContent>
+    </Card>
+  );
+};

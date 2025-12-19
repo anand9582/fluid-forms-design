@@ -1,79 +1,144 @@
-import { Cpu, HardDrive, Database, ArrowRight } from "lucide-react";
+import React from "react";
+import { Cpu, MemoryStick, HardDrive,Activity  } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-interface GaugeProps {
-  value: number;
-  label: string;
-  icon: React.ElementType;
-  color: string;
-}
-
-function MiniGauge({ value, label, icon: Icon, color }: GaugeProps) {
-  const radius = 24;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (value / 100) * circumference;
+const Gauge = ({
+  value,
+  label,
+  icon: Icon,
+  gradientId,
+  bgColor,
+  textAlignClass,
+  needlePosition,
+  needleColor,
+}: any) => {
+  const rotation = (value / 100) * 180 - 90;
 
   return (
-    <div className="flex flex-col items-center">
-      <div className="relative">
-        <svg width="60" height="60" viewBox="0 0 60 60">
-          <circle
-            cx="30"
-            cy="30"
-            r={radius}
-            fill="none"
+    <div
+      className="p-3 w-full shadow-sm  rounded-none"
+      style={{ backgroundColor: bgColor }}
+    >
+      <div className="relative w-full flex justify-center">
+        <svg width="380" height="66" viewBox="0 0 100 100">
+          <defs>
+            <linearGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#4F46E5" />
+              <stop offset="100%" stopColor="#3B82F6" />
+            </linearGradient>
+
+            <linearGradient id="orangeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#F59E0B" />
+              <stop offset="80%" stopColor="#FDBA74" />
+            </linearGradient>
+
+            <linearGradient id="greenGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#2B43FF" />
+              <stop offset="100%" stopColor="#8492FF" />
+            </linearGradient>
+          </defs>
+
+          <path
+            d="M10 50 A40 40 0 0 1 90 50"
             stroke="#e5e7eb"
-            strokeWidth="5"
-          />
-          <circle
-            cx="30"
-            cy="30"
-            r={radius}
+            strokeWidth="22"
             fill="none"
-            stroke={color}
-            strokeWidth="5"
-            strokeDasharray={circumference}
-            strokeDashoffset={strokeDashoffset}
-            className="gauge-ring"
-            strokeLinecap="round"
+          />
+
+          <path
+            d="M10 50 A40 40 0 0 1 90 50"
+            stroke={`url(#${gradientId})`}
+            strokeWidth="22"
+            fill="none"
+            strokeDasharray={`${(value / 100) * 125} 300`}
           />
         </svg>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <Icon className="w-4 h-4 text-gray-400" />
+
+        {/* Needle */}
+        <div
+          className="absolute origin-bottom"
+          style={{
+            top: needlePosition.top,
+            left: needlePosition.left,
+            right: needlePosition.right,
+            transform: `rotate(${rotation}deg)`,
+          }}
+        >
+          <div className="w-[2px] h-5" style={{ backgroundColor: needleColor }}></div>
         </div>
+
       </div>
-      <span className="text-sm font-bold text-gray-900 mt-1">{value}%</span>
-      <span className="text-[10px] text-gray-500">{label}</span>
+
+      <p className={`font-semibold font-roboto text-center mt-1 ${textAlignClass}`}>
+        {value}%
+      </p>
+
+      <p className={`text-gray-600 text-sm mt-1 ${textAlignClass}`}>
+        {label}
+      </p>
     </div>
   );
-}
+};
 
-export function SystemHealth() {
+export const SystemHealth = () => {
   return (
-    <div className="bg-white rounded-xl p-4 shadow-sm animate-fade-in" style={{ animationDelay: "0.25s" }}>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-gray-900 text-sm">SYSTEM HEALTH</h3>
-        <div className="flex items-center gap-1.5 text-xs text-gray-500">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          Uptime 14d 2h 12m
-        </div>
+  <Card className=" border-border/80 shadow-none overflow-hidden rounded">
+        <CardHeader className="flex flex-row items-center justify-between pb-2 bg-bgprimary border-b p-2 rounded-t-sm">
+        <CardTitle className="text-sm font-roboto font-semibold font-medium  uppercase tracking-wide text-textgray">
+            SYSTEM HEALTH
+        </CardTitle>
+         <p className="text-sm text-gray-500 flex items-center gap-1">
+            <Activity className="w-4 h-4" /> Uptime 14d 2h 12m
+         </p>
+    </CardHeader>
+
+    <div className="border shadow-sm bg-white p-4 rounded-none">
+
+      <div className="grid grid-cols-3 gap-3 mt-4">
+
+        {/* CPU Gauge → Left */}
+        <Gauge
+          value={37}
+          label="CPU Load"
+          icon={Cpu}
+          gradientId="blueGradient"
+          bgColor="#F1F5F9"
+          textAlignClass="text-left"
+          needlePosition={{ top: "-1px", left: "29px" }}
+          needleColor="#3B82F6"
+        />
+
+        {/* Memory Gauge → Center */}
+        <Gauge
+          value={76}
+          label="Memory"
+          icon={MemoryStick}
+          gradientId="orangeGradient"
+          bgColor="#FFFBEB"
+          textAlignClass="text-center"
+          needlePosition={{ top: "1px", left: "65%" }}
+          needleColor="#F59E0B"
+        />
+
+        {/* Disk Gauge → Right */}
+        <Gauge
+          value={22}
+          label="Disk"
+          icon={HardDrive}
+          gradientId="greenGradient"
+          bgColor="#F1F5F9"
+          textAlignClass="text-center"
+          needlePosition={{ top: "2px", right: "47px" }}
+          needleColor="#2B43FF"
+        />
       </div>
 
-      {/* Gauges */}
-      <div className="grid grid-cols-3 gap-2 mb-3">
-        <MiniGauge value={37} label="CPU Load" icon={Cpu} color="#22c55e" />
-        <MiniGauge value={76} label="Memory" icon={Database} color="#f97316" />
-        <MiniGauge value={22} label="Disk" icon={HardDrive} color="#3b82f6" />
+      <div className="text-center mt-5 border-t pt-4">
+        <button className="text-blue-600 flex items-center justify-center gap-1 font-medium">
+          View Diagnostics →
+        </button>
       </div>
-
-      {/* Link */}
-      <a
-        href="#"
-        className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-600 transition-colors"
-      >
-        View Diagnostics
-        <ArrowRight className="w-3 h-3" />
-      </a>
     </div>
+    </Card>
   );
-}
+};

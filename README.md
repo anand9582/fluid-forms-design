@@ -1,22 +1,22 @@
-# Welcome to your Lovable project
+# Welcome to your CamPulse project
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/bdd138c9-7ad2-4c5e-9921-c3f8d01974ee
+**URL**: https://CamPulse.dev/projects/bdd138c9-7ad2-4c5e-9921-c3f8d01974ee
 
 ## How can I edit this code?
 
 There are several ways of editing your application.
 
-**Use Lovable**
+**Use CamPulse**
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/bdd138c9-7ad2-4c5e-9921-c3f8d01974ee) and start prompting.
+Simply visit the [CamPulse Project](https://CamPulse.dev/projects/bdd138c9-7ad2-4c5e-9921-c3f8d01974ee) and start prompting.
 
-Changes made via Lovable will be committed automatically to this repo.
+Changes made via CamPulse will be committed automatically to this repo.
 
 **Use your preferred IDE**
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in CamPulse.
 
 The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
@@ -62,12 +62,12 @@ This project is built with:
 
 ## How can I deploy this project?
 
-Simply open [Lovable](https://lovable.dev/projects/bdd138c9-7ad2-4c5e-9921-c3f8d01974ee) and click on Share -> Publish.
+Simply open [CamPulse](https://CamPulse.dev/projects/bdd138c9-7ad2-4c5e-9921-c3f8d01974ee) and click on Share -> Publish.
 
-## Can I connect a custom domain to my Lovable project?
+## Can I connect a custom domain to my CamPulse project?
 
 Yes, you can!
 
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Read more here: [Setting up a custom domain](https://docs.CamPulse.dev/features/custom-domain#custom-domain)

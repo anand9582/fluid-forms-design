@@ -1,4 +1,11 @@
 import { ExternalLink, User, AlertTriangle, Car, Footprints } from "lucide-react";
+import { Card,CardHeader,CardTitle } from "@/components/ui/card";
+import Facematch from "../../assets/img/icons/facematch-img.png";
+import Facematch2 from "../../assets/img/icons/facematch1-img.png";
+import Facematch3 from "../../assets/img/icons/facematch3-img.png";
+import Facematch4 from "../../assets/img/icons/facematch4-img.png";
+import Facematch5 from "../../assets/img/icons/facematch4-img.png";
+import Facematch6 from "../../assets/img/icons/facematch3-img.png";
 
 const alerts = [
   {
@@ -6,8 +13,8 @@ const alerts = [
     location: "Lobby Entrance",
     description: "Watchlist match: 85% confidence.",
     time: "11:57:36 AM",
-    icon: User,
-    color: "text-blue-500",
+    image: Facematch,
+    color: "text-orange-500",
     bgColor: "bg-blue-100",
   },
   {
@@ -15,6 +22,7 @@ const alerts = [
     location: "Perimeter North",
     description: "Human detected in restricted zone",
     time: "11:57:36 AM",
+    image: Facematch2,
     icon: AlertTriangle,
     color: "text-red-500",
     bgColor: "bg-red-100",
@@ -24,8 +32,8 @@ const alerts = [
     location: "Parking Garage B",
     description: "Vehicle stationary for > 20 min.",
     time: "11:57:36 AM",
-    icon: Car,
-    color: "text-orange-500",
+     image: Facematch3,
+     color: "text-orange-500",
     bgColor: "bg-orange-100",
   },
   {
@@ -33,8 +41,8 @@ const alerts = [
     location: "Lobby Entrance",
     description: "Watchlist match: 85% confidence.",
     time: "11:57:36 AM",
-    icon: User,
-    color: "text-blue-500",
+    image: Facematch4,
+    color: "text-orange-500",
     bgColor: "bg-blue-100",
   },
   {
@@ -42,7 +50,7 @@ const alerts = [
     location: "Perimeter North",
     description: "Human detected in restricted zone",
     time: "11:57:36 AM",
-    icon: AlertTriangle,
+    image: Facematch5,
     color: "text-red-500",
     bgColor: "bg-red-100",
   },
@@ -51,7 +59,7 @@ const alerts = [
     location: "Parking Garage B",
     description: "Vehicle stationary for > 20 min.",
     time: "11:57:36 AM",
-    icon: Footprints,
+   image: Facematch6,
     color: "text-orange-500",
     bgColor: "bg-orange-100",
   },
@@ -59,41 +67,52 @@ const alerts = [
 
 export function AIAlerts() {
   return (
-    <div className="bg-white rounded-xl p-4 shadow-sm h-full animate-fade-in" style={{ animationDelay: "0.2s" }}>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-gray-900 text-sm">REAL-TIME AI ALERTS</h3>
-        <div className="flex items-center gap-2">
-          <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
-            122
-          </span>
-          <button className="text-gray-400 hover:text-gray-600 transition-colors">
-            <ExternalLink className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
+    <Card className="border-border/80 shadow-none rounded overflow-hidden">
+              <CardHeader className="flex flex-row items-center justify-between pb-2 bg-bgprimary border-b p-2 rounded-t-sm">
+              <CardTitle className="text-sm font-roboto font-semibold font-medium  uppercase tracking-wide text-textgray">
+                    <h3 className="text-md  font-roboto  font-medium  uppercase tracking-wide text-[#475569]">
+                      REAL-TIME AI ALERTS</h3>
+              </CardTitle>
+               <div className="flex items-center gap-2">
+              <span className="bg-red-500 text-white text-[14px] font-bold px-1.5 py-0.5 rounded-full">
+                122
+              </span>
+            <button className="text-gray-400 hover:text-gray-600 transition-colors">
+              <ExternalLink className="w-4 h-4" />
+            </button>
+          </div>
+          </CardHeader>
 
-      {/* Alerts List */}
-      <div className="space-y-2 max-h-[400px] overflow-y-auto scrollbar-thin pr-1">
-        {alerts.map((alert, index) => (
-          <div key={index} className="flex items-start gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors">
-            {/* Thumbnail */}
-            <div className={`w-12 h-12 rounded-lg ${alert.bgColor} flex-shrink-0 flex items-center justify-center`}>
-              <alert.icon className={`w-5 h-5 ${alert.color}`} />
+      <div
+        className="bg-white rounded-xl p-3 shadow-md h-full animate-fade-in "
+        style={{ animationDelay: "0.2s" }}
+      >
+        {/* Alerts list */}
+        <div className="space-y-2 max-h-[600px] overflow-y-auto scrollbar-thin pr-1">
+          {alerts.map((alert, index) => (
+             <div key={index} className="flex items-start gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors border p-2">
+            {/* Thumbnail Image */}
+            <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+              <img 
+                src={alert.image} 
+                alt={alert.type}
+                className="w-full h-full object-cover"
+              />
             </div>
 
             {/* Content */}
             <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between mb-0.5">
-                <span className={`text-[10px] font-bold ${alert.color}`}>{alert.type}</span>
-                <span className="text-[10px] text-gray-400">{alert.time}</span>
+              <div className="flex items-center justify-between mb-0.5 ">
+                <span className={`text-[12px] font-bold ${alert.color}`}>{alert.type}</span>
+                <span className="text-[12px] text-gray-400  font-roboto font-semibold">{alert.time}</span>
               </div>
-              <p className="text-xs font-medium text-gray-900 truncate">{alert.location}</p>
-              <p className="text-[10px] text-gray-500 truncate">{alert.description}</p>
+              <p className="text-xs font-semibold text-gray-500 truncate font-roboto">{alert.location}</p>
+              <p className="text-[13px] text-gray-500 truncate font-roboto">{alert.description}</p>
             </div>
           </div>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
+    </Card>
   );
 }
