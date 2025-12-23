@@ -1,5 +1,5 @@
+import { NavLink, useLocation } from "react-router-dom";
 import {
-  LayoutGrid,
   LayoutDashboard,
   Video,
   PlayCircle,
@@ -11,98 +11,132 @@ import {
   HelpCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  Alerts,
+  Emap,
+  Health,
+  Light
+} from "@/components/ui/icons";
+import { useTheme } from "@/context/ThemeContext";
 
 const menuItems = [
-  { icon: LayoutDashboard, label: "Dashboard", active: true },
-  { icon: Video, label: "Live view" },
-  { icon: PlayCircle, label: "Playback" },
-  { icon: Bell, label: "Alerts" },
-  { icon: Users, label: "Emap" },
-  { icon: Activity, label: "Health" },
+  { icon: LayoutDashboard, label: "Dashboard", path: "/" },
+  { icon: Video, label: "Live view", path: "/live" },
+  { icon: PlayCircle, label: "Playback", path: "/playback" },
+  { icon: Alerts, label: "Alerts", path: "/alerts" },
+  { icon: Emap, label: "Emap", path: "/emap" },
+  { icon: Health, label: "Health", path: "/health" },
 ];
 
 const bottomItems = [
-  { icon: Sparkles, label: "Light" },
-  { icon: Settings, label: "Settings" },
-  { icon: HelpCircle, label: "Help" },
+  { icon: Light, label: "Light", path: "/theme" },
+  { icon: Settings, label: "Settings", path: "/settings" },
+  { icon: HelpCircle, label: "Help", path: "/help" },
 ];
 
-interface SidebarProps {
-  collapsed: boolean;
-  onToggle: () => void;
-}
-
-export function Sidebar({ collapsed, onToggle }: SidebarProps) {
+export function Sidebar() {
+  const location = useLocation();
+  const { isAltTheme } = useTheme();
   return (
     <>
-      {/* Desktop Sidebar */}
-      <aside className="hidden md:flex fixed left-0 top-14 z-40 h-[calc(100vh-56px)] w-[72px] bg-[#FFFFFF] flex-col border-r">
+      {/* ---------------- Desktop Sidebar ---------------- */}
+      <aside className="hidden md:flex fixed left-0 top-14 z-40 h-[calc(100vh-56px)] w-[80px] bg-white border-r flex-col">
 
         {/* Main Menu */}
-        <nav className="flex-1 py-2">
-          <ul className="flex flex-col items-center space-y-1">
-            {menuItems.map((item) => (
-              <li key={item.label} className="w-full">
-                <button
-                  className={cn(
-                    "w-full flex flex-col items-center gap-1.5 py-3 transition-colors",
-                    item.active
-                      ? "text-black"         
-                      : "text-gray-500 hover:text-gray-700" 
-                  )}
-                >
-                <item.icon
-                className={cn(
-                  "w-7 h-7 p-1 rounded",
-                  item.active ? "bg-[#E2E8F0] text-black" : "text-gray-500"
-                )}
-                strokeWidth={1.5}
-              />
-                  <span className="text-[12px] tracking-wide font-roboto font-medium text-black">{item.label}</span>
-                </button>
-              </li>
-            ))}
+        <nav className="flex-1 py-3">
+          <ul className="flex flex-col items-center gap-1">
+            {menuItems.map((item) => {
+              const isActive = location.pathname === item.path;
+
+              return (
+                <li key={item.path} className="w-full">
+                  <NavLink
+                    to={item.path}
+                    className={cn(
+                      "w-full flex flex-col items-center gap-1 py-2 transition-colors",
+                      isActive
+                        ? "text-black"
+                        : "text-black-800 hover:text-gray-700"
+                    )}
+                  >
+                    <item.icon
+                      className={cn(
+                        "w-7 h-7 p-1 rounded",
+                        isActive
+                          ? "bg-slate-200 text-black"
+                          : "text-black-500"
+                      )}
+                      strokeWidth={1.5}
+                    />
+                    <span className="text-[12px] font-medium font-roboto">
+                      {item.label}
+                    </span>
+                  </NavLink>
+                </li>
+              );
+            })}
           </ul>
         </nav>
 
         {/* Bottom Menu */}
         <div className="py-4">
-          <ul className="flex flex-col items-center space-y-1">
-            {bottomItems.map((item) => (
-              <li key={item.label} className="w-full">
-                <button className="w-full flex flex-col items-center gap-1.5 py-3 text-white/50 hover:text-white/80 transition-colors">
-                  <item.icon className="w-5 h-5" strokeWidth={1.5} />
-                  <span className="text-[10px] font-normal tracking-wide">{item.label}</span>
-                </button>
-              </li>
-            ))}
+          <ul className="flex flex-col items-center gap-1">
+            {bottomItems.map((item) => {
+              const isActive = location.pathname.startsWith(item.path);
+
+              return (
+                <li key={item.path} className="w-full">
+                  <NavLink
+                    to={item.path}
+                    className={cn(
+                      "w-full flex flex-col items-center gap-1.5 py-3 transition-colors",
+                      isActive
+                        ? "text-black"
+                        : "text-black-500 hover:text-gray-700"
+                    )}
+                  >
+                    <item.icon className="w-5 h-5" strokeWidth={1.5} />
+                    <span className="text-[10px]">
+                      {item.label}
+                    </span>
+                  </NavLink>
+                </li>
+              );
+            })}
           </ul>
         </div>
       </aside>
 
-      {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0a1628] border-t border-white/10 safe-area-bottom">
+      {/* ---------------- Mobile Bottom Navigation ---------------- */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0a1628] border-t border-white/10">
         <ul className="flex items-center justify-around py-2">
-          {menuItems.slice(0, 5).map((item) => (
-            <li key={item.label}>
-              <button
-                className={cn(
-                  "flex flex-col items-center gap-1 px-3 py-2 transition-colors",
-                  item.active
-                    ? "text-white"
-                    : "text-white/50"
-                )}
-              >
-                <item.icon className="w-5 h-5" strokeWidth={1.5} />
-                  <span className="text-[9px] font-normal">{item.label}</span>
-              </button>
-            </li>
-          ))}
+          {menuItems.slice(0, 5).map((item) => {
+            const isActive = location.pathname === item.path;
+
+            return (
+              <li key={item.path}>
+                <NavLink
+                  to={item.path}
+                  className={cn(
+                    "flex flex-col items-center gap-1 px-3 py-2",
+                    isActive ? "text-white" : "text-white/50"
+                  )}
+                >
+                  <item.icon className="w-5 h-5" strokeWidth={1.5} />
+                  <span className="text-[9px]">{item.label}</span>
+                </NavLink>
+              </li>
+            );
+          })}
+
           <li>
-            <button className="flex flex-col items-center gap-1 px-3 py-2 text-white/50">
+            <NavLink
+              to="/settings"
+              className="flex flex-col items-center gap-1 px-3 py-2 text-white/50"
+            >
               <Settings className="w-5 h-5" strokeWidth={1.5} />
-              <span className="text-[9px] font-normal">More</span>
-            </button>
+              <span className="text-[9px]">More</span>
+            </NavLink>
           </li>
         </ul>
       </nav>

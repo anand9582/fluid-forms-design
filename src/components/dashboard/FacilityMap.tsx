@@ -160,7 +160,7 @@ export function FacilityMap() {
                       className="absolute transform -translate-x-1/2 -translate-y-1/2 group"
                       style={{ left: `${cam.x}%`, top: `${cam.y}%` }}
                     >
-                      {/* Tooltip for alert cameras - shows on hover */}
+                      {/* Tooltip for alert cameras - shows on hover */}  
                       {cam.status === "alert" && cam.message && (
                         <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-white rounded shadow-lg text-xs text-gray-700 whitespace-nowrap border border-gray-200 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
                           {cam.message}
@@ -185,7 +185,13 @@ export function FacilityMap() {
                     </div>
                   ))}
                    {/* Bottom Navigation Controls */}
-              <div className="absolute bottom-3 left-3 flex items-center gap-1">
+              
+              </div>
+                
+              ))}
+              
+            </div>
+<div className="absolute bottom-3 left-3 flex items-center gap-1">
                 <button 
                   onClick={handleZoomOut}
                   className="w-7 h-7 bg-[#171717] border-1 rounded border border-gray-200 flex items-center justify-center hover:bg-gray-500 transition-colors shadow-sm"
@@ -214,12 +220,6 @@ export function FacilityMap() {
                   <RightArrow className="w-3.5 h-3.5 text-white" />
                 </button>
               </div>
-                </div>
-                
-              ))}
-              
-            </div>
-
             {/* Slide Indicators */}
             {/* <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-1.5">
               {floorPlans.map((_, index) => (

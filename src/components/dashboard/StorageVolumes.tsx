@@ -35,7 +35,7 @@
 
   /* ---------------- ROW ---------------- */
  function StorageRow({ item, level = 0 }: { item: StorageItem; level?: number }) {
-  const [expanded, setExpanded] = useState(item.name === "NAS-02 (Pri)");
+  const [expanded, setExpanded] = useState(false);
   const hasChildren = !!item.children;
 
   return (
@@ -107,7 +107,7 @@
 
       {/* CHILDREN */}
       {hasChildren && expanded && (
-        <div className="ml-6 border-l border-gray-200 pl-2">
+        <div className="ml-6  border-gray-200 pl-2">
           <p className="text-[11px] text-gray-400 uppercase py-1">
             Mounted disks
           </p>
@@ -161,21 +161,18 @@
             />
           </div>
 
-          {/* LIST */}
           <div className="space-y-1">
             {storageData.map((item) => (
               <StorageRow key={item.name} item={item} />
             ))}
           </div>
 
-          {/* LINK */}
-          <a
-            href="#"
-            className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-600 mt-3"
-          >
-            Manage Volumes
-            <ArrowRight className="w-3 h-3" />
-          </a>
+             <div className="mt-5 border-t pt-4 flex justify-center">
+                  <button className="text-blue-600 flex items-center justify-center gap-1 text-fontSize15px font-roboto font-medium">
+                      Manage Volumes
+                     <ArrowRight className="w-4 h-4 font-roboto" />
+                  </button>
+                </div>
         </div>
       </div>
     );

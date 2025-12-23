@@ -10,15 +10,18 @@ import { FacilityMap } from "@/components/dashboard/FacilityMap";
 import { StorageVolumes } from "@/components/dashboard/StorageVolumes";
 import { NetworkThroughput } from "@/components/dashboard/NetworkThroughput";
 import { ComprehensiveAlerts } from "@/components/dashboard/ComprehensiveAlerts";
+import { GetStartedWizard } from "@/components/onboarding/GetStartedWizard.tsx";
 
 const Index = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
 
   return (
     <div className="min-h-screen bg-white">
+     
       {/* Header - Full Width at Top */}
       <Header />
-
+  {/* Get Started Wizard - Fixed at top */}
+   <GetStartedWizard  /> 
       {/* Content Area with Sidebar */}
       <div className="flex">
         {/* Sidebar */}
@@ -48,6 +51,7 @@ const Index = () => {
                 <QuickActions />
                 <AIAlerts />
                 <ComprehensiveAlerts />
+                
               </div>
             </div>
           </main>

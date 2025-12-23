@@ -14,7 +14,7 @@ const alerts = [
     description: "Watchlist match: 85% confidence.",
     time: "11:57:36 AM",
     image: Facematch,
-    color: "text-orange-500",
+    color: "text-Ailightorange",
     bgColor: "bg-blue-100",
   },
   {
@@ -24,7 +24,7 @@ const alerts = [
     time: "11:57:36 AM",
     image: Facematch2,
     icon: AlertTriangle,
-    color: "text-red-500",
+    color: "text-Ailightred",
     bgColor: "bg-red-100",
   },
   {
@@ -37,30 +37,30 @@ const alerts = [
     bgColor: "bg-orange-100",
   },
   {
+    type: "LOITERING",
+    location: "Parking Garage B",
+    description: "Vehicle stationary for > 20 min.",
+    time: "11:57:36 AM",
+    image: Facematch4,
+    color: "text-Aidarkorange",
+    bgColor: "bg-blue-100",
+  },
+  {
     type: "FACE MATCH",
     location: "Lobby Entrance",
     description: "Watchlist match: 85% confidence.",
     time: "11:57:36 AM",
-    image: Facematch4,
-    color: "text-orange-500",
-    bgColor: "bg-blue-100",
+    image: Facematch5,
+    color: "text-Aidarkorange",
+    bgColor: "bg-red-100",
   },
   {
     type: "INTRUSION",
     location: "Perimeter North",
     description: "Human detected in restricted zone",
     time: "11:57:36 AM",
-    image: Facematch5,
-    color: "text-red-500",
-    bgColor: "bg-red-100",
-  },
-  {
-    type: "LOITERING",
-    location: "Parking Garage B",
-    description: "Vehicle stationary for > 20 min.",
-    time: "11:57:36 AM",
    image: Facematch6,
-    color: "text-orange-500",
+    color: "text-Ailighteronered",
     bgColor: "bg-orange-100",
   },
 ];
@@ -90,7 +90,7 @@ export function AIAlerts() {
         {/* Alerts list */}
         <div className="space-y-2 max-h-[600px] overflow-y-auto scrollbar-thin pr-1">
           {alerts.map((alert, index) => (
-             <div key={index} className="flex items-start gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors border p-2">
+             <div key={index} className="flex items-start gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors border p-3 shadow-md">
             {/* Thumbnail Image */}
             <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
               <img 
@@ -102,12 +102,12 @@ export function AIAlerts() {
 
             {/* Content */}
             <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between mb-0.5 ">
+              <div className="flex items-center justify-between mb-0.5">
                 <span className={`text-[12px] font-bold ${alert.color}`}>{alert.type}</span>
-                <span className="text-[12px] text-gray-400  font-roboto font-semibold">{alert.time}</span>
+                <span className="text-[12px] text-[#64748B]  font-roboto font-medium">{alert.time}</span>
               </div>
-              <p className="text-xs font-semibold text-gray-500 truncate font-roboto">{alert.location}</p>
-              <p className="text-[13px] text-gray-500 truncate font-roboto">{alert.description}</p>
+              <p className="text-sm font-semibold text-gray-500 truncate font-roboto">{alert.location}</p>
+              <p className="text-[13px] text-gray-500  font-roboto font-medium">{alert.description}</p>
             </div>
           </div>
           ))}

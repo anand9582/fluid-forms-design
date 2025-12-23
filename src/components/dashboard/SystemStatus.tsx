@@ -1,21 +1,21 @@
 import React from "react";
-import { Cctv,ChevronDown } from "lucide-react";
+import { Cctv,ChevronDown,ArrowRight  } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DonutChart from "./DonutChart";
 import StatCard from "./StatCard";
-
 export const SystemStatus = () => {
   const stats = {
     total: 142,
     online: 138,
-    offline:9,
+    offline:9,  
     recording: 135,
   };
 
+
   return (
-    <Card className=" border-border/80 shadow-none">
-      <CardHeader className="flex flex-row items-center justify-between pb-2 bg-bgprimary border-b p-2 rounded-t-sm">
+    <Card className="border-border/80 shadow-none">
+      <CardHeader className="flex flex-row items-center justify-between pb-2 bg-bgprimary border-b px-3 pt-2 rounded-t-sm">
         <CardTitle className="text-sm font-roboto font-semibold font-medium  uppercase tracking-wide text-textgray">
             System Status 
         </CardTitle>
@@ -81,9 +81,9 @@ export const SystemStatus = () => {
         </div>
 
         {/* View offline cameras */}
-        <button className="w-full text-center text-sm text-red-600 hover:text-primary/80 transition-colors flex items-center justify-center gap-1 pt-2">
+        <button className="w-full text-center text-fontSize14px text-textlightred  hover:text-primary/80 transition-colors flex items-center justify-center gap-1 pt-4 border-t ">
           View {stats.offline} Offline Cameras
-           <ChevronDown className="w-4 h-4 rotate-[-90deg]" />
+           <ArrowRight className="w-4 h-4 " />
         </button>
       </CardContent>
     </Card>

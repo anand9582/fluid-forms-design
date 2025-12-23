@@ -45,22 +45,18 @@ export const NetworkThroughput  = ({
 }: NetworkThroughputChartProps) => {
   return (
         <Card className="border-border/80 shadow-none">
-          
-           <CardHeader className="flex flex-row items-center justify-between bg-bgprimary pt-4 pb-4 rounded-t border-b">
-                <CardTitle className="text-sm font-medium uppercase tracking-wide text-textgray">
+           <CardHeader className="flex flex-row items-center justify-between pb-2 bg-bgprimary pt-4 rounded-t border-b pb-4">
+              <CardTitle className="text-sm font-roboto font-medium uppercase tracking-wide text-textgray">
                     {title}
-                </CardTitle>
-                <button className="text-gray-500 hover:text-gray-700 transition-colors">
-                      {onExpand && (
-                        <button 
-                          onClick={onExpand}
-                          className="text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                        </button>
-                      )}
+              </CardTitle>
+                 
+                <button 
+                  onClick={onExpand}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <ExternalLink className="w-4 h-4" />
                 </button>
-            </CardHeader>
+           </CardHeader>
 
        <CardContent>
         <div className="h-[260px] w-full px-3 pt-2">

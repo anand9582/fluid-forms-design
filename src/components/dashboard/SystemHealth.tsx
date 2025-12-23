@@ -1,5 +1,5 @@
 import React from "react";
-import { Cpu, MemoryStick, HardDrive,Activity  } from "lucide-react";
+import { Cpu, MemoryStick, HardDrive,Activity,ArrowRight  } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const Gauge = ({
@@ -16,11 +16,19 @@ const Gauge = ({
 
   return (
     <div
-      className="p-3 w-full shadow-sm  rounded-none"
+      className="relative p-3 w-full shadow-sm rounded-sm"
       style={{ backgroundColor: bgColor }}
     >
+      {/* ---------- ICON (Top Right) ---------- */}
+      {Icon && (
+      <div className="absolute top-2 right-2 text-gray-500">
+        <Icon className="w-5 h-5 font-roboto font-semibold" strokeWidth={2} />
+      </div>
+    )}
+
+      {/* ---------- GAUGE ---------- */}
       <div className="relative w-full flex justify-center">
-        <svg width="380" height="66" viewBox="0 0 100 100">
+        <svg width="380" height="60" viewBox="0 0 100 30">
           <defs>
             <linearGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#4F46E5" />
@@ -38,6 +46,7 @@ const Gauge = ({
             </linearGradient>
           </defs>
 
+          {/* Background arc */}
           <path
             d="M10 50 A40 40 0 0 1 90 50"
             stroke="#e5e7eb"
@@ -45,6 +54,7 @@ const Gauge = ({
             fill="none"
           />
 
+          {/* Active arc */}
           <path
             d="M10 50 A40 40 0 0 1 90 50"
             stroke={`url(#${gradientId})`}
@@ -54,7 +64,7 @@ const Gauge = ({
           />
         </svg>
 
-        {/* Needle */}
+        {/* ---------- NEEDLE ---------- */}
         <div
           className="absolute origin-bottom"
           style={{
@@ -64,27 +74,32 @@ const Gauge = ({
             transform: `rotate(${rotation}deg)`,
           }}
         >
-          <div className="w-[2px] h-5" style={{ backgroundColor: needleColor }}></div>
+          <div
+            className="w-[2px] h-5"
+            style={{ backgroundColor: needleColor }}
+          />
         </div>
-
       </div>
 
-      <p className={`font-semibold font-roboto text-center mt-1 ${textAlignClass}`}>
+      {/* ---------- VALUE ---------- */}
+      <p className={`font-roboto font-medium text-center  text-[16px] ${textAlignClass}`}>
         {value}%
       </p>
 
-      <p className={`text-gray-600 text-sm mt-1 ${textAlignClass}`}>
+      {/* ---------- LABEL ---------- */}
+      <p className={`font-roboto font-medium text-gray-600 text-sm  ${textAlignClass}`}>
         {label}
       </p>
     </div>
   );
 };
 
+
 export const SystemHealth = () => {
   return (
   <Card className=" border-border/80 shadow-none overflow-hidden rounded">
         <CardHeader className="flex flex-row items-center justify-between pb-2 bg-bgprimary border-b p-2 rounded-t-sm">
-        <CardTitle className="text-sm font-roboto font-semibold font-medium  uppercase tracking-wide text-textgray">
+        <CardTitle className="font-roboto font-semibold font-medium  uppercase tracking-wide text-textgray">
             SYSTEM HEALTH
         </CardTitle>
          <p className="text-sm text-gray-500 flex items-center gap-1">
@@ -92,9 +107,9 @@ export const SystemHealth = () => {
          </p>
     </CardHeader>
 
-    <div className="border shadow-sm bg-white p-4 rounded-none">
+    <div className="border shadow-sm bg-white p-3 rounded-none">
 
-      <div className="grid grid-cols-3 gap-3 mt-4">
+      <div className="grid grid-cols-3 gap-2 mt-4">
 
         {/* CPU Gauge → Left */}
         <Gauge
@@ -104,7 +119,7 @@ export const SystemHealth = () => {
           gradientId="blueGradient"
           bgColor="#F1F5F9"
           textAlignClass="text-left"
-          needlePosition={{ top: "-1px", left: "29px" }}
+          needlePosition={{ top: "18px", left: "29px" }}
           needleColor="#3B82F6"
         />
 
@@ -116,7 +131,7 @@ export const SystemHealth = () => {
           gradientId="orangeGradient"
           bgColor="#FFFBEB"
           textAlignClass="text-center"
-          needlePosition={{ top: "1px", left: "65%" }}
+          needlePosition={{ top: "22px", left: "68%" }}
           needleColor="#F59E0B"
         />
 
@@ -128,14 +143,15 @@ export const SystemHealth = () => {
           gradientId="greenGradient"
           bgColor="#F1F5F9"
           textAlignClass="text-center"
-          needlePosition={{ top: "2px", right: "47px" }}
+          needlePosition={{ top: "23px", right: "52px" }}
           needleColor="#2B43FF"
         />
       </div>
 
-      <div className="text-center mt-5 border-t pt-4">
-        <button className="text-blue-600 flex items-center justify-center gap-1 font-medium">
-          View Diagnostics →
+      <div className="mt-5 border-t pt-4 flex justify-center">
+        <button className="text-blue-600 flex items-center justify-center gap-1 text-fontSize15px font-roboto font-medium">
+          View Diagnostics 
+           <ArrowRight className="w-4 h-4 font-roboto" />
         </button>
       </div>
     </div>
