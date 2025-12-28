@@ -1,6 +1,7 @@
+import React, { useState } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { ExternalLink } from 'lucide-react';
-import { Card, CardContent,CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const data = [
   { time: '10:00', inbound: 450, outbound: 120 },
@@ -38,30 +39,39 @@ interface NetworkThroughputChartProps {
   onExpand?: () => void;
 }
 
-export const NetworkThroughput  = ({ 
+export const NetworkThroughput = ({ 
   title = "NETWORK THROUGHPUT",
   threshold = 800,
   onExpand 
 }: NetworkThroughputChartProps) => {
-  return (
-        <Card className="border-border/80 shadow-none">
-           <CardHeader className="flex flex-row items-center justify-between pb-2 bg-bgprimary pt-4 rounded-t border-b pb-4">
-              <CardTitle className="text-sm font-roboto font-medium uppercase tracking-wide text-textgray">
-                    {title}
-              </CardTitle>
-                 
-                <button 
-                  onClick={onExpand}
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                </button>
-           </CardHeader>
+  
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
 
-       <CardContent>
-        <div className="h-[260px] w-full px-3 pt-2">
+  return (
+    <Card className="border-border/80 shadow-none">
+      <CardHeader className="flex flex-row items-center justify-between pb-2 bg-bgprimary pt-4 rounded-t border-b pb-4">
+        <CardTitle className="text-sm font-roboto font-medium uppercase tracking-wide text-textgray">
+          {title}
+        </CardTitle>
+        <button 
+          onClick={onExpand}
+          className="text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ExternalLink className="w-4 h-4" />
+        </button>
+      </CardHeader>
+
+      <CardContent>
+        <div className="h-[290px] w-full px-3 pt-3">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={data} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+            <LineChart
+              data={data}
+              margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
+              onMouseMove={(state) => {
+                if (state.isTooltipActive) setHoverIndex(state.activeTooltipIndex);
+                else setHoverIndex(null);
+              }}
+            >
               <CartesianGrid 
                 strokeDasharray="0" 
                 vertical={false} 
@@ -84,19 +94,32 @@ export const NetworkThroughput  = ({
                 dx={-10}
               />
               <Tooltip content={<CustomTooltip />} />
+
+              {/* Threshold line */}
               <ReferenceLine 
                 y={threshold} 
                 stroke="hsl(var(--destructive))" 
                 strokeDasharray="8 4" 
                 strokeOpacity={0.6}
               />
+
+              {/* Hover Dashed Line */}
+              {hoverIndex !== null && (
+                <ReferenceLine 
+                  x={data[hoverIndex].time} 
+                  stroke="#94A3B8" 
+                  strokeDasharray="5 5" 
+                  strokeOpacity={0.7}
+                />
+              )}
+
               <Line 
                 type="monotone" 
                 dataKey="inbound" 
-                stroke="hsl(var(--primary))" 
+                stroke="#94A3B8" 
                 strokeWidth={2}
                 dot={false}
-                activeDot={{ r: 4, fill: 'hsl(var(--primary))' }}
+                activeDot={{ r: 4, fill: '#94A3B8' }}
               />
               <Line 
                 type="monotone" 
@@ -110,7 +133,7 @@ export const NetworkThroughput  = ({
             </LineChart>
           </ResponsiveContainer>
         </div>
-         </CardContent>
+      </CardContent>
     </Card>
   );
 };

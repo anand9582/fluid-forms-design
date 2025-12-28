@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -18,6 +19,7 @@ import {
   Light
 } from "@/components/ui/icons";
 import { useTheme } from "@/context/ThemeContext";
+import { SettingsSubNav } from "@/./components/layout/SettingsSubNav";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/" },
@@ -37,6 +39,10 @@ const bottomItems = [
 export function Sidebar() {
   const location = useLocation();
   const { isAltTheme } = useTheme();
+ const isSettingsSection = location.pathname.startsWith("/settings");
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  
+
   return (
     <>
       {/* ---------------- Desktop Sidebar ---------------- */}
@@ -105,6 +111,14 @@ export function Sidebar() {
             })}
           </ul>
         </div>
+          {/* Settings Sub-Navigation */}
+            {isSettingsSection && (
+              <SettingsSubNav
+                variant="desktop"
+                hoveredItem={hoveredItem}
+                setHoveredItem={setHoveredItem}
+              />
+            )}
       </aside>
 
       {/* ---------------- Mobile Bottom Navigation ---------------- */}

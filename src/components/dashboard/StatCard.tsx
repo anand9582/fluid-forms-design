@@ -12,8 +12,8 @@ const StatCard = ({ value, label, icon, variant = 'default', className }: StatCa
   const variants = {
     default: 'bg-card',
     highlight: 'bg-primary/10',
-    danger: 'bg-destructive/10',
-    statusbg: 'bg-[rgba(241,245,249,1)]', 
+    danger: 'bg-[#FFE2E2]',
+    statusbg: 'bg-[#F1F5F9]', 
   };
 
   const iconVariants = {
@@ -38,7 +38,7 @@ const StatCard = ({ value, label, icon, variant = 'default', className }: StatCa
         {icon}
       </div>
       <span className={cn('font-roboto font-semibold', valueVariants[variant])}>{value}</span>
-      <span className="text-xs text-muted-foreground font-medium font-roboto">{label}</span>
+      <span className="text-xs text-[#475569] font-medium font-roboto">{label}</span>
     </div>
   );
 };

@@ -17,20 +17,17 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-white">
-     
-      {/* Header - Full Width at Top */}
-      <Header />
   {/* Get Started Wizard - Fixed at top */}
    <GetStartedWizard  /> 
       {/* Content Area with Sidebar */}
       <div className="flex">
         {/* Sidebar */}
-        <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
+        {/* <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} /> */}
 
         {/* Main Content */}
-        <div className="flex-1 md:ml-[72px] transition-all duration-300 pb-20 md:pb-0">
+        <div className="flex-1   transition-all duration-300 pb-20 md:pb-0">
           {/* Dashboard Grid */}
-          <main className="p-2 sm:p-3 lg:p-4">
+          <main >
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-2 sm:gap-3 lg:gap-4">
               {/* Left Column */}
               <div className="lg:col-span-3 space-y-2 sm:space-y-3 lg:space-y-4">
