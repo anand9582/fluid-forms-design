@@ -5,8 +5,8 @@ export function SettingsLayout() {
     <div className="min-h-screen bg-white">
           <SettingsHeader />
       <div>
-          <main className="p-2 sm:p-3 lg:p-4">
-            <Outlet />
+          <main className="p-2 sm:p-3 lg:p-3 bg-[#F9FAFB]">
+              <Outlet />
           </main>
       </div>
     </div>

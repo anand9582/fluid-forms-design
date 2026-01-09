@@ -67,21 +67,20 @@ const alerts = [
 
 export function AIAlerts() {
   return (
-    <Card className="border-border/80 shadow-none rounded overflow-hidden">
-              <CardHeader className="flex flex-row items-center justify-between pb-2 bg-bgprimary border-b p-2 rounded-t-sm">
-              <CardTitle className="text-sm font-roboto font-semibold font-medium  uppercase tracking-wide text-textgray">
-                    <h3 className="text-md  font-roboto  font-medium  uppercase tracking-wide text-[#475569]">
-                      REAL-TIME AI ALERTS</h3>
-              </CardTitle>
-               <div className="flex items-center gap-2">
+    <Card className="rounded-md bg-card text-card-foreground border border-border/80 shadow-none overflow-hidden">
+       <CardHeader className="flex flex-row items-center justify-between py-3 bg-bgprimary rounded-t px-4">
+        <CardTitle className="font-roboto font-medium uppercase tracking-wide text-textgray">
+            REAL-TIME AI ALERTS
+        </CardTitle>
+          <div className="flex items-center gap-2">
               <span className="bg-red-500 text-white text-[14px] font-bold px-1.5 py-0.5 rounded-full">
                 122
               </span>
-            <button className="text-gray-400 hover:text-gray-600 transition-colors">
-              <ExternalLink className="w-4 h-4" />
-            </button>
+                <button className="text-gray-400 hover:text-gray-600 transition-colors">
+                  <ExternalLink className="w-4 h-4" />
+                </button>
           </div>
-          </CardHeader>
+      </CardHeader>
 
       <div
         className="bg-white rounded-xl p-3 shadow-md h-full animate-fade-in "

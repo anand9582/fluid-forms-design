@@ -52,6 +52,7 @@ export default {
         Ailightred:"#DC2626",
         Aidarkorange:"#D97706",
         Ailighteronered:"#DC2626",
+        tablecolor:"#64748B",
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",

@@ -1,53 +1,108 @@
-import { useState } from "react";
-import { SettingsSidebar } from "@/components/settings/SettingsSidebar";
-import { SettingsContent } from "@/components/settings/SettingsContent";
-import { ManageDevicesPage } from "@/components/settings/ManageDevicesPage";
-// import { StoragePage } from "@/components/settings/pages/StoragePage";
-// import { ApiSdkPage } from "@/components/settings/pages/ApiSdkPage";
-// import { VideoAnalyticsPage } from "@/components/settings/pages/VideoAnalyticsPage";
-// import { LicensingPage } from "@/components/settings/pages/LicensingPage";
+  // SettingsOverview.tsx
+  import { useState, Suspense, lazy } from "react";
+  import { SettingsSidebar } from "./SettingsSidebar";
+  import { SettingsTabs, TabsContent } from "./SettingsTab";
+  import { manageUsersTabs } from "./tabConfigs/ManageUsers";
+  import { AddDeviceTabs } from "./tabConfigs/AddDevices";
 
-const SettingsOverview = () => {
-  const [activePage, setActivePage] = useState("manage-users");
+  import RolesContent from "./tabContents/RolesContent";
+  import UsersContent from "./tabContents/UsersContent";
+  import AuditContent from "./tabContents/AuditContent";
 
-  const renderRightPage = () => {
-    switch (activePage) {
-      case "manage-users":
-        return <SettingsContent activeSidebarItem={activePage} />;
 
-      case "manage-devices":
-        return <ManageDevicesPage />;
-
-      // case "storage":
-      //   return <StoragePage />;
-
-      // case "api-sdk":
-      //   return <ApiSdkPage />;
-
-      // case "video-analytics":
-      //   return <VideoAnalyticsPage />;
-
-      // case "licensing":
-      //   return <LicensingPage />;
-
-      // default:
-      //   return <ManageUsersPage />;
-    }
+  // Map default tab per sidebar item
+  const defaultTabMap: Record<string, string> = {
+      "manage-users": "roles",
+      "add-devices": "discover",
+      "storage": "volumes",
   };
 
-  return (
-    <div className="min-h-screen flex bg-background">
-      <SettingsSidebar
-        activeItem={activePage}
-        onItemClick={setActivePage}
-      />
+  export default function SettingsOverview() {
+    const [activeSidebarItem, setActiveSidebarItem] = useState("manage-users");
+    const [activeTab, setActiveTab] = useState(defaultTabMap["manage-users"]);
+    const [selectedRole, setSelectedRole] = useState("admin-super");
 
-      {/* 🔥 RIGHT SIDE PAGE */}
-      <div className="flex-1 p-6 overflow-auto">
-        {renderRightPage()}
+    const handleSidebarClick = (id: string) => {
+      setActiveSidebarItem(id);
+      setActiveTab(defaultTabMap[id]);
+    };
+
+    const getTabsForSidebar = () => {
+      if (activeSidebarItem === "manage-users") return manageUsersTabs;
+      if (activeSidebarItem === "add-devices") return AddDeviceTabs;
+      // if (activeSidebarItem === "storage") return storageTabs;
+      return [];
+    };
+
+    return (
+      <div className="flex min-h-screen bg-muted/20">
+        <SettingsSidebar
+          activeItem={activeSidebarItem}
+          onItemClick={handleSidebarClick}
+        />
+
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {getTabsForSidebar().length > 0 && (
+            <SettingsTabs
+              tabs={getTabsForSidebar()}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+            >
+              {/* MANAGE USERS */}
+              {activeSidebarItem === "manage-users" && (
+                <>
+                  <TabsContent value="roles">
+                        <RolesContent
+                          selectedRole={selectedRole}
+                          onRoleSelect={setSelectedRole}
+                          getRoleName={() => ""}
+                        />
+                  </TabsContent>
+
+                  <TabsContent value="users">
+                      <Suspense fallback="Loading...">
+                           <UsersContent />
+                      </Suspense>
+                  </TabsContent>
+
+                  <TabsContent value="audit">
+                    <Suspense fallback="Loading...">
+                      <AuditContent />
+                    </Suspense>
+                  </TabsContent>
+                </>
+              )}
+
+              {/* ADD DEVICES */}
+              {activeSidebarItem === "add-devices" && (
+                <>
+                  <TabsContent value="discover">
+                    <Suspense fallback="Loading...">
+                           <UsersContent />
+                      </Suspense>
+                  </TabsContent>
+                  <TabsContent value="manual">Manual Add</TabsContent>
+                  <TabsContent value="bulk">Bulk Upload</TabsContent>
+                </>
+              )}
+
+              {/* STORAGE */}
+              {activeSidebarItem === "storage" && (
+                <>
+                  <TabsContent value="volumes">Storage Volumes</TabsContent>
+                  <TabsContent value="retention">Retention Policies</TabsContent>
+                  <TabsContent value="failover">Failover & Redundancy</TabsContent>
+                </>
+              )}
+            </SettingsTabs>
+          )}
+
+          {/* NON-TAB PAGES */}
+          {activeSidebarItem === "configure-devices" && (
+            <h1 className="p-6">Configure Devices</h1>
+          )}
+        </div>
       </div>
-    </div>
-  );
-};
+    );
+  }
 
-export default SettingsOverview;

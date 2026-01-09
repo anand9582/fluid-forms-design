@@ -1,0 +1,28 @@
+export const themeColors = {
+    light: {
+      cpu: "#2B43FF",
+      mem: "#F97316",
+      disk: "#2B43FF",
+      needleCpu: "#2B43FF",
+      needleMem: "#F97316",
+      needleDisk: "#2B43FF",
+      gradient: ["#2563EB", "#153885"],
+      background: "#F1F5F9",
+      cardBg: "#FFFFFF",
+      online: "#2B43FF",
+      offline: "#FB7185",
+    },
+    dark: {
+      cpu: "#50C878",
+      mem: "#F59E0B",
+      disk: "#50C878",
+      needleCpu: "#50C878",
+      needleMem: "#F59E0B",
+      needleDisk: "#50C878",
+      gradient: ["#50C878", "#6BEC96"],
+      background: "#F1F5F9",
+      cardBg: "#1F2937",
+      online: "#50C878",
+      offline: "#FB7185",
+    },
+};

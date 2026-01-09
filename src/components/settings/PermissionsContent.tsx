@@ -1,132 +1,118 @@
-import { useState } from "react";
-import { Copy, Video, Settings, Bell } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { PermissionCard } from "./PermissionCard";
+import { useMemo, useState } from "react"
+import { PermissionCard } from "./PermissionCard"
+import { ALL_PERMISSION_GROUPS } from "./Permissions.config"
+import { Copy, Video, Settings, Users, FileText, Key,User } from "lucide-react"
+import { ROLE_PERMISSION_MAP } from "./RolePermissions"
+import { Button } from "@/components/ui/button"
+import { Card, CardHeader, CardTitle } from "@/components/ui/card"
+import { System,OperatorIcons } from "@/components/ui/icons"
 
-interface Permission {
-  id: string;
-  title: string;
-  description: string;
-  enabled: boolean;
+// Group icons
+const GROUP_ICON_MAP: Record<string, JSX.Element> = {
+  "video-access": <Video size={18} />,
+  "system-admin": <System size={18} />,
 }
 
-interface PermissionGroup {
-  id: string;
-  name: string;
-  icon: React.ReactNode;
-  permissions: Permission[];
+// Permission icons
+const PERMISSION_ICON_MAP: Record<string, JSX.Element> = {
+  "live-sd": <Video size={16} />,
+  "live-hd": <Video size={16} />,
+  playback: <FileText size={16} />,
+  ptz: <Key size={16} />,
+  "two-way": <Users size={16} />,
+  export: <FileText size={16} />,
+  users: <Users size={16} />,
+  roles: <Key size={16} />,
+  settings: <Settings size={16} />,
+  firmware: <Settings size={16} />,
+  logs: <FileText size={16} />,
 }
-
-const initialPermissionGroups: PermissionGroup[] = [
-  {
-    id: "video-access",
-    name: "Video Access Control",
-    icon: <Video size={16} />,
-    permissions: [
-      { id: "live-sd", title: "Live view (SD)", description: "View standard definition streams", enabled: true },
-      { id: "live-hd", title: "Live view (HD)", description: "View high definition streams", enabled: true },
-      { id: "playback", title: "Playback", description: "Access recorded footage", enabled: true },
-      { id: "ptz", title: "PTZ Control", description: "Control Pan-Tilt-Zoom cameras", enabled: false },
-      { id: "two-way", title: "Two-way Audio", description: "Listen and speak through cameras", enabled: false },
-      { id: "export", title: "Export Video", description: "Download video clips", enabled: false },
-    ],
-  },
-  {
-    id: "system-admin",
-    name: "System Administration",
-    icon: <Settings size={16} />,
-    permissions: [
-      { id: "manage-users", title: "Manage Users", description: "Create and edit user accounts", enabled: false },
-      { id: "assign-cameras", title: "Assign Cameras", description: "Change camera assignments", enabled: false },
-      { id: "firmware", title: "Firmware Updates", description: "Update device firmware", enabled: false },
-    ],
-  },
-  {
-    id: "alerts",
-    name: "Alerts and Monitoring",
-    icon: <Bell size={16} />,
-    permissions: [
-      { id: "view-alerts", title: "View Alerts", description: "See real-time alarms", enabled: true },
-      { id: "ack-alerts", title: "Acknowledge Alerts", description: "Mark alerts as handled", enabled: true },
-    ],
-  },
-];
 
 interface PermissionsContentProps {
-  roleName: string;
+  roleId: string
 }
 
-export function PermissionsContent({ roleName }: PermissionsContentProps) {
-  const [permissionGroups, setPermissionGroups] = useState(initialPermissionGroups);
+export function PermissionsContent({ roleId }: PermissionsContentProps) {
+  const allowedPermissionIds = ROLE_PERMISSION_MAP[roleId] || []
+  const [enabledMap, setEnabledMap] = useState<Record<string, boolean>>({})
 
-  const togglePermission = (groupId: string, permissionId: string) => {
-    setPermissionGroups((groups) =>
-      groups.map((group) =>
-        group.id === groupId
-          ? {
-              ...group,
-              permissions: group.permissions.map((perm) =>
-                perm.id === permissionId ? { ...perm, enabled: !perm.enabled } : perm
-              ),
-            }
-          : group
-      )
-    );
-  };
+  const togglePermission = (id: string) => {
+    setEnabledMap(prev => ({
+      ...prev,
+      [id]: !prev[id],
+    }))
+  }
 
-  const totalPermissions = permissionGroups.reduce(
-    (acc, group) => acc + group.permissions.length,
-    0
-  );
-  const enabledPermissions = permissionGroups.reduce(
-    (acc, group) => acc + group.permissions.filter((p) => p.enabled).length,
-    0
-  );
+  const visibleGroups = useMemo(() => {
+    return ALL_PERMISSION_GROUPS
+      .map(group => ({
+        ...group,
+        icon: GROUP_ICON_MAP[group.id],
+        permissions: group.permissions
+          .filter(p => allowedPermissionIds.includes(p.id))
+          .map(p => ({
+            ...p,
+            icon: PERMISSION_ICON_MAP[p.id],
+          })),
+      }))
+      .filter(group => group.permissions.length > 0)
+  }, [roleId])
 
   return (
-    <div className="flex-1 p-4 md:p-6 overflow-auto">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div className="ml-16 md:ml-0">
-          <h2 className="text-lg md:text-xl font-semibold text-foreground">{roleName} dd</h2>
-          <p className="text-xs md:text-sm text-muted-foreground mt-1">
-            Showing {enabledPermissions} of {totalPermissions} permissions available for this Role Type.
-          </p>
-        </div>
-        <div className="flex items-center gap-2 sm:gap-3">
-          <Button variant="outline" className="gap-2 text-sm">
-            <Copy size={16} />
-            <span className="hidden sm:inline">Duplicate</span>
-          </Button>
-          <Button className="bg-primary text-primary-foreground hover:bg-primary/90 text-sm">
-            <span className="hidden sm:inline">Save changes</span>
-            <span className="sm:hidden">Save</span>
-          </Button>
-        </div>
-      </div>
+    <div className="flex-1 pl-3 pt-3 overflow-auto">
+      <Card className="border shadow-none">
+        {/* HEADER */}
+        <CardHeader className="flex flex-row items-center justify-between border-b h-[60px]">
+          <CardTitle>
+            <div className="flex items-center gap-3">
+              {/* Circle Icon */}
+                <div className="w-10 h-10 rounded-sm bg-[#EFF6FF] flex items-center justify-center">
+                  <OperatorIcons  className="w-6 h-6 text-green-600" />
+                </div>
+                <div>
 
-      {/* Permission Groups */}
-      <div className="space-y-6 md:space-y-8">
-        {permissionGroups.map((group) => (
-          <div key={group.id}>
-            <div className="flex items-center gap-2 mb-3 md:mb-4">
-              <span className="text-muted-foreground">{group.icon}</span>
-              <h3 className="text-sm font-semibold text-foreground">{group.name}</h3>
+              <h2 className="text-xl font-semibold capitalize">{roleId}</h2>
+                <p className="text-sm font-roboto font-medium text-[#737373]">
+                  {allowedPermissionIds.length} permissions available
+                </p>
+                </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-3">
-              {group.permissions.map((permission) => (
-                <PermissionCard
-                  key={permission.id}
-                  title={permission.title}
-                  description={permission.description}
-                  enabled={permission.enabled}
-                  onChange={() => togglePermission(group.id, permission.id)}
-                />
-              ))}
-            </div>
+          </CardTitle>
+
+          <div className="flex gap-2">
+            <Button variant="outline"  className="bg-transparent hover:bg-transparent focus:bg-transparent active:bg-transparent" size="sm">
+              <Copy size={14} />
+               Duplicate
+            </Button>
+            <Button size="sm" disabled>Save changes</Button>
           </div>
-        ))}
-      </div>
+        </CardHeader>
+
+        {/* BODY */}
+        <div className="p-4 space-y-8">
+          {visibleGroups.map(group => (
+            <div key={group.id}>
+              <div className="flex items-center gap-2 mb-3">
+                {group.icon}
+                <h3 className="font-roboto font-medium">{group.name}</h3>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {group.permissions.map(p => (
+                  <PermissionCard
+                    key={p.id}
+                    title={p.title}
+                    description={p.description}
+                    enabled={!!enabledMap[p.id]}
+                    icon={p.icon}
+                    onChange={() => togglePermission(p.id)}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
     </div>
-  );
+  )
 }

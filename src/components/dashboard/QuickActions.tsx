@@ -9,14 +9,14 @@ const actions = [
 ];
 
 export function QuickActions() {
-  const [activeIndex, setActiveIndex] = useState<number | null>(0); // default selected
+  const [activeIndex, setActiveIndex] = useState<number | null>(0); 
 
   return (
     <Card className="border border-border/80 shadow-none overflow-hidden">
       {/* Header */}
       <CardHeader className="flex flex-row items-center justify-between py-3 bg-bgprimary rounded-t px-4">
         <CardTitle className="font-roboto font-medium uppercase tracking-wide text-textgray">
-          QUICK ACTION
+            QUICK ACTION
         </CardTitle>
       </CardHeader>
 

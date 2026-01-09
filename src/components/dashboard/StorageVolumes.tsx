@@ -1,118 +1,161 @@
-  import {
-    ChevronRight,
-    ChevronDown,
-    ArrowRight,
-    Database,
-    HardDrive,
-  } from "lucide-react";
-  import { useState } from "react";
-  import { cn } from "@/lib/utils";
-  import { CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  ChevronRight,
+  ChevronDown,
+  ArrowRight,
+  Database,
+  HardDrive,
+} from "lucide-react";
+import { useState } from "react";
+import { cn } from "@/lib/utils";
+import {Card, CardHeader, CardTitle,CardContent } from "@/components/ui/card";
+import { storageData } from "@/components/dashboard/sampleStorageData";
+import { useTheme } from "@/context/ThemeContext";
+import { themeColors } from "@/theme/themeColors";
 
-  /* ---------------- TYPES ---------------- */
-  interface StorageItem {
-    name: string;
-    percentage: number;
-    used?: string;
-    total?: string;
-    children?: StorageItem[];
-  }
+/* ---------------- TYPES ---------------- */
+export interface StorageItem {
+  id: string;
+  name: string;
+  percentage: number;
+  used?: string;
+  total?: string;
+  children?: StorageItem[];
+}
 
-  /* ---------------- DATA ---------------- */
-  const storageData: StorageItem[] = [
-    { name: "CAMPulse Cloud", percentage: 54 },
-    { name: "NAS-01 (Pri)", percentage: 90 },
-    {
-      name: "NAS-02 (Pri)",
-      percentage: 54,
-      children: [
-        { name: "Bay 1 (HDD)", percentage: 53, total: "32/60TB" },
-        { name: "Bay 2 (HDD)", percentage: 53, total: "32/60TB" },
-      ],
-    },
-    { name: "Local HDD Array", percentage: 95 },
-  ];
+/* ---------------- PROPS ---------------- */
+interface StorageVolumesProps {
+  data: StorageItem[];
+  title?: string;
+  isLoading?: boolean;
+}
 
-  /* ---------------- ROW ---------------- */
- function StorageRow({ item, level = 0 }: { item: StorageItem; level?: number }) {
-  const [expanded, setExpanded] = useState(false);
+/* ---------------- HELPERS ---------------- */
+const getUsageColor = (percentage: number) => {
+  if (percentage >= 90) return "bg-destructive";
+  if (percentage >= 70) return "bg-warning";
+  return "bg-primary";
+};
+
+const getTextColor = (percentage: number) => {
+  if (percentage >= 90) return "text-orange-600";
+  if (percentage >= 70) return "text-warning";
+  return "text-muted-foreground";
+};
+
+/* ---------------- ROW ---------------- */
+function StorageRow({
+  item,
+  level = 0,
+  expandedRows,
+  toggleRow,
+}: {
+  item: StorageItem;
+  level?: number;
+  expandedRows: string[];
+  toggleRow: (id: string) => void;
+}) {
   const hasChildren = !!item.children;
-
+  const isExpanded = expandedRows.includes(item.id);
+   const { isAltTheme } = useTheme();
+  const theme = isAltTheme ? themeColors.dark : themeColors.light;
+  
   return (
     <div>
       {/* ROW */}
-      <div
+      <button
+        type="button"
         className={cn(
-          "flex items-center gap-2 py-2 rounded",
-          hasChildren ? "cursor-pointer hover:bg-gray-50" : "cursor-default"
+          "flex items-center gap-2 py-2 rounded-md w-full text-left",
+          hasChildren ? "hover:bg-muted/50" : "",
+          level > 0 ? "pl-6" : ""
         )}
-        onClick={() => {
-          if (hasChildren) setExpanded(!expanded);
-        }}
+        onClick={() => hasChildren && toggleRow(item.id)}
+        aria-expanded={isExpanded}
       >
-        {/* ✅ ARROW (ALL ROWS SAME) */}
-        {expanded && hasChildren ? (
-          <ChevronDown className="w-4 h-4 text-gray-400" />
+        {/* ARROW */}
+        {hasChildren ? (
+          isExpanded ? (
+            <ChevronDown className="w-4 h-4 text-muted-foreground" />
+          ) : (
+            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+          )
         ) : (
-          <ChevronRight
-            className={cn(
-              "w-4 h-4",
-              hasChildren ? "text-gray-400" : "text-gray-300"
-            )}
-          />
+          <span className="w-4" />
         )}
 
         {/* ICON */}
-        <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center">
+        <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center">
           {level > 0 ? (
-            <HardDrive className="w-4 h-4 text-gray-500" />
+            <HardDrive className="w-4 h-4 text-muted-foreground" />
           ) : (
-            <Database className="w-4 h-4 text-gray-500" />
+            <Database className="w-4 h-4 text-muted-foreground" />
           )}
         </div>
 
         {/* NAME */}
-        <span className="flex-1 text-sm text-gray-800">{item.name}</span>
+        <span className="flex-1 text-sm font-medium text-foreground">
+          {item.name}
+        </span>
 
         {/* SIZE */}
         {item.total && (
-          <span className="text-xs text-gray-500 mr-2">{item.total}</span>
+          <span className="text-xs text-muted-foreground mr-2">{item.total}</span>
         )}
 
         {/* % */}
-        <span
-          className={cn(
-            "text-sm font-semibold",
-            item.percentage >= 90 ? "text-orange-500" : "text-gray-600"
-          )}
-        >
+        <span className={cn("text-sm font-semibold", getTextColor(item.percentage))}>
           {item.percentage}%
         </span>
-      </div>
+      </button>
 
-      {/* PROGRESS BAR (TOP LEVEL ONLY) */}
-      {level === 0 && (
-        <div className="ml-14 mr-4 mb-2">
-          <div className="h-1 bg-gray-200 rounded-full overflow-hidden">
-            <div
-              className={cn(
-                "h-full rounded-full",
-                item.percentage >= 90 ? "bg-orange-500" : "bg-blue-500"
-              )}
-              style={{ width: `${item.percentage}%` }}
-            />
-          </div>
-        </div>
-      )}
+      {/* TOP-LEVEL BAR */}
+{level === 0 && (
+  <div className="ml-14 mr-4 mb-2">
+    <div className="h-1 rounded-full overflow-hidden">
+      <div
+        className="h-full rounded-full transition-all"
+        style={{
+          width: `${item.percentage}%`,
+          background: item.percentage >= 90 
+                      ? "#EA580C"  // red
+                      : item.percentage >= 70
+                      ? "#EA580C"  // orange
+                      : "#2B43FF", // blue
+        }}
+      />
+    </div>
+  </div>
+)}
+
+{/* CHILDREN (always blue) */}
+{level > 0 && (
+  <div className="ml-14 mr-4 mb-2">
+    <div className="h-1 rounded-full overflow-hidden">
+      <div
+        className="h-full rounded-full transition-all"
+        style={{
+          width: `${item.percentage}%`,
+          background: "linear-gradient(90deg, #2563EB, #153885)", // fixed light blue
+        }}
+      />
+    </div>
+  </div>
+)}
+
+
 
       {/* CHILDREN */}
-      {hasChildren && expanded && (
-        <div className="ml-6  border-gray-200 pl-2">
-          <p className="text-[11px] text-gray-400 uppercase py-1">
-            Mounted disks
-          </p>
+      {hasChildren && isExpanded && (
+        <div className="ml-6 pl-2">
+          <p className="text-[11px] uppercase text-muted-foreground py-1">Mounted disks</p>
           {item.children!.map((child) => (
-            <StorageRow key={child.name} item={child} level={level + 1} />
+            <StorageRow
+              key={child.id}
+              item={child}
+              level={level + 1}
+              expandedRows={expandedRows}
+              toggleRow={toggleRow}
+            />
           ))}
         </div>
       )}
@@ -120,60 +163,97 @@
   );
 }
 
+/* ---------------- MAIN ---------------- */
+export function StorageVolumes({
+  data,
+  title = "Storage Volumes",
+  isLoading = false,
+}: StorageVolumesProps) {
+  const [expandedRows, setExpandedRows] = useState<string[]>([]);
+  const { isAltTheme } = useTheme(); 
+  const theme = isAltTheme ? themeColors.dark : themeColors.light;
 
-  /* ---------------- MAIN ---------------- */
-  export function StorageVolumes() {
-    return (
-      <div className="bg-white rounded-xl shadow-sm ">
-        {/* HEADER */}
-        <CardHeader className="flex flex-row items-center justify-between pb-2 bg-bgprimary border-b p-2 rounded-t-sm">
-          <CardTitle className="text-sm font-roboto font-medium  uppercase text-gray-600 text">
-            Storage Volumes 
-          </CardTitle>
-        </CardHeader>
-
-        <div className="border shadow-sm bg-white p-4 rounded-none">
-          {/* STATS */}
-          <div className="grid grid-cols-3 gap-4 mb-3">
-            <div>
-              <p className="text-xs text-gray-500 uppercase text-sm font-semibold">Total Space </p>
-              <p className="text-lg font-bold">
-                780<span className="text-xs ml-1 text-gray-500">TB</span>
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 uppercase font-semibold">Used</p>
-              <p className="text-lg font-bold">
-                331<span className="text-xs ml-1 text-gray-500">TB</span>
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 uppercase font-semibold">Free</p>
-              <p className="text-lg font-bold text-[#365314]">58%</p>
-            </div>
-          </div>
-
-          {/* TOTAL BAR */}
-          <div className="h-2 bg-gray-200 rounded-full overflow-hidden mb-4">
-            <div
-              className="h-full rounded-full bg-blue-600"
-              style={{ width: "42%" }}
-            />
-          </div>
-
-          <div className="space-y-1">
-            {storageData.map((item) => (
-              <StorageRow key={item.name} item={item} />
-            ))}
-          </div>
-
-             <div className="mt-5 border-t pt-4 flex justify-center">
-                  <button className="text-blue-600 flex items-center justify-center gap-1 text-fontSize15px font-roboto font-medium">
-                      Manage Volumes
-                     <ArrowRight className="w-4 h-4 font-roboto" />
-                  </button>
-                </div>
-        </div>
-      </div>
+  const toggleRow = (id: string) => {
+    setExpandedRows((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
+  };
+
+  if (isLoading) {
+    return <div className="p-4 text-center text-muted-foreground">Loading...</div>;
   }
+
+  if (!data || data.length === 0) {
+    return <div className="text-center text-muted-foreground">
+        <StorageVolumes data={storageData} />
+    </div>;
+  }
+
+  return (
+    <Card className="border-border/80 shadow-none overflow-hidden rounded">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 bg-bgprimary border-b p-2 rounded-t-sm">
+              <CardTitle className="text-sm font-roboto font-medium  uppercase text-gray-600 text">
+                    {title}
+              </CardTitle>
+          </CardHeader>
+
+
+      {/* BODY */}
+      <CardContent className="py-4 px-4">
+        {/* STATS */}
+          <div className="grid grid-cols-3 gap-4 mb-4">
+            <div className="text-left">
+              <p className="text-xs uppercase text-muted-foreground font-semibold">Total Space</p>
+              <p className="text-md font-bold text-foreground ">
+                780
+                <span className="text-xs ml-1 text-muted-foreground">TB</span>
+              </p>
+            </div>
+            <div className="text-left">
+              <p className="text-xs uppercase text-muted-foreground font-semibold">Used</p>
+              <p className="text-md font-bold text-foreground">
+                331
+                <span className="text-xs ml-1 text-muted-foreground">TB</span>
+              </p>
+            </div>
+             <div className="text-left">
+              <p className="text-xs uppercase text-muted-foreground font-semibold">Free</p>
+              <p className="text-md font-bold text-black">58%</p>
+            </div>
+          </div>
+
+        {/* TOTAL BAR */}
+       <div className="h-2 bg-muted rounded-full overflow-hidden mb-4">
+          <div
+            className="h-full rounded-full transition-all"
+            style={{
+              width: "42%",
+              background: `linear-gradient(90deg, ${theme.gradient[0]}, ${theme.gradient[1]})`,
+            }}
+          />
+        </div>
+
+
+        {/* LIST */}
+        <div className="space-y-1">
+            {data.map((item) => (
+              <StorageRow
+                key={item.id}
+                item={item}
+                expandedRows={expandedRows}
+                toggleRow={toggleRow}
+              />
+            ))}
+        </div>
+
+        {/* FOOTER */}
+        <div className="mt-5 border-t pt-4 flex justify-center">
+          <button className="text-primary flex items-center gap-1 text-sm font-medium hover:underline">
+            Manage Volumes
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

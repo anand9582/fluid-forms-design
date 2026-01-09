@@ -47,7 +47,7 @@ export function Header() {
       {/* Logo - Clickable to toggle theme */}
       <div className="flex items-center gap-2">
         <button onClick={toggleTheme} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-          <span className="text-white font-semibold text-base md:text-lg">CamPulse</span>
+          <span className="font-roboto text-white font-semibold text-base md:text-lg">CamPulse</span>
           <span className={`text-white text-[10px] md:text-xs font-bold  px-1.5 py-0.5 rounded`}>
             {/* Logo Image */}
             <img

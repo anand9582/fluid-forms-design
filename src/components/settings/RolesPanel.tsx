@@ -1,113 +1,182 @@
-import { useState } from "react";
-import { Plus, ChevronDown, ChevronRight, Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState } from "react"
+import {
+  Plus,
+  ChevronDown,
+  ChevronRight,
+  Users,
+  Trash2,
+} from "lucide-react"
 
-interface Role {
-  id: string;
-  name: string;
-  userCount?: number;
-}
+import { Button } from "../ui/button"
+import { Card, CardHeader, CardTitle } from "../ui/card"
+import { cn } from "../../lib/utils"
+import type { Role, RolesPanelProps } from "../../lib/types"
+import { ConfirmDialog } from "../ConfirmDialog"
 
-interface RoleGroup {
-  id: string;
-  name: string;
-  roles?: Role[];
-}
+export function RolesPanel({
+  roleGroups = [],
+  selectedRole,
+  onRoleSelect,
+  onCreateRole,
+}: RolesPanelProps) {
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(["operator"])
+  const [hoveredRole, setHoveredRole] = useState<string | null>(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [roleToDelete, setRoleToDelete] = useState<Role | null>(null)
 
-const roleGroups: RoleGroup[] = [
-  { id: "admin", name: "ADMINISTRATOR" },
-  {
-    id: "operator",
-    name: "OPERATOR",
-    roles: [
-      { id: "operator-l1", name: "Operator L1", userCount: 21 },
-      { id: "operator-l2", name: "Operator L2", userCount: 23 },
-    ],
-  },
-  { id: "viewer", name: "VIEWER" },
-];
-
-interface RolesPanelProps {
-  selectedRole: string;
-  onRoleSelect: (id: string) => void;
-}
-
-export function RolesPanel({ selectedRole, onRoleSelect }: RolesPanelProps) {
-  const [expandedGroups, setExpandedGroups] = useState<string[]>(["operator"]);
-
+  const getAllRoles = (): Role[] =>
+      roleGroups.flatMap((group) => group.roles ?? []);
+  
   const toggleGroup = (groupId: string) => {
     setExpandedGroups((prev) =>
       prev.includes(groupId)
         ? prev.filter((id) => id !== groupId)
         : [...prev, groupId]
-    );
-  };
+    )
+  }
+
+  const handleDeleteClick = (
+    e: React.MouseEvent,
+    role: Role
+  ) => {
+    e.stopPropagation()
+    setRoleToDelete(role)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleConfirmDelete = (reassignToRoleId: string) => {
+    console.log(
+      `Deleting ${roleToDelete?.id}, reassign to ${reassignToRoleId}`
+    )
+    setDeleteDialogOpen(false)
+    setRoleToDelete(null)
+  }
 
   return (
-    <div className="w-[240px] md:w-[240px] border-r border-border flex-shrink-0 flex flex-col h-full bg-card md:bg-transparent">
-      {/* Create New Role Button */}
-      <div className="p-4 border-b border-border">
-        <Button
-          variant="outline"
-          className="w-full justify-start gap-2 text-sm font-medium"
-        >
-          <Plus size={16} />
-          Create New Role
-        </Button>
-      </div>
+    <div className="w-[260px] flex flex-col h-full">
+      {/* Create Role */}
+      <Button
+        className="mb-4 gap-2 bg-blue-600 text-white hover:bg-blue-700"
+        onClick={onCreateRole}
+      >
+        <Plus size={16} />
+        Create New Role
+      </Button>
 
-      {/* Defined Roles */}
-      <div className="p-4 flex-1 overflow-auto">
-        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-          Defined Roles
-        </h3>
+      {/* Roles */}
+      <Card className="flex-1 overflow-auto shadow-none border border-border ">
+        <CardHeader className="flex py-2 px-4 border-b bg-[#f1f5f9] rounded-t-md h-12">
+          <CardTitle className="font-roboto text-md font-medium uppercase text-gray-500 mt-1">
+            Defined Roles
+          </CardTitle>
+        </CardHeader>
 
-        <div className="space-y-1">
-          {roleGroups.map((group) => (
-            <div key={group.id}>
-              {/* Group Header */}
-              <button
-                onClick={() => group.roles && toggleGroup(group.id)}
-                className="w-full flex items-center gap-2 px-2 py-2 text-sm font-medium text-foreground hover:bg-muted rounded-md transition-colors"
-              >
-                {group.roles ? (
-                  expandedGroups.includes(group.id) ? (
-                    <ChevronDown size={16} className="text-muted-foreground flex-shrink-0" />
-                  ) : (
-                    <ChevronRight size={16} className="text-muted-foreground flex-shrink-0" />
-                  )
-                ) : (
-                  <ChevronRight size={16} className="text-muted-foreground flex-shrink-0" />
+        <div className="bg-white space-y-2 p-2">
+          {roleGroups.map((group) => {
+            const isExpanded = expandedGroups.includes(group.id)
+
+            return (
+              <div key={group.id}>
+                {/* Group Header */}
+                <button
+                onClick={() => toggleGroup(group.id)}
+                className={cn(
+                  "w-full flex items-center gap-2 px-4 py-3 border text-sm font-medium text-gray-500 transition-all shadow-sm",
+                  isExpanded
+                    ? "rounded-t-lg border-b-0 bg-gray-50"
+                    : "rounded-sm hover:bg-gray-50"     
                 )}
-                <span className="truncate">{group.name}</span>
+              >
+                {isExpanded ? (
+                  <ChevronDown size={16} />
+                ) : (
+                  <ChevronRight size={16} />
+                )}
+
+                <span className="font-roboto font-medium uppercase">{group.name}</span>
               </button>
 
-              {/* Sub-roles */}
-              {group.roles && expandedGroups.includes(group.id) && (
-                <div className="ml-2 mt-1 space-y-0.5">
-                  {group.roles.map((role) => (
-                    <button
-                      key={role.id}
-                      onClick={() => onRoleSelect(role.id)}
-                      className={`w-full flex flex-col items-start px-3 py-2 text-sm rounded-md transition-all ${
-                        selectedRole === role.id
-                          ? "bg-primary/5 border-l-3 border-primary"
-                          : "hover:bg-muted border-l-3 border-transparent"
-                      }`}
-                    >
-                      <span className="font-medium text-foreground truncate w-full text-left">{role.name}</span>
-                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Users size={12} />
-                        {role.userCount} users
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
+
+                {/* Roles */}
+                {isExpanded && (
+                  <div className="border border-t-0 rounded-b-lg overflow-hidden shadow">
+                    {group.roles.map((role) => (
+                      <div
+                        key={role.id}
+                        className="relative"
+                        onMouseEnter={() =>
+                          setHoveredRole(role.id)
+                        }
+                        onMouseLeave={() =>
+                          setHoveredRole(null)
+                        }
+                      >
+                        <button
+                          onClick={() =>
+                            onRoleSelect(role.id)
+                          }
+                          className={cn(
+                            "w-full px-4 py-2 text-left",
+                            selectedRole === role.id
+                              ? "bg-blue-50 border-l-4 border-blue-600"
+                              : "hover:bg-gray-50"
+                          )}
+                        >
+                          <div className="font-roboto font-medium text-md  text-gray-900">
+                            {role.name}
+                          </div>
+                          <div className="mt-1 flex items-center gap-1 text-xs text-gray-500">
+                            <Users size={12} />
+                            {role.userCount} users
+                          </div>
+                        </button>
+
+                        {hoveredRole === role.id && (
+                          <button
+                            onClick={(e) =>
+                              handleDeleteClick(e, role)
+                            }
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-destructive"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </div>
-      </div>
+      </Card>
+
+      {/* Confirm Dialog */}
+        <ConfirmDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          title="Role has assigned users"
+          description={
+            <>
+              Role "{roleToDelete?.name}" has{" "}
+              {roleToDelete?.userCount} users.
+              <br />
+              Reassign users before deleting.
+            </>
+          }
+        icon="warning"
+        confirmLabel="Confirm and Delete"
+        onConfirm={handleConfirmDelete}
+        selectOptions={getAllRoles()
+          .filter((r) => r.id !== roleToDelete?.id)
+          .map((r) => ({
+            id: r.id,
+            label: r.name,
+          }))}
+        selectLabel="Reassign Users To"
+        selectPlaceholder="Select a role"
+        selectRequired
+      />
     </div>
-  );
+  )
 }

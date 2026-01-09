@@ -4,19 +4,16 @@ import {
   LayoutDashboard,
   Video,
   PlayCircle,
-  Bell,
-  Users,
-  Activity,
-  Sparkles,
   Settings,
-  HelpCircle,
+  Bell,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Alerts,
   Emap,
   Health,
-  Light
+  lighticons,
+  helpCircle,
 } from "@/components/ui/icons";
 import { useTheme } from "@/context/ThemeContext";
 import { SettingsSubNav } from "@/./components/layout/SettingsSubNav";
@@ -31,9 +28,9 @@ const menuItems = [
 ];
 
 const bottomItems = [
-  { icon: Light, label: "Light", path: "/theme" },
+  { icon: lighticons, label: "Light", path: "/theme" },
   { icon: Settings, label: "Settings", path: "/settings" },
-  { icon: HelpCircle, label: "Help", path: "/help" },
+  { icon: helpCircle, label: "Help", path: "/help" },
 ];
 
 export function Sidebar() {

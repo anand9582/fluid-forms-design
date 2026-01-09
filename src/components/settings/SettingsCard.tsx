@@ -35,7 +35,7 @@ export function SettingsCard({
                 <Star className="h-3 w-3" />
                 Recommended
               </span>
-            )}
+            )}  
             {tooltip && (
               <Tooltip>
                 <TooltipTrigger>

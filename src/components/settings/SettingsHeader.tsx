@@ -1,18 +1,39 @@
 import { ArrowLeft, Settings } from "lucide-react";
 
-export function SettingsHeader() {
+interface SettingsHeaderProps {
+  title?: string;
+  breadcrumb?: string;
+  onBack?: () => void;
+}
+
+export function SettingsHeader({
+  title = "Settings",
+  breadcrumb = "Manage Users",
+  onBack,
+}: SettingsHeaderProps) {
   return (
-    <header className="h-14 bg-card border-b border-border flex items-center px-4 gap-4">
-      <button className="p-1.5 hover:bg-muted rounded-md transition-colors">
-        <ArrowLeft size={18} className="text-muted-foreground" />
-      </button>
-      <div className="flex items-center gap-2">
-        <Settings size={18} className="text-muted-foreground" />
-        <span className="font-semibold text-foreground">Settings</span>
+    <header className="bg-card border-b border-border px-4 py-2">
+      
+      {/* ROW 1 */}
+      <div className="flex items-center gap-3 h-10">
+        <button
+          onClick={onBack}
+          className="p-1.5 rounded-md hover:bg-muted transition-colors"
+        >
+          <ArrowLeft size={18} className="text-muted-foreground" />
+        </button>
+
+        <div className="flex items-center gap-2">
+          <Settings size={18} className="text-muted-foreground" />
+          <span className="font-semibold text-foreground">{title}</span>
+        </div>
       </div>
-      <div className="flex items-center text-sm text-muted-foreground">
+
+      {/* ROW 2 (Breadcrumb) */}
+      <div className="flex items-center text-sm text-muted-foreground pl-9">
+        <span>{title}</span>
         <span className="mx-2">›</span>
-        <span>Manage Users</span>
+        <span className="text-foreground font-roboto font-medium">{breadcrumb}</span>
       </div>
     </header>
   );

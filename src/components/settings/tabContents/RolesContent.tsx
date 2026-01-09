@@ -1,18 +1,52 @@
-// src/components/settings/tabContents/RolesContent.tsx
-import { RolesPanel } from "../RolesPanel";
-import { PermissionsContent } from "../PermissionsContent";
+import { RolesPanel } from "../RolesPanel"
+import { PermissionsContent } from "../PermissionsContent"
 
-interface RolesContentProps {
-  selectedRole: string;
-  onRoleSelect: (id: string) => void;
-  getRoleName: (id: string) => string;
+interface RoleGroup {
+  id: string
+  name: string
+  roles: Array<{ id: string; name: string; userCount: number }>
 }
 
-export function RolesContent({ selectedRole, onRoleSelect, getRoleName }: RolesContentProps) {
+const roleGroups: RoleGroup[] = [
+  {
+    id: "admin",
+    name: "Admin",
+    roles: [
+      { id: "admin-super", name: "Super Admin", userCount: 0 },
+      { id: "admin-sub", name: "Sub Admin", userCount: 0 },
+    ],
+  },
+  {
+    id: "operator",
+    name: "Operator",
+    roles: [
+      { id: "operator-l1", name: "Operator L1", userCount: 0 },
+      { id: "operator-l2", name: "Operator L2", userCount: 0 },
+    ],
+  },
+  { id: "viewer", name: "Viewer", roles: [] }, 
+]
+
+
+interface RolesContentProps {
+  selectedRole: string
+  onRoleSelect: (id: string) => void
+  getRoleName: (id: string) => string
+}
+
+export default function RolesContent({
+  selectedRole,
+  onRoleSelect,
+}: RolesContentProps) {
   return (
-    <div className="flex flex-1 overflow-hidden mt-4 bg-muted/30 rounded-lg p-4">
-        <RolesPanel selectedRole={selectedRole} onRoleSelect={onRoleSelect} />
-        <PermissionsContent roleName={getRoleName(selectedRole)} />
+    <div className="flex h-full">
+        <RolesPanel
+          roleGroups={roleGroups}
+          selectedRole={selectedRole}
+          onRoleSelect={onRoleSelect}
+          onCreateRole={() => {}}
+        />
+       <PermissionsContent roleId={selectedRole} />
     </div>
-  );
+  )
 }

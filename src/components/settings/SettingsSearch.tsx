@@ -46,7 +46,7 @@ export function SettingsSearch({ className }: SettingsSearchProps) {
         />
         {query && (
           <kbd className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground bg-secondary px-1.5 py-0.5 rounded">
-            ESC
+             ESC
           </kbd>
         )}
       </div>

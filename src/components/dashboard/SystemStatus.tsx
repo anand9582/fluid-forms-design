@@ -17,7 +17,7 @@ export const SystemStatus = () => {
     <Card className="border-border/80 shadow-none">
       <CardHeader className="flex flex-row items-center justify-between pb-2 bg-bgprimary border-b px-3 pt-2 rounded-t-sm">
         <CardTitle className="text-sm font-roboto font-semibold font-medium  uppercase tracking-wide text-textgray">
-            System Status 
+               System Status 
         </CardTitle>
 
         <Select defaultValue="camera">

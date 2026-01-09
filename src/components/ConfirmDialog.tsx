@@ -1,0 +1,227 @@
+import { ReactNode, useState } from "react";
+import { AlertTriangle, Trash2, Info, AlertCircle, CheckCircle } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+
+// Icon types
+type IconType = "warning" | "danger" | "info" | "success";
+
+// Size variants
+type SizeVariant = "sm" | "md" | "lg";
+
+// Option for dropdowns
+interface SelectOption {
+  id: string;
+  label: string;
+}
+
+interface ConfirmDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  description?: string | ReactNode;
+  icon?: IconType;
+  size?: SizeVariant;
+  
+  // Primary action
+  confirmLabel?: string;
+  confirmVariant?: "default" | "destructive" | "outline";
+  onConfirm: (selectedValue?: string) => void;
+  confirmDisabled?: boolean;
+  
+  // Cancel action
+  cancelLabel?: string;
+  onCancel?: () => void;
+  showCancel?: boolean;
+  
+  // Optional select dropdown
+  selectOptions?: SelectOption[];
+  selectLabel?: string;
+  selectPlaceholder?: string;
+  selectRequired?: boolean;
+  
+  // Custom content
+  children?: ReactNode;
+}
+
+const iconConfig: Record<IconType, { icon: typeof AlertTriangle; bgClass: string; iconClass: string }> = {
+  warning: {
+    icon: AlertTriangle,
+    bgClass: "bg-amber-100 dark:bg-amber-900/30",
+    iconClass: "text-amber-600 dark:text-amber-400",
+  },
+  danger: {
+    icon: Trash2,
+    bgClass: "bg-destructive/10",
+    iconClass: "text-destructive",
+  },
+  info: {
+    icon: Info,
+    bgClass: "bg-blue-100 dark:bg-blue-900/30",
+    iconClass: "text-blue-600 dark:text-blue-400",
+  },
+  success: {
+    icon: CheckCircle,
+    bgClass: "bg-green-100 dark:bg-green-900/30",
+    iconClass: "text-green-600 dark:text-green-400",
+  },
+};
+
+const sizeConfig: Record<SizeVariant, { dialog: string; icon: string; iconSize: number }> = {
+  sm: {
+    dialog: "sm:max-w-[320px]",
+    icon: "w-10 h-10",
+    iconSize: 20,
+  },
+  md: {
+    dialog: "sm:max-w-[425px]",
+    icon: "w-12 h-12",
+    iconSize: 24,
+  },
+  lg: {
+    dialog: "sm:max-w-[520px]",
+    icon: "w-14 h-14",
+    iconSize: 28,
+  },
+};
+
+export function ConfirmDialog({
+  open,
+  onOpenChange,
+  title,
+  description,
+  icon = "warning",
+  size = "md",
+  confirmLabel = "Confirm",
+  confirmVariant = "default",
+  onConfirm,
+  confirmDisabled = false,
+  cancelLabel = "Cancel",
+  onCancel,
+  showCancel = true,
+  selectOptions,
+  selectLabel,
+  selectPlaceholder = "Select an option",
+  selectRequired = false,
+  children,
+}: ConfirmDialogProps) {
+  const [selectedValue, setSelectedValue] = useState<string>("");
+  
+  const { icon: IconComponent, bgClass, iconClass } = iconConfig[icon];
+  const { dialog, icon: iconSizeClass, iconSize } = sizeConfig[size];
+
+  const handleConfirm = () => {
+    onConfirm(selectedValue || undefined);
+    setSelectedValue("");
+  };
+
+  const handleCancel = () => {
+    setSelectedValue("");
+    onCancel?.();
+    onOpenChange(false);
+  };
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen) {
+      setSelectedValue("");
+    }
+    onOpenChange(newOpen);
+  };
+
+  const isConfirmDisabled = confirmDisabled || (selectRequired && !selectedValue);
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className={cn("p-4 sm:p-6", dialog)}>
+        <DialogHeader className="flex flex-col items-center text-center gap-3">
+          <div className={cn("rounded-full flex items-center justify-center", bgClass, iconSizeClass)}>
+            <IconComponent className={iconClass} size={iconSize} />
+          </div>
+          <DialogTitle className={cn(
+            "font-semibold",
+            size === "sm" ? "text-base" : size === "lg" ? "text-xl" : "text-lg"
+          )}>
+            {title}
+          </DialogTitle>
+          {description && (
+            <div className="text-sm text-muted-foreground">
+              {description}
+            </div>
+          )}
+        </DialogHeader>
+
+        {/* Optional Select Dropdown */}
+        {selectOptions && selectOptions.length > 0 && (
+          <div className="py-4">
+            {selectLabel && (
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 block">
+                {selectLabel}
+              </label>
+            )}
+            <Select value={selectedValue} onValueChange={setSelectedValue}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder={selectPlaceholder} />
+              </SelectTrigger>
+              <SelectContent>
+                {selectOptions.map((option) => (
+                  <SelectItem key={option.id} value={option.id}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        {/* Custom content slot */}
+        {children && <div className="py-2">{children}</div>}
+
+        <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-2 mt-2">
+          {showCancel && (
+            <Button 
+              variant="outline" 
+              onClick={handleCancel} 
+              className="flex-1"
+              size={size === "sm" ? "sm" : "default"}
+            >
+              {cancelLabel}
+            </Button>
+          )}
+          <Button
+            variant={confirmVariant}
+            onClick={handleConfirm}
+            disabled={isConfirmDisabled}
+            className="flex-1"
+            size={size === "sm" ? "sm" : "default"}
+          >
+            {confirmLabel}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// Hook for easy dialog management
+export function useConfirmDialog() {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  const openDialog = () => setIsOpen(true);
+  const closeDialog = () => setIsOpen(false);
+  
+  return { isOpen, openDialog, closeDialog, setIsOpen };
+}
