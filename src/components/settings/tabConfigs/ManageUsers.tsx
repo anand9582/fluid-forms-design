@@ -5,3 +5,4 @@ export const manageUsersTabs = [
   { id: "users", label: "User Management", icon: <Usermanagement size={16} /> },
   { id: "audit", label: "Audit Logs", icon: <AuditLogs size={16} /> },
 ];
+  

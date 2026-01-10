@@ -24,7 +24,7 @@ const roleGroups: RoleGroup[] = [
       { id: "operator-l2", name: "Operator L2", userCount: 0 },
     ],
   },
-  { id: "viewer", name: "Viewer", roles: [] }, 
+  { id: "viewer", name: "Viewer", roles: [] },  
 ]
 
 
@@ -44,7 +44,9 @@ export default function RolesContent({
           roleGroups={roleGroups}
           selectedRole={selectedRole}
           onRoleSelect={onRoleSelect}
-          onCreateRole={() => {}}
+         onCreateRole={() => {
+            console.log("Create role clicked")
+          }}
         />
        <PermissionsContent roleId={selectedRole} />
     </div>

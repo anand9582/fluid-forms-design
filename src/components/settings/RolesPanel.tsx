@@ -24,9 +24,8 @@ export function RolesPanel({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [roleToDelete, setRoleToDelete] = useState<Role | null>(null)
 
-  const getAllRoles = (): Role[] =>
-      roleGroups.flatMap((group) => group.roles ?? []);
-  
+  const getAllRoles = (): Role[] => roleGroups.flatMap((group) => group.roles ?? []);
+
   const toggleGroup = (groupId: string) => {
     setExpandedGroups((prev) =>
       prev.includes(groupId)
@@ -156,27 +155,19 @@ export function RolesPanel({
           open={deleteDialogOpen}
           onOpenChange={setDeleteDialogOpen}
           title="Role has assigned users"
-          description={
-            <>
-              Role "{roleToDelete?.name}" has{" "}
-              {roleToDelete?.userCount} users.
-              <br />
-              Reassign users before deleting.
-            </>
-          }
-        icon="warning"
-        confirmLabel="Confirm and Delete"
-        onConfirm={handleConfirmDelete}
-        selectOptions={getAllRoles()
-          .filter((r) => r.id !== roleToDelete?.id)
-          .map((r) => ({
-            id: r.id,
-            label: r.name,
-          }))}
-        selectLabel="Reassign Users To"
-        selectPlaceholder="Select a role"
-        selectRequired
-      />
+          icon="warning"
+          confirmLabel="Confirm and Delete"
+          onConfirm={handleConfirmDelete}
+          selectOptions={getAllRoles()
+            .filter((r) => r.id !== roleToDelete?.id)
+            .map((r) => ({
+              id: r.id,
+              label: r.name,
+            }))}
+          selectLabel="Reassign Users To"
+          selectPlaceholder="Select a role"
+          selectRequired
+        />
     </div>
   )
 }

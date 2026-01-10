@@ -1,108 +1,88 @@
-  // SettingsOverview.tsx
-  import { useState, Suspense, lazy } from "react";
-  import { SettingsSidebar } from "./SettingsSidebar";
-  import { SettingsTabs, TabsContent } from "./SettingsTab";
-  import { manageUsersTabs } from "./tabConfigs/ManageUsers";
-  import { AddDeviceTabs } from "./tabConfigs/AddDevices";
+// SettingsOverview.tsx
+import { useState, Suspense } from "react";
+import { SettingsSidebar } from "./SettingsSidebar";
+import { SettingsTabs, TabsContent } from "./SettingsTab";
+import { manageUsersTabs } from "./tabConfigs/ManageUsers";
+import { AddDeviceTabs } from "./tabConfigs/AddDevices"; 
+import { AddDevicesPage } from "./AddDevicesPage";
+import RolesContent from "./tabContents/RolesContent";
+import UsersContent from "./tabContents/UsersContent";
+import AuditContent from "./tabContents/AuditContent";
+import ConfigureDevicesPage from "./configure-devices/ConfigureDevicesPage";
 
-  import RolesContent from "./tabContents/RolesContent";
-  import UsersContent from "./tabContents/UsersContent";
-  import AuditContent from "./tabContents/AuditContent";
 
+// Map default tab per sidebar item
+const defaultTabMap: Record<string, string> = {
+  "manage-users": "roles",
+  "add-devices": "", 
+  "storage": "volumes",
+};
 
-  // Map default tab per sidebar item
-  const defaultTabMap: Record<string, string> = {
-      "manage-users": "roles",
-      "add-devices": "discover",
-      "storage": "volumes",
+export default function SettingsOverview() {
+  const [activeItem, setActiveItem] = useState("manage-users");
+  const [activeRoute, setActiveRoute] = useState("/settings/users");
+  const [activeTab, setActiveTab] = useState("roles");
+  const [selectedRole, setSelectedRole] = useState("admin-super");
+
+  const handleNavigate = (route: string, id: string) => {
+    setActiveItem(id);        // 🔹 sidebar highlight
+    setActiveRoute(route);    // 🔹 right side page
   };
 
-  export default function SettingsOverview() {
-    const [activeSidebarItem, setActiveSidebarItem] = useState("manage-users");
-    const [activeTab, setActiveTab] = useState(defaultTabMap["manage-users"]);
-    const [selectedRole, setSelectedRole] = useState("admin-super");
+  return (
+    <div className="flex min-h-screen bg-muted/20">
+      <SettingsSidebar
+        activeItem={activeItem}
+        onNavigate={handleNavigate}
+      />
 
-    const handleSidebarClick = (id: string) => {
-      setActiveSidebarItem(id);
-      setActiveTab(defaultTabMap[id]);
-    };
+      <div className="flex-1 overflow-hidden">
+        {/* USERS */}
+        {activeRoute === "/settings/users" && (
+          <SettingsTabs
+            tabs={manageUsersTabs}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+          >
+            <TabsContent value="roles">
+              <RolesContent
+                selectedRole={selectedRole}
+                onRoleSelect={setSelectedRole}
+                getRoleName={() => ""}
+              />
+            </TabsContent>
 
-    const getTabsForSidebar = () => {
-      if (activeSidebarItem === "manage-users") return manageUsersTabs;
-      if (activeSidebarItem === "add-devices") return AddDeviceTabs;
-      // if (activeSidebarItem === "storage") return storageTabs;
-      return [];
-    };
+            <TabsContent value="users">
+              <UsersContent />
+            </TabsContent>
 
-    return (
-      <div className="flex min-h-screen bg-muted/20">
-        <SettingsSidebar
-          activeItem={activeSidebarItem}
-          onItemClick={handleSidebarClick}
-        />
+            <TabsContent value="audit">
+              <AuditContent />
+            </TabsContent>
+          </SettingsTabs>
+        )}
 
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {getTabsForSidebar().length > 0 && (
-            <SettingsTabs
-              tabs={getTabsForSidebar()}
-              activeTab={activeTab}
-              onTabChange={setActiveTab}
-            >
-              {/* MANAGE USERS */}
-              {activeSidebarItem === "manage-users" && (
-                <>
-                  <TabsContent value="roles">
-                        <RolesContent
-                          selectedRole={selectedRole}
-                          onRoleSelect={setSelectedRole}
-                          getRoleName={() => ""}
-                        />
-                  </TabsContent>
+        {/* ADD DEVICES */}
+        {activeRoute === "/settings/devices/add" && <AddDevicesPage />}
 
-                  <TabsContent value="users">
-                      <Suspense fallback="Loading...">
-                           <UsersContent />
-                      </Suspense>
-                  </TabsContent>
+        {/* CONFIGURE DEVICES */}
+        {activeRoute === "/settings/devices/configure" && (
+          <ConfigureDevicesPage />
+        )}
 
-                  <TabsContent value="audit">
-                    <Suspense fallback="Loading...">
-                      <AuditContent />
-                    </Suspense>
-                  </TabsContent>
-                </>
-              )}
-
-              {/* ADD DEVICES */}
-              {activeSidebarItem === "add-devices" && (
-                <>
-                  <TabsContent value="discover">
-                    <Suspense fallback="Loading...">
-                           <UsersContent />
-                      </Suspense>
-                  </TabsContent>
-                  <TabsContent value="manual">Manual Add</TabsContent>
-                  <TabsContent value="bulk">Bulk Upload</TabsContent>
-                </>
-              )}
-
-              {/* STORAGE */}
-              {activeSidebarItem === "storage" && (
-                <>
-                  <TabsContent value="volumes">Storage Volumes</TabsContent>
-                  <TabsContent value="retention">Retention Policies</TabsContent>
-                  <TabsContent value="failover">Failover & Redundancy</TabsContent>
-                </>
-              )}
-            </SettingsTabs>
-          )}
-
-          {/* NON-TAB PAGES */}
-          {activeSidebarItem === "configure-devices" && (
-            <h1 className="p-6">Configure Devices</h1>
-          )}
-        </div>
+        {/* STORAGE */}
+        {activeRoute === "/settings/storage" && (
+          <SettingsTabs
+            tabs={AddDeviceTabs}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+          >
+            <TabsContent value="volumes">Storage Volumes</TabsContent>
+            <TabsContent value="retention">Retention Policies</TabsContent>
+            <TabsContent value="failover">Failover</TabsContent>
+          </SettingsTabs>
+        )}
       </div>
-    );
-  }
-
+    </div>
+  );
+}

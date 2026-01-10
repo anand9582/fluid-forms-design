@@ -1,63 +1,31 @@
-import { useState } from "react";
-import {
-  Users,
-  Monitor,
-  HardDrive,
-  Code2,
-  BarChart3,
-  Key,
-  ChevronDown,
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { sidebarItems } from "@/components/settings/sidebarConfigs/Sidebar-config";
 
-import {
-  ManageUsers,
-  Devices,
-  Apisdk
-} from "@/components/ui/icons";
-
-interface SubItem {
-  id: string;
-  label: string;
-}
-
-interface SidebarItem {
-  id: string;
-  label: string;
-  icon: React.ReactNode;
-  subItems?: SubItem[];
-}
-
-const sidebarItems: SidebarItem[] = [
-  { id: "manage-users", label: "Manage Users", icon: <ManageUsers size={18} /> },
-  {
-    id: "manage-devices",
-    label: "Manage Devices",
-    icon: <Devices size={18} />,
-    subItems: [
-      { id: "add-devices", label: "Add Devices" },
-      { id: "configure-devices", label: "Configure Devices" },
-    ],
-  },
-  { id: "storage", label: "Storage and Recording", icon: <HardDrive size={18} /> },
-  { id: "api-sdk", label: "API & SDK", icon: <Apisdk size={18} /> },
-  { id: "video-analytics", label: "Video Analytics", icon: <BarChart3 size={18} /> },
-  { id: "licensing", label: "Licensing", icon: <Key size={18} /> },
-];
-
-interface SettingsSidebarProps {
+interface Props {
   activeItem: string;
-  onItemClick: (id: string) => void;
+  onNavigate: (route: string, id: string) => void;
 }
 
-export function SettingsSidebar({ activeItem, onItemClick }: SettingsSidebarProps) {
-  const [expandedItems, setExpandedItems] = useState<string[]>(["manage-devices"]);
+export function SettingsSidebar({ activeItem, onNavigate }: Props) {
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
+
+  useEffect(() => {
+    sidebarItems.forEach((item) => {
+      if (item.subItems?.some((sub) => sub.id === activeItem)) {
+        setExpandedItems((prev) =>
+          prev.includes(item.id) ? prev : [...prev, item.id]
+        );
+      }
+    });
+  }, [activeItem]);
 
   const toggleExpand = (id: string) => {
     setExpandedItems((prev) =>
@@ -65,28 +33,19 @@ export function SettingsSidebar({ activeItem, onItemClick }: SettingsSidebarProp
     );
   };
 
-  const isSubItemActive = (item: SidebarItem) =>
-    item.subItems?.some((sub) => sub.id === activeItem);
-
   return (
     <aside className="w-56 shrink-0 border rounded-md bg-white">
       <ScrollArea className="h-full p-2">
         <div className="space-y-1">
           {sidebarItems.map((item) =>
             item.subItems ? (
-                <Collapsible
-                  key={item.id}
-                  open={expandedItems.includes(item.id)}
-                  onOpenChange={() => toggleExpand(item.id)}
-                >
+              <Collapsible
+                key={item.id}
+                open={expandedItems.includes(item.id)}
+                onOpenChange={() => toggleExpand(item.id)}
+              >
                 <CollapsibleTrigger asChild>
-                  <button
-                    className={cn(
-                      "w-full flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg hover:bg-muted",
-                      (activeItem === item.id || isSubItemActive(item)) &&
-                        "bg-primary/10 text-primary"
-                    )}
-                  >
+                  <button className="w-full flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg hover:bg-muted">
                     {item.icon}
                     <span className="flex-1 text-left">{item.label}</span>
                     <ChevronDown
@@ -103,10 +62,11 @@ export function SettingsSidebar({ activeItem, onItemClick }: SettingsSidebarProp
                   {item.subItems.map((sub) => (
                     <button
                       key={sub.id}
-                      onClick={() => onItemClick(sub.id)}
+                      onClick={() => onNavigate(sub.route, sub.id)}
                       className={cn(
                         "w-full px-3 py-2 text-sm rounded-lg text-left hover:bg-muted",
-                        activeItem === sub.id && "bg-primary/10 text-primary"
+                        activeItem === sub.id &&
+                          "bg-primary/10 text-primary"
                       )}
                     >
                       {sub.label}
@@ -117,10 +77,13 @@ export function SettingsSidebar({ activeItem, onItemClick }: SettingsSidebarProp
             ) : (
               <button
                 key={item.id}
-                onClick={() => onItemClick(item.id)}
+                onClick={() =>
+                  item.route && onNavigate(item.route, item.id)
+                }
                 className={cn(
                   "w-full flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg hover:bg-muted",
-                  activeItem === item.id && "bg-[#E2E8F0] text-[#404040]"
+                  activeItem === item.id &&
+                    "bg-[#E2E8F0] text-[#404040]"
                 )}
               >
                 {item.icon}

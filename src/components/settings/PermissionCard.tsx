@@ -4,6 +4,7 @@ interface PermissionCardProps {
     description: string;
     enabled: boolean;
     onChange: (enabled: boolean) => void;
+    icon?: JSX.Element;
 }
 
 export function PermissionCard({ title, description, enabled, onChange }: PermissionCardProps) {

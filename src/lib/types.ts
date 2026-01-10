@@ -44,4 +44,10 @@ export interface RolesPanelProps {
     selectedRole: string
     onRoleSelect: (id: string) => void
     onCreateRole: () => void
-} 
+}
+
+// permissioncontent interface
+export interface PermissionsContentProps {
+  roleId: string
+  roleName?: string 
+}
