@@ -1,4 +1,3 @@
-// SettingsOverview.tsx
 import { useState, Suspense } from "react";
 import { SettingsSidebar } from "./SettingsSidebar";
 import { SettingsTabs, TabsContent } from "./SettingsTab";
@@ -11,7 +10,6 @@ import AuditContent from "./tabContents/AuditContent";
 import ConfigureDevicesPage from "./configure-devices/ConfigureDevicesPage";
 
 
-// Map default tab per sidebar item
 const defaultTabMap: Record<string, string> = {
   "manage-users": "roles",
   "add-devices": "", 
@@ -25,8 +23,8 @@ export default function SettingsOverview() {
   const [selectedRole, setSelectedRole] = useState("admin-super");
 
   const handleNavigate = (route: string, id: string) => {
-    setActiveItem(id);        // 🔹 sidebar highlight
-    setActiveRoute(route);    // 🔹 right side page
+    setActiveItem(id);        
+    setActiveRoute(route);   
   };
 
   return (
@@ -37,7 +35,6 @@ export default function SettingsOverview() {
       />
 
       <div className="flex-1 overflow-hidden">
-        {/* USERS */}
         {activeRoute === "/settings/users" && (
           <SettingsTabs
             tabs={manageUsersTabs}
@@ -53,25 +50,22 @@ export default function SettingsOverview() {
             </TabsContent>
 
             <TabsContent value="users">
-              <UsersContent />
+                <UsersContent />
             </TabsContent>
 
             <TabsContent value="audit">
-              <AuditContent />
+                <AuditContent />
             </TabsContent>
           </SettingsTabs>
         )}
 
-        {/* ADD DEVICES */}
         {activeRoute === "/settings/devices/add" && <AddDevicesPage />}
 
-        {/* CONFIGURE DEVICES */}
         {activeRoute === "/settings/devices/configure" && (
-          <ConfigureDevicesPage />
+           <ConfigureDevicesPage />
         )}
 
-        {/* STORAGE */}
-        {activeRoute === "/settings/storage" && (
+        {/* {activeRoute === "/settings/storage" && (
           <SettingsTabs
             tabs={AddDeviceTabs}
             activeTab={activeTab}
@@ -81,7 +75,7 @@ export default function SettingsOverview() {
             <TabsContent value="retention">Retention Policies</TabsContent>
             <TabsContent value="failover">Failover</TabsContent>
           </SettingsTabs>
-        )}
+        )} */}
       </div>
     </div>
   );

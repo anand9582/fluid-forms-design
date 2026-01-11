@@ -1,3 +1,7 @@
-export default function CameraSettings() {
-  return <div>⚙️ Camera settings here</div>
+interface Props {
+  cameraId: string;
+}
+
+export default function CameraSettings({ cameraId }: Props) {
+  return <div>Settings for {cameraId}</div>;
 }

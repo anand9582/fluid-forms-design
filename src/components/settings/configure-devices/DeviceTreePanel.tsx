@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils"
 const deviceTree = [
   {
     id: "building-a",
-    name: "Building A",
+    name: "Building A dd",
     devices: [
       { id: "camera-1", name: "Lobby Camera" },
       { id: "camera-2", name: "Parking Camera" },
