@@ -45,7 +45,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { UserStatus } from "../../../components/settings/UserStatus";
+import { UserStatus } from "../UserStatus";
 import { AddDeviceSheet } from "@/components/settings/AddDeviceSheet";
 
 // ====================
@@ -302,76 +302,60 @@ export default function UserManagementTable() {
 
       {/* Pagination */}
       <div className="flex flex-col md:flex-row items-center justify-between mt-4 gap-2 px-4">
-  {/* Page info + page size */}
-  <div className="flex items-center gap-2 text-sm text-[#62748E]">
-    Showing {table.getRowModel().rows.length} of{" "}
-    {table.getFilteredRowModel().rows.length} results.
-    
-    <Select
-      value={String(pageSize)}
-      onValueChange={(value) => table.setPageSize(Number(value))}
-    >
-      <SelectTrigger className="w-[60px] h-8 bg-card border-border">
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        {[5, 10, 20, 50].map((size) => (
-          <SelectItem key={size} value={String(size)}>
-            {size}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  </div>
+        {/* Page info + page size */}
+        <div className="flex items-center gap-2 text-sm text-[#62748E]">
+          Showing {table.getRowModel().rows.length} of {table.getFilteredRowModel().rows.length} results.
+          <Select value={String(pageSize)} onValueChange={(value) => table.setPageSize(Number(value))}>
+            <SelectTrigger className="w-[60px] h-8 bg-card border-border">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {[5, 10, 20, 50].map((size) => (
+                <SelectItem key={size} value={String(size)}>{size}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-  {/* Pagination buttons */}
-  <div className="flex items-center gap-1">
-    <Button
-      variant="ghost"
-      size="sm"
-      onClick={() => table.previousPage()}
-      disabled={!table.getCanPreviousPage()}
-      className="h-8 gap-1 text-muted-foreground hover:text-foreground"
-    >
-      <ChevronLeft className="h-4 w-4" /> Previous
-    </Button>
+        {/* Pagination buttons */}
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+            className="h-8 gap-1 text-muted-foreground hover:text-foreground"
+          >
+            <ChevronLeft className="h-4 w-4" /> Previous
+          </Button>
 
-    {getPageNumbers().map((p, idx) =>
-      p === "..." ? (
-        <span
-          key={idx}
-          className="h-8 w-8 flex items-center justify-center text-muted-foreground"
-        >
-          ...
-        </span>
-      ) : (
-        <Button
-          key={p}
-          variant={currentPage === p ? "outline" : "ghost"}
-          size="sm"
-          onClick={() => table.setPageIndex(Number(p) - 1)}
-          className={cn(
-            "h-8 w-8 p-0",
-            currentPage === p && "border-border bg-card"
+          {getPageNumbers().map((p, idx) =>
+            p === "..." ? (
+              <span key={idx} className="h-8 w-8 flex items-center justify-center text-muted-foreground">...</span>
+            ) : (
+              <Button
+                key={p}
+                variant={currentPage === p ? "outline" : "ghost"}
+                size="sm"
+                onClick={() => table.setPageIndex(Number(p) - 1)}
+                className={cn("h-8 w-8 p-0", currentPage === p && "border-border bg-card")}
+              >
+                {p}
+              </Button>
+            )
           )}
-        >
-          {p}
-        </Button>
-      )
-    )}
 
-    <Button
-      variant="ghost"
-      size="sm"
-      onClick={() => table.nextPage()}
-      disabled={!table.getCanNextPage()}
-      className="h-8 gap-1 text-muted-foreground hover:text-foreground"
-    >
-      Next <ChevronRight className="h-4 w-4" />
-    </Button>
-  </div>
-</div>
-
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+            className="h-8 gap-1 text-muted-foreground hover:text-foreground"
+          >
+            Next <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
       {/* Add Device Sheet */}
       <AddDeviceSheet open={addDeviceOpen} onOpenChange={setAddDeviceOpen} />
     </div>

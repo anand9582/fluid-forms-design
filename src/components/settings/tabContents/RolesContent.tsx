@@ -39,7 +39,7 @@ export default function RolesContent({
   onRoleSelect,
 }: RolesContentProps) {
   return (
-    <div className="flex h-full">
+    <div className="flex flex-1 overflow-hidden mt-4 bg-muted/30 gap-3">
         <RolesPanel
           roleGroups={roleGroups}
           selectedRole={selectedRole}

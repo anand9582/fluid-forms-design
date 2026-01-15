@@ -162,3 +162,10 @@
     border-radius: 3px;
   }
 }
+
+.Dailogcross > button:last-child{
+   background: #ededed;
+    padding: 6px;
+    border-radius: 5px;
+    top: 29px;
+}

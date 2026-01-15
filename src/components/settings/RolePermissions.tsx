@@ -1,40 +1,33 @@
-// rolePermissions.ts
-export const ROLE_PERMISSION_MAP: Record<string, string[]> = {
+export const ROLE_PERMISSION_MAP: Record<
+  string,
+  { id: string; enabled: boolean }[]
+> = {
   "admin-super": [
-    // Video permissions
-    "live-sd",
-    "live-hd",
-    "playback",
-    "ptz",
-    "two-way",
-    "export",
+    { id: "live-sd", enabled: true },
+    { id: "live-hd", enabled: true },
+    { id: "playback", enabled: true },
+    { id: "ptz", enabled: true },
+    { id: "two-way", enabled: true },
+    { id: "export", enabled: true },
 
-    // System permissions
-    "manage-users",
-    "assign-cameras",
-    "firmware",
+    { id: "manage-users", enabled: true },
+    { id: "assign-cameras", enabled: true },
+    { id: "firmware", enabled: true },
 
-    // Alerts and Monitoring
-     "manage-users",
-    "assign-cameras",
-    "firmware",
+    { id: "view-alerts", enabled: true },
+    { id: "ack-alerts", enabled: true },
   ],
 
   "admin-sub": [
-    "live-sd",
-    "playback",
-    "users",
-    "roles",
-    "logs",
+    { id: "live-sd", enabled: true },
+    { id: "playback", enabled: true },
+    { id: "export", enabled: false },
+    { id: "manage-users", enabled: false },
   ],
 
   operator: [
-    "live-sd",
-    "live-hd",
-    "playback",
-    "users",
-    "logs",
+    { id: "live-sd", enabled: true },
+    { id: "playback", enabled: true },
+    { id: "export", enabled: false },
   ],
-
-  viewer: ["live-sd", "playback"],
 };

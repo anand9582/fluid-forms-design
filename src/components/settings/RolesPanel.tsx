@@ -11,18 +11,25 @@ import { Button } from "../ui/button"
 import { Card, CardHeader, CardTitle } from "../ui/card"
 import { cn } from "../../lib/utils"
 import type { Role, RolesPanelProps } from "../../lib/types"
-import { ConfirmDialog } from "../ConfirmDialog"
+import { ConfirmDialog } from "../Dialogs/ConfirmDialog"
+import { useRoleStore } from "@/Store/RoleStore";
+import { useSettingsStore } from "@/Store/SettingsStore";
+import { CreateRoleDialog } from "@/components/settings/roles/CreateRoleDialog";
+import { ConfirmDeleteRoleDialog } from "@/components/settings/roles/ConfirmDeleteRoleDialog";
 
 export function RolesPanel({
   roleGroups = [],
-  selectedRole,
-  onRoleSelect,
   onCreateRole,
 }: RolesPanelProps) {
   const [expandedGroups, setExpandedGroups] = useState<string[]>(["operator"])
   const [hoveredRole, setHoveredRole] = useState<string | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [roleToDelete, setRoleToDelete] = useState<Role | null>(null)
+  const { selectedRoleId, setSelectedRole } = useRoleStore();
+  const { hasUnsavedChanges } = useSettingsStore();
+  const [createRoleOpen, setCreateRoleOpen] = useState(false);
+const [newRoleName, setNewRoleName] = useState("");
+
 
   const getAllRoles = (): Role[] => roleGroups.flatMap((group) => group.roles ?? []);
 
@@ -56,7 +63,7 @@ export function RolesPanel({
       {/* Create Role */}
       <Button
         className="mb-4 gap-2 bg-blue-600 text-white hover:bg-blue-700"
-        onClick={onCreateRole}
+        onClick={() => setCreateRoleOpen(true)}
       >
         <Plus size={16} />
         Create New Role
@@ -111,12 +118,17 @@ export function RolesPanel({
                         }
                       >
                         <button
-                          onClick={() =>
-                            onRoleSelect(role.id)
-                          }
+                         onClick={() => {
+                            if (hasUnsavedChanges) {
+                              alert("Save changes before switching role");
+                              return;
+                            }
+                            setSelectedRole(role.id);
+                          }}
+
                           className={cn(
                             "w-full px-4 py-2 text-left",
-                            selectedRole === role.id
+                            selectedRoleId  === role.id
                               ? "bg-blue-50 border-l-4 border-blue-600"
                               : "hover:bg-gray-50"
                           )}
@@ -151,23 +163,18 @@ export function RolesPanel({
       </Card>
 
       {/* Confirm Dialog */}
-        <ConfirmDialog
-          open={deleteDialogOpen}
-          onOpenChange={setDeleteDialogOpen}
-          title="Role has assigned users"
-          icon="warning"
-          confirmLabel="Confirm and Delete"
-          onConfirm={handleConfirmDelete}
-          selectOptions={getAllRoles()
-            .filter((r) => r.id !== roleToDelete?.id)
-            .map((r) => ({
-              id: r.id,
-              label: r.name,
-            }))}
-          selectLabel="Reassign Users To"
-          selectPlaceholder="Select a role"
-          selectRequired
-        />
+<ConfirmDeleteRoleDialog
+  open={deleteDialogOpen}
+  onClose={() => setDeleteDialogOpen(false)}
+  role={roleToDelete}
+/>
+
+
+         <CreateRoleDialog
+            open={createRoleOpen}
+            onClose={() => setCreateRoleOpen(false)}
+          />
+
     </div>
   )
 }

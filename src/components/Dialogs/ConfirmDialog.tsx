@@ -1,5 +1,5 @@
 import { ReactNode, useState } from "react";
-import { AlertTriangle, Trash2, Info, AlertCircle, CheckCircle } from "lucide-react";
+import { AlertTriangle, Trash2, Info, CheckCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -23,7 +23,6 @@ type IconType = "warning" | "danger" | "info" | "success";
 // Size variants
 type SizeVariant = "sm" | "md" | "lg";
 
-// Option for dropdowns
 interface SelectOption {
   id: string;
   label: string;
@@ -34,69 +33,60 @@ interface ConfirmDialogProps {
   onOpenChange: (open: boolean) => void;
   title: string;
   description?: string | ReactNode;
-  icon?: IconType;
+  icon?: IconType; // icon optional
   size?: SizeVariant;
-  
+  headerCentered?: boolean; 
+
   // Primary action
   confirmLabel?: string;
   confirmVariant?: "default" | "destructive" | "outline";
   onConfirm: (selectedValue?: string) => void;
   confirmDisabled?: boolean;
-  
+
   // Cancel action
   cancelLabel?: string;
   onCancel?: () => void;
   showCancel?: boolean;
-  
+
   // Optional select dropdown
   selectOptions?: SelectOption[];
   selectLabel?: string;
   selectPlaceholder?: string;
   selectRequired?: boolean;
-  
+
   // Custom content
   children?: ReactNode;
 }
 
+// Icon configuration
 const iconConfig: Record<IconType, { icon: typeof AlertTriangle; bgClass: string; iconClass: string }> = {
   warning: {
     icon: AlertTriangle,
-    bgClass: "bg-amber-100 dark:bg-amber-900/30",
-    iconClass: "text-amber-600 dark:text-amber-400",
+    bgClass: "bg-red-50",  
+    iconClass: "text-red-600" 
   },
   danger: {
     icon: Trash2,
-    bgClass: "bg-destructive/10",
-    iconClass: "text-destructive",
+    bgClass: "bg-red-50",
+    iconClass: "text-red-500"
   },
   info: {
     icon: Info,
-    bgClass: "bg-blue-100 dark:bg-blue-900/30",
-    iconClass: "text-blue-600 dark:text-blue-400",
+    bgClass: "bg-blue-100",
+    iconClass: "text-blue-600"
   },
   success: {
     icon: CheckCircle,
-    bgClass: "bg-green-100 dark:bg-green-900/30",
-    iconClass: "text-green-600 dark:text-green-400",
-  },
+    bgClass: "bg-green-100",
+    iconClass: "text-green-600"
+  }
 };
 
+// Size configuration
 const sizeConfig: Record<SizeVariant, { dialog: string; icon: string; iconSize: number }> = {
-  sm: {
-    dialog: "sm:max-w-[320px]",
-    icon: "w-10 h-10",
-    iconSize: 20,
-  },
-  md: {
-    dialog: "sm:max-w-[425px]",
-    icon: "w-12 h-12",
-    iconSize: 24,
-  },
-  lg: {
-    dialog: "sm:max-w-[520px]",
-    icon: "w-14 h-14",
-    iconSize: 28,
-  },
+  sm: { dialog: "sm:max-w-[320px]", icon: "w-10 h-10", iconSize: 20 },
+  md: { dialog: "sm:max-w-[425px]", icon: "w-12 h-12", iconSize: 24 },
+  lg: { dialog: "sm:max-w-[520px]", icon: "w-14 h-14", iconSize: 28 },
 };
 
 export function ConfirmDialog({
@@ -104,7 +94,7 @@ export function ConfirmDialog({
   onOpenChange,
   title,
   description,
-  icon = "warning",
+  icon, // optional
   size = "md",
   confirmLabel = "Confirm",
   confirmVariant = "default",
@@ -117,11 +107,11 @@ export function ConfirmDialog({
   selectLabel,
   selectPlaceholder = "Select an option",
   selectRequired = false,
+  headerCentered = false, 
   children,
 }: ConfirmDialogProps) {
   const [selectedValue, setSelectedValue] = useState<string>("");
-  
-  const { icon: IconComponent, bgClass, iconClass } = iconConfig[icon];
+
   const { dialog, icon: iconSizeClass, iconSize } = sizeConfig[size];
 
   const handleConfirm = () => {
@@ -136,9 +126,7 @@ export function ConfirmDialog({
   };
 
   const handleOpenChange = (newOpen: boolean) => {
-    if (!newOpen) {
-      setSelectedValue("");
-    }
+    if (!newOpen) setSelectedValue("");
     onOpenChange(newOpen);
   };
 
@@ -146,30 +134,45 @@ export function ConfirmDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className={cn("p-4 sm:p-6", dialog)}>
-        <DialogHeader className="flex flex-col items-center text-center gap-3">
-          <div className={cn("rounded-full flex items-center justify-center", bgClass, iconSizeClass)}>
-            <IconComponent className={iconClass} size={iconSize} />
-          </div>
-          <DialogTitle className={cn(
+      <DialogContent className={cn("p-4 sm:p-6 Dailogcross", dialog)}>
+      <DialogHeader
+        className={cn(
+          "flex flex-col text-center space-y-0",
+          headerCentered ? "items-center gap-3" : "items-start"
+        )}
+      >
+        {icon && (() => {
+          const { icon: IconComponent, bgClass, iconClass } = iconConfig[icon];
+          return (  
+            <div className={cn("rounded-full flex items-center justify-center", bgClass, iconSizeClass)}>
+              <IconComponent className={iconClass} size={iconSize} />
+            </div>
+          );
+        })()}
+
+        <DialogTitle
+          className={cn(
             "font-semibold",
             size === "sm" ? "text-base" : size === "lg" ? "text-xl" : "text-lg"
-          )}>
-            {title}
-          </DialogTitle>
-          {description && (
-            <div className="text-sm text-muted-foreground">
-              {description}
-            </div>
           )}
-        </DialogHeader>
+        >
+          {title}
+        </DialogTitle>
+
+        {description && (
+          <div className="text-sm text-muted-foreground mt-0">
+            {description}
+          </div>
+        )}
+      </DialogHeader>
+
 
         {/* Optional Select Dropdown */}
         {selectOptions && selectOptions.length > 0 && (
           <div className="py-4">
             {selectLabel && (
               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 block">
-                {selectLabel}
+                   {selectLabel}
               </label>
             )}
             <Select value={selectedValue} onValueChange={setSelectedValue}>
@@ -190,38 +193,38 @@ export function ConfirmDialog({
         {/* Custom content slot */}
         {children && <div className="py-2">{children}</div>}
 
-        <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-2 mt-2">
-          {showCancel && (
-            <Button 
-              variant="outline" 
-              onClick={handleCancel} 
-              className="flex-1"
-              size={size === "sm" ? "sm" : "default"}
-            >
-              {cancelLabel}
-            </Button>
-          )}
-          <Button
-            variant={confirmVariant}
-            onClick={handleConfirm}
-            disabled={isConfirmDisabled}
-            className="flex-1"
-            size={size === "sm" ? "sm" : "default"}
-          >
-            {confirmLabel}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
+        <DialogFooter className="footerbottom flex flex-col-reverse gap-2 sm:flex-row sm:justify-end mt-2">
+                  {showCancel && (
+                    <Button
+                      variant="outline"
+                      onClick={handleCancel}
+                      className="px-8"
+                      size={size === "sm" ? "sm" : "default"}
+                    >
+                      {cancelLabel}
+                    </Button>
+                  )}
+                  <Button
+                    variant={confirmVariant}
+                    onClick={handleConfirm}
+                    className="bg-primary"
+                    size={size === "sm" ? "sm" : "default"}
+                  >
+                    {confirmLabel}
+                  </Button>
+                </DialogFooter>
+
+                </DialogContent>
+              </Dialog>
+            );
+          }
 
 // Hook for easy dialog management
 export function useConfirmDialog() {
   const [isOpen, setIsOpen] = useState(false);
-  
+
   const openDialog = () => setIsOpen(true);
   const closeDialog = () => setIsOpen(false);
-  
+
   return { isOpen, openDialog, closeDialog, setIsOpen };
 }

@@ -1,12 +1,12 @@
 interface PermissionToggleProps {
   enabled: boolean;
-  onChange: (enabled: boolean) => void;
+  onChange: () => void;
 }
 
 export function PermissionToggle({ enabled, onChange }: PermissionToggleProps) {
   return (
       <button
-          onClick={() => onChange(!enabled)}
+          onClick={onChange}
           className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
             enabled ? "bg-primary" : "bg-toggle bg-gray-200"
           }`}

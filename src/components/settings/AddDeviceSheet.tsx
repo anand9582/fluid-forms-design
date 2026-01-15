@@ -118,19 +118,50 @@ export function AddDeviceSheet({ open, onOpenChange }: AddDeviceSheetProps) {
       case "device-info":
         return (
           <div className="space-y-6">
-            <StepFormSection title="Basic Information" description="Enter the basic details of your device.">
+           <StepFormSection
+              description={`Step ${currentStep + 1} of ${steps.length}`}
+            >
               <StepFormRow>
                 <StepFormField>
-                  <Label htmlFor="name">Device Name</Label>
+                  <Label htmlFor="name">Full name</Label>
                   <Input
                     id="name"
-                    placeholder="Enter device name"
+                    placeholder="Enter Full Name"
                     value={formData.name}
                     onChange={(e) => handleInputChange("name", e.target.value)}
                   />
                 </StepFormField>
-                <StepFormField>
-                  <Label htmlFor="type">Device Type</Label>
+                 <StepFormField>
+                  <Label htmlFor="name">Username</Label>
+                  <Input
+                    id="name"
+                    placeholder="Enter Full Name"
+                    value={formData.name}
+                    onChange={(e) => handleInputChange("name", e.target.value)}
+                  />
+                </StepFormField>
+
+              <StepFormField>
+                  <Label htmlFor="Email">Email</Label>
+                  <Input
+                    id="name"
+                    placeholder="Enter Full Name"
+                    value={formData.name}
+                    onChange={(e) => handleInputChange("name", e.target.value)}
+                  />
+                </StepFormField>  
+              <StepFormField>
+                  <Label htmlFor="Phone">Phone</Label>
+                  <Input
+                    id="Phone"
+                    placeholder="Enter Full Name"
+                    value={formData.name}
+                    onChange={(e) => handleInputChange("name", e.target.value)}
+                  />
+                </StepFormField>
+
+                 <StepFormField>
+                  <Label htmlFor="type">Role</Label>
                   <Select
                     value={formData.type}
                     onValueChange={(value) => handleInputChange("type", value)}
@@ -150,6 +181,25 @@ export function AddDeviceSheet({ open, onOpenChange }: AddDeviceSheetProps) {
                     </SelectContent>
                   </Select>
                 </StepFormField>
+                
+              <div className="col-span-2">
+                <h3 className="text-sm font-semibold text-foreground">
+                  Address Information
+                </h3>
+                <hr className="mt-2 border-border" />
+              </div>
+
+              <StepFormField className="col-span-2">
+                <Label htmlFor="address">Street Address</Label>
+                <Input
+                  id="address"
+                  placeholder="123 Security Blvd, Monitoring Center A"
+                  value={formData.address}
+                  onChange={(e) => handleInputChange("address", e.target.value)}
+                />
+              </StepFormField>
+
+                
               </StepFormRow>
             </StepFormSection>
 
@@ -349,13 +399,13 @@ export function AddDeviceSheet({ open, onOpenChange }: AddDeviceSheetProps) {
     <StepWizardDrawer
       open={open}
       onOpenChange={onOpenChange}
-      title="Add New Device"
+      title="Edit User"
       titleIcon={
         <div className="p-2 rounded-lg bg-primary/10">
           <Plus className="h-5 w-5 text-primary" />
         </div>
       }
-      description="Fill in the details below to add a new device to your system."
+      description="Update configuration for kate.russell@campulse.com"
       steps={steps}
       currentStep={currentStep}
       onStepChange={setCurrentStep}

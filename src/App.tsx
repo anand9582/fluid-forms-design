@@ -7,10 +7,11 @@ import { ThemeProvider } from "./context/ThemeContext";
 import Index from "./pages/Index";
 import { LoginPage } from "@/pages/Auth/LoginPage";
 import SettingsOverview from "@/components/settings/SettingsOverview";
-import ManageUsers from "@/components/settings/ManageUsers";
+// import ManageUsers from "@/components/settings/ManageUsers";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { SettingsLayout } from "@/components/layout/SettingsLayout";
 import NotFound from "./pages/NotFound";
+import LiveView from "@/pages/LiveView";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -20,18 +21,21 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <AppLayout>
-            <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/login" element={<LoginPage />} />
-                  <Route path="*" element={<NotFound />} />
-                 <Route path="/settings" element={<SettingsLayout />}>
-                    <Route index element={<SettingsOverview />} />
-                    <Route path="users" element={<ManageUsers />} />
-                </Route>
-            </Routes>
-            </AppLayout>
-            
+          <Routes>
+
+            <Route path="/login" element={<LoginPage />} />
+
+            <Route element={<AppLayout />}>
+              <Route path="/" element={<Index />} />
+              <Route path="/live" element={<LiveView />} />
+              <Route path="/settings" element={<SettingsLayout />}>
+                <Route index element={<SettingsOverview />} />
+              </Route>
+            </Route>
+
+            <Route path="*" element={<NotFound />} />
+
+          </Routes>
         </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>
@@ -39,3 +43,4 @@ const App = () => (
 );
 
 export default App;
+

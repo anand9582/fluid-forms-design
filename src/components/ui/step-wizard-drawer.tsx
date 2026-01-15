@@ -168,13 +168,13 @@ export function StepWizardDrawer({
         <div className="flex-1 overflow-y-auto px-6 py-6">{children}</div>
 
         {/* Footer Navigation */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-muted/30">
+        <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-[#E2E8F0]">
           <Button
             type="button"
             variant="ghost"
             onClick={handleBack}
             disabled={currentStep === 0}
-            className="gap-2 text-muted-foreground hover:text-foreground"
+            className="gap-2 text-black hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
             <span className="hidden sm:inline">{backLabel}</span>
