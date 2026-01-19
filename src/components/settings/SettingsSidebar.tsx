@@ -66,7 +66,7 @@
                         className={cn(
                           "w-full px-3 py-2 text-sm rounded-lg text-left hover:bg-muted",
                           activeItem === sub.id &&
-                            "bg-primary/10 text-primary"
+                            "bg-[#E2E8F0] text-black"
                         )}
                       >
                         {sub.label}

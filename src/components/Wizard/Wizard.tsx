@@ -16,7 +16,7 @@ export function Wizard({
   steps = [],
   navButtons = [],
   size = "medium",
-  position = "right", // 'right', 'left', 'top', 'bottom'
+  position = "right",
   autoShow = true,  
   autoShowDelay = 2000,
   onFinish = () => {}
@@ -54,11 +54,11 @@ export function Wizard({
   positionClass = "bottom-4 left-1/2 -translate-x-1/2";
   slideClass = isVisible ? "translate-y-0" : "translate-y-[100%]";
 } else if (position === "right-top") {
-  positionClass = "top-0 right-4";                // right side
-  slideClass = isVisible ? "translate-y-0" : "-translate-y-[100%]"; // slide top → bottom
+  positionClass = "top-0 right-4";        
+  slideClass = isVisible ? "translate-y-0" : "-translate-y-[100%]"; 
 } else if (position === "right-bottom") {
-  positionClass = "bottom-4 right-4";             // right side
-  slideClass = isVisible ? "translate-y-0" : "translate-y-[100%]";  // slide bottom → top
+  positionClass = "bottom-4 right-4";
+  slideClass = isVisible ? "translate-y-0" : "translate-y-[100%]";  
 }
 
 
@@ -123,21 +123,17 @@ export function Wizard({
               className={cn(
                 "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all",
                 
-                // ✅ Completed
                 isCompleted &&
                   "bg-green-50 text-green-700",
 
-                // 👉 Active
                 isActive &&
                   "border border-neutral-300 bg-white shadow-sm text-foreground",
 
-                // ⏳ Upcoming
                 !isCompleted &&
                   !isActive &&
                   "bg-muted text-muted-foreground hover:bg-muted/80"
               )}
             >
-              {/* Icon logic */}
               {isCompleted ? (
                 <CheckCircle className="w-4 h-4 text-green-700" />
               ) : (

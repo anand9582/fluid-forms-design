@@ -5,6 +5,9 @@ import { StepWizardDrawer, WizardStep, StepValidation } from "@/components/ui/st
 import { StepFormSection, StepFormRow, StepFormField } from "@/components/ui/step-form-section";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { DeviceTreeSelect, DeviceNode } from "@/components/ui/device-tree-select";
+
 import {
   Select,
   SelectContent,
@@ -13,41 +16,89 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+import {
+  Restrictions,
+  Date,
+  Devices,
+  User  
+} from "@/components/ui/icons";
+
 interface AddDeviceSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
+// Mock data for tree view - this will come from API
+const mockDeviceData: DeviceNode[] = [
+  {
+    id: "hq",
+    name: "Headquarters HQ",
+    type: "group",
+    deviceCount: 8,
+    children: [
+      {
+        id: "hq-sub",
+        name: "Headquarters HQ",
+        type: "group",
+        children: [
+          { id: "cam-1", name: "Main entrance cam 1", type: "device", status: "online" },
+          { id: "cam-2", name: "Reception Desk Cam 2", type: "device", status: "online" },
+          { id: "cam-3", name: "Main entrance cam 3", type: "device", status: "offline" },
+          { id: "cam-4", name: "Main entrance cam 4", type: "device", status: "online" },
+        ],
+      },
+      {
+        id: "hq2",
+        name: "Headquarters HQ 2",
+        type: "group",
+        children: [
+          { id: "cam-5", name: "Main entrance cam 5", type: "device", status: "offline" },
+          { id: "cam-6", name: "Reception Desk Cam 6", type: "device", status: "online" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "warehouse",
+    name: "Warehouse 1",
+    type: "group",
+    deviceCount: 12,
+    children: [
+      { id: "wh-cam-1", name: "Warehouse Cam 1", type: "device", status: "online" },
+      { id: "wh-cam-2", name: "Warehouse Cam 2", type: "device", status: "online" },
+    ],
+  },
+];
 
 const deviceTypes = [
-  { value: "camera", label: "Camera", icon: Camera },
-  { value: "nvr", label: "NVR", icon: MonitorSpeaker },
-  { value: "router", label: "Router", icon: Router },
-  { value: "access_control", label: "Access Control", icon: Shield },
-  { value: "iot", label: "IOT Center", icon: Cpu },
+    { value: "camera", label: "Camera", icon: Camera },
+    { value: "nvr", label: "NVR", icon: MonitorSpeaker },
+    { value: "router", label: "Router", icon: Router },
+    { value: "access_control", label: "Access Control", icon: Shield },
+    { value: "iot", label: "IOT Center", icon: Cpu },
 ];
 
 const steps: WizardStep[] = [
-  { id: "device-info", label: "Device Information", icon: Camera },
-  { id: "network", label: "Network Config", icon: Network },
-  { id: "credentials", label: "Credentials", icon: Key },
-  { id: "group", label: "Group Assignment", icon: FolderTree },
-  { id: "settings", label: "Settings", icon: Settings },
+  { id: "device-info", label: "User Information", icon: User },
+  { id: "network", label: "Camera Assignment", icon: Devices },
+  { id: "credentials", label: "Schedule & Events", icon: Date },
+  { id: "group", label: "Restrictions", icon: Restrictions },
 ];
 
 const initialFormData = {
   name: "",
-  ipAddress: "",
-  port: "",
-  make: "",
-  model: "",
-  type: "",
   username: "",
+  email: "",
+  phone: "",
+  address: "",
+  city: "",
+  state: "",
+  pincode: "",
+  type: "",
   password: "",
   group: "",
-  rtspPort: "",
-  httpPort: "",
-  protocol: "",
+  selectedCameras: [] as string[],
 };
+
 
 type FormErrors = Partial<Record<keyof typeof initialFormData, string>>;
 
@@ -75,8 +126,9 @@ export function AddDeviceSheet({ open, onOpenChange }: AddDeviceSheetProps) {
         if (!formData.type) newErrors.type = "Device type is required";
         break;
       case "network":
-        if (!formData.ipAddress.trim()) newErrors.ipAddress = "IP address is required";
-        if (!formData.port.trim()) newErrors.port = "Port is required";
+        if (formData.selectedCameras.length === 0) {
+          newErrors.selectedCameras = "Please select at least one camera";
+        }
         break;
       case "credentials":
         if (!formData.username.trim()) newErrors.username = "Username is required";
@@ -90,7 +142,7 @@ export function AddDeviceSheet({ open, onOpenChange }: AddDeviceSheetProps) {
 
   const validation: StepValidation = useMemo(() => ({
     0: { isValid: !!formData.name.trim() && !!formData.type },
-    1: { isValid: !!formData.ipAddress.trim() && !!formData.port.trim() },
+    1: { isValid: formData.selectedCameras.length > 0 },
     2: { isValid: !!formData.username.trim() && !!formData.password.trim() },
     3: { isValid: true }, // Group is optional
     4: { isValid: true }, // Review step
@@ -124,12 +176,12 @@ export function AddDeviceSheet({ open, onOpenChange }: AddDeviceSheetProps) {
               <StepFormRow>
                 <StepFormField>
                   <Label htmlFor="name">Full name</Label>
-                  <Input
-                    id="name"
-                    placeholder="Enter Full Name"
-                    value={formData.name}
-                    onChange={(e) => handleInputChange("name", e.target.value)}
-                  />
+                    <Input
+                      id="name"
+                      placeholder="Enter Full Name"
+                      value={formData.name}
+                      onChange={(e) => handleInputChange("name", e.target.value)}
+                    />
                 </StepFormField>
                  <StepFormField>
                   <Label htmlFor="name">Username</Label>
@@ -184,7 +236,7 @@ export function AddDeviceSheet({ open, onOpenChange }: AddDeviceSheetProps) {
                 
               <div className="col-span-2">
                 <h3 className="text-sm font-semibold text-foreground">
-                  Address Information
+                      Address Information
                 </h3>
                 <hr className="mt-2 border-border" />
               </div>
@@ -198,130 +250,214 @@ export function AddDeviceSheet({ open, onOpenChange }: AddDeviceSheetProps) {
                   onChange={(e) => handleInputChange("address", e.target.value)}
                 />
               </StepFormField>
-
                 
               </StepFormRow>
             </StepFormSection>
 
-            <StepFormSection title="Device Details" description="Specify the make and model of your device.">
-              <StepFormRow>
-                <StepFormField>
-                  <Label htmlFor="make">Make / Manufacturer</Label>
-                  <Input
-                    id="make"
-                    placeholder="e.g., Axis, Hikvision"
-                    value={formData.make}
-                    onChange={(e) => handleInputChange("make", e.target.value)}
-                  />
-                </StepFormField>
-                <StepFormField>
-                  <Label htmlFor="model">Model Number</Label>
-                  <Input
-                    id="model"
-                    placeholder="e.g., Model-XO, DS-2CD2143"
-                    value={formData.model}
-                    onChange={(e) => handleInputChange("model", e.target.value)}
-                  />
-                </StepFormField>
-              </StepFormRow>
-            </StepFormSection>
+           <StepFormSection>
+          <div className="flex items-center gap-2">
+              <h2 className="text-sm font-semibold text-foreground">
+                Security
+              </h2>
+
+              <Badge
+                variant="secondary"
+                className="rounded-full px-2 py-0.5 text-xs font-medium text-gray-500"
+              >
+                Admin only
+              </Badge>
+            </div>
+  <StepFormRow columns={3}>
+    <StepFormField>
+      <Label htmlFor="city">Old Password</Label>
+      <Input
+        id="city"
+        placeholder="New Delhi"
+        value={formData.city}
+        onChange={(e) => handleInputChange("city", e.target.value)}
+      />
+    </StepFormField>
+
+    <StepFormField>
+      <Label htmlFor="state">State</Label>
+      <Input
+        id="state"
+        placeholder="Delhi"
+        value={formData.state}
+        onChange={(e) => handleInputChange("state", e.target.value)}
+      />
+    </StepFormField>
+
+    <StepFormField>
+      <Label htmlFor="pincode">Pincode</Label>
+      <Input
+        id="pincode"
+        placeholder="110001"
+        value={formData.pincode}
+        onChange={(e) => handleInputChange("pincode", e.target.value)}
+      />
+    </StepFormField>
+  </StepFormRow>
+</StepFormSection>
+
+
+           <StepFormSection>
+  <StepFormRow columns={3}>
+    <StepFormField>
+      <Label htmlFor="city">Old Password</Label>
+      <Input
+        id="city"
+        placeholder="New Delhi"
+        value={formData.city}
+        onChange={(e) => handleInputChange("city", e.target.value)}
+      />
+    </StepFormField>
+
+    <StepFormField>
+      <Label htmlFor="state">New Password</Label>
+      <Input
+        id="state"
+        placeholder="Delhi"
+        value={formData.state}
+        onChange={(e) => handleInputChange("state", e.target.value)}
+      />
+    </StepFormField>
+
+    <StepFormField>
+      <Label htmlFor="pincode">Confirm Password</Label>
+      <Input
+        id="pincode"
+        placeholder="110001"
+        value={formData.pincode}
+        onChange={(e) => handleInputChange("pincode", e.target.value)}
+      />
+    </StepFormField>
+  </StepFormRow>
+</StepFormSection>  
+
           </div>
         );
 
       case "network":
         return (
-          <div className="space-y-6">
-            <StepFormSection title="Network Configuration" description="Configure the network settings for your device.">
-              <StepFormRow>
-                <StepFormField>
-                  <Label htmlFor="ipAddress">IP Address</Label>
-                  <Input
-                    id="ipAddress"
-                    placeholder="e.g., 192.168.1.100"
-                    value={formData.ipAddress}
-                    onChange={(e) => handleInputChange("ipAddress", e.target.value)}
-                  />
-                </StepFormField>
-                <StepFormField>
-                  <Label htmlFor="port">Main Port</Label>
-                  <Input
-                    id="port"
-                    placeholder="e.g., 8080"
-                    value={formData.port}
-                    onChange={(e) => handleInputChange("port", e.target.value)}
-                  />
-                </StepFormField>
-              </StepFormRow>
-              <StepFormRow>
-                <StepFormField>
-                  <Label htmlFor="rtspPort">RTSP Port</Label>
-                  <Input
-                    id="rtspPort"
-                    placeholder="e.g., 554"
-                    value={formData.rtspPort}
-                    onChange={(e) => handleInputChange("rtspPort", e.target.value)}
-                  />
-                </StepFormField>
-                <StepFormField>
-                  <Label htmlFor="httpPort">HTTP Port</Label>
-                  <Input
-                    id="httpPort"
-                    placeholder="e.g., 80"
-                    value={formData.httpPort}
-                    onChange={(e) => handleInputChange("httpPort", e.target.value)}
-                  />
-                </StepFormField>
-              </StepFormRow>
-              <StepFormRow columns={1}>
-                <StepFormField>
-                  <Label htmlFor="protocol">Protocol</Label>
-                  <Select
-                    value={formData.protocol}
-                    onValueChange={(value) => handleInputChange("protocol", value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select protocol" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="rtsp">RTSP</SelectItem>
-                      <SelectItem value="onvif">ONVIF</SelectItem>
-                      <SelectItem value="http">HTTP</SelectItem>
-                      <SelectItem value="https">HTTPS</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </StepFormField>
-              </StepFormRow>
-            </StepFormSection>
-          </div>
+          <DeviceTreeSelect
+            data={mockDeviceData}
+            selectedIds={formData.selectedCameras}
+            onSelectionChange={(ids) => handleInputChange("selectedCameras", ids)}
+            searchPlaceholder="Search cameras, buildings or areas..."
+            selectionLabel="Cameras Assigned"
+          />
+
+          // <div className="space-y-6">
+          //   <StepFormSection title="Network Configuration" description="Configure the network settings for your device.">
+          //     <StepFormRow>
+          //       <StepFormField>
+          //         <Label htmlFor="ipAddress">IP Address</Label>
+          //         <Input
+          //           id="ipAddress"
+          //           placeholder="e.g., 192.168.1.100"
+          //           value={formData.ipAddress}
+          //           onChange={(e) => handleInputChange("ipAddress", e.target.value)}
+          //         />
+          //       </StepFormField>
+          //       <StepFormField>
+          //         <Label htmlFor="port">Main Port</Label>
+          //         <Input
+          //           id="port"
+          //           placeholder="e.g., 8080"
+          //           value={formData.port}
+          //           onChange={(e) => handleInputChange("port", e.target.value)}
+          //         />
+          //       </StepFormField>
+          //     </StepFormRow>
+          //     <StepFormRow>
+          //       <StepFormField>
+          //         <Label htmlFor="rtspPort">RTSP Port</Label>
+          //         <Input
+          //           id="rtspPort"
+          //           placeholder="e.g., 554"
+          //           value={formData.rtspPort}
+          //           onChange={(e) => handleInputChange("rtspPort", e.target.value)}
+          //         />
+          //       </StepFormField>
+          //       <StepFormField>
+          //         <Label htmlFor="httpPort">HTTP Port</Label>
+          //         <Input
+          //           id="httpPort"
+          //           placeholder="e.g., 80"
+          //           value={formData.httpPort}
+          //           onChange={(e) => handleInputChange("httpPort", e.target.value)}
+          //         />
+          //       </StepFormField>
+          //     </StepFormRow>
+          //     <StepFormRow columns={1}>
+          //       <StepFormField>
+          //         <Label htmlFor="protocol">Protocol</Label>
+          //         <Select
+          //           value={formData.protocol}
+          //           onValueChange={(value) => handleInputChange("protocol", value)}
+          //         >
+          //           <SelectTrigger>
+          //             <SelectValue placeholder="Select protocol" />
+          //           </SelectTrigger>
+          //           <SelectContent>
+          //             <SelectItem value="rtsp">RTSP</SelectItem>
+          //             <SelectItem value="onvif">ONVIF</SelectItem>
+          //             <SelectItem value="http">HTTP</SelectItem>
+          //             <SelectItem value="https">HTTPS</SelectItem>
+          //           </SelectContent>
+          //         </Select>
+          //       </StepFormField>
+          //     </StepFormRow>
+          //   </StepFormSection>
+          // </div>
         );
 
       case "credentials":
         return (
-          <div className="space-y-6">
-            <StepFormSection title="Device Credentials" description="Enter the login credentials for your device.">
-              <StepFormRow>
-                <StepFormField>
-                  <Label htmlFor="username">Username</Label>
-                  <Input
-                    id="username"
-                    placeholder="Enter username"
-                    value={formData.username}
-                    onChange={(e) => handleInputChange("username", e.target.value)}
-                  />
-                </StepFormField>
-                <StepFormField>
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Enter password"
-                    value={formData.password}
-                    onChange={(e) => handleInputChange("password", e.target.value)}
-                  />
-                </StepFormField>
-              </StepFormRow>
-            </StepFormSection>
-          </div>
+         <div className="space-y-6 px-6 py-4">
+  <StepFormSection
+    title="Device Credentials"
+    description="Enter the login credentials for your device."
+  >
+    {/* ✅ Inputs */}
+    <StepFormRow>
+      <StepFormField>
+        <Label htmlFor="username">Username</Label>
+        <Input
+          id="username"
+          placeholder="Enter username"
+          value={formData.username}
+          onChange={(e) =>
+            handleInputChange("username", e.target.value)
+          }
+        />
+      </StepFormField>
+
+      <StepFormField>
+        <Label htmlFor="password">Password</Label>
+        <Input
+          id="password"
+          type="password"
+          placeholder="Enter password"
+          value={formData.password}
+          onChange={(e) =>
+            handleInputChange("password", e.target.value)
+          }
+        />
+      </StepFormField>
+    </StepFormRow>
+
+    {/* 🔽 Divider */}
+    <div className="border-t border-border pt-6 mt-6 space-y-4">
+      <h3 className="text-sm font-semibold text-foreground">
+        Allowed Login Times
+      </h3>
+      
+    </div>
+  </StepFormSection>
+</div>
+
         );
 
       case "group":
@@ -352,40 +488,7 @@ export function AddDeviceSheet({ open, onOpenChange }: AddDeviceSheetProps) {
           </div>
         );
 
-      case "settings":
-        return (
-          <div className="space-y-6">
-            <StepFormSection title="Review & Confirm" description="Review your device configuration before adding.">
-              <div className="rounded-lg border border-border p-4 space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Device Name</span>
-                  <span className="font-medium">{formData.name || "—"}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Type</span>
-                  <span className="font-medium">{formData.type || "—"}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Make / Model</span>
-                  <span className="font-medium">{formData.make && formData.model ? `${formData.make} ${formData.model}` : "—"}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">IP Address</span>
-                  <span className="font-medium">{formData.ipAddress || "—"}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Port</span>
-                  <span className="font-medium">{formData.port || "—"}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Group</span>
-                  <span className="font-medium">{formData.group || "—"}</span>
-                </div>
-              </div>
-            </StepFormSection>
-          </div>
-        );
-
+    
       default:
         return null;
     }
@@ -400,11 +503,6 @@ export function AddDeviceSheet({ open, onOpenChange }: AddDeviceSheetProps) {
       open={open}
       onOpenChange={onOpenChange}
       title="Edit User"
-      titleIcon={
-        <div className="p-2 rounded-lg bg-primary/10">
-          <Plus className="h-5 w-5 text-primary" />
-        </div>
-      }
       description="Update configuration for kate.russell@campulse.com"
       steps={steps}
       currentStep={currentStep}

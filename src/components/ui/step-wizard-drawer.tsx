@@ -141,15 +141,15 @@ export function StepWizardDrawer({
                   onClick={() => handleStepClick(index)}
                   className={cn(
                     "flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors relative whitespace-nowrap",
-                    isActive
-                      ? "text-primary"
-                      : isCompleted
-                      ? "text-foreground"
-                      : hasError
-                      ? "text-destructive"
-                      : "text-muted-foreground",
-                    isActive &&
-                      "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary"
+                   isActive
+                  ? "text-blue-600 font-semibold"
+                  : isCompleted
+                  ? "text-blue-500"
+                  : hasError
+                  ? "text-destructive"
+                  : "text-blue-500",
+                isActive &&
+                  "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-blue-600"
                   )}
                 >
                   {isCompleted ? (
