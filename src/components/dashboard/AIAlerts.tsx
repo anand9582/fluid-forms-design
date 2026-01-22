@@ -73,7 +73,7 @@ export function AIAlerts() {
             REAL-TIME AI ALERTS
         </CardTitle>
           <div className="flex items-center gap-2">
-              <span className="bg-red-500 text-white text-[14px] font-bold px-1.5 py-0.5 rounded-full">
+              <span className="bg-red-500 text-white text-[12px] font-medium px-2 py-0.5 rounded-full">
                 122
               </span>
                 <button className="text-gray-400 hover:text-gray-600 transition-colors">
@@ -87,9 +87,9 @@ export function AIAlerts() {
         style={{ animationDelay: "0.2s" }}
       >
         {/* Alerts list */}
-        <div className="space-y-2 max-h-[600px] overflow-y-auto scrollbar-thin pr-1">
+        <div className="space-y-4 max-h-[650px] overflow-y-auto scrollbar-thin pr-1 ">
           {alerts.map((alert, index) => (
-             <div key={index} className="flex items-start gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors border p-3 shadow-md">
+             <div key={index} className="flex items-start gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors border p-3 shadow-alert">
             {/* Thumbnail Image */}
             <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
               <img 

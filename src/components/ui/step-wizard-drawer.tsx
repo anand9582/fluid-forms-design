@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ArrowLeft, ArrowRight, Check, LucideIcon } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check ,LucideIcon } from "lucide-react";
 import {
   Drawer,
   DrawerContent,
@@ -87,7 +87,6 @@ export function StepWizardDrawer({
   };
 
   const handleStepClick = (index: number) => {
-    // Allow going back freely, but validate when going forward
     if (index > currentStep) {
       if (onValidateStep && !onValidateStep(currentStep)) {
         return;
@@ -110,14 +109,14 @@ export function StepWizardDrawer({
         className={cn(
           "flex flex-col",
           isHorizontal 
-            ? "h-full w-[100vw] max-w-3xl inset-y-0 mt-0 rounded-none" 
+            ? "h-full w-[100vw] max-w-4xl inset-y-0 mt-0 rounded-none bg-white" 
             : "max-h-[90vh]",
           direction === "right" && "ml-auto right-0 left-auto rounded-l-[10px]",
           direction === "left" && "mr-auto left-0 right-auto rounded-r-[10px]",
           className
         )}
       >
-        <DrawerHeader className="px-6 pt-6 pb-4">
+        <DrawerHeader className="border-b border-border px-6 pt-0">
           <DrawerTitle className="flex items-center gap-2 text-xl">
             {titleIcon}
             {title}
@@ -126,8 +125,8 @@ export function StepWizardDrawer({
         </DrawerHeader>
 
         {/* Step Navigation */}
-        <div className="w-full border-b border-border">
-          <div className="flex items-center gap-0 px-6">
+        <div className="w-full ">
+          <div className="flex items-center gap-0 px-6 font-medium border-b p-3 gap-2">
             {steps.map((step, index) => {
               const Icon = step.icon;
               const isActive = index === currentStep;
@@ -135,37 +134,53 @@ export function StepWizardDrawer({
               const hasError = validation?.[index] && !validation[index].isValid && index < currentStep;
 
               return (
-                <button
-                  key={step.id}
-                  type="button"
-                  onClick={() => handleStepClick(index)}
-                  className={cn(
-                    "flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors relative whitespace-nowrap",
-                   isActive
-                  ? "text-blue-600 font-semibold"
-                  : isCompleted
-                  ? "text-blue-500"
-                  : hasError
-                  ? "text-destructive"
-                  : "text-blue-500",
-                isActive &&
-                  "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-blue-600"
-                  )}
-                >
-                  {isCompleted ? (
-                    <Check className="h-4 w-4 text-green-500" />
-                  ) : (
-                    <Icon className="h-4 w-4" />
-                  )}
-                  <span className="hidden sm:inline">{step.label}</span>
-                </button>
+               <button
+  key={step.id}
+  type="button"
+  onClick={() => handleStepClick(index)}
+  className={cn(
+    "flex items-center gap-2 px-4 py-2 text-sm font-normal relative whitespace-nowrap transition-all rounded-md",
+    isActive
+      ? "text-blue-600 font-semibold"
+      : isCompleted
+      ? "text-gray-700 bg-gray-100"
+      : hasError
+      ? "text-destructive"
+      : "text-gray-600",
+    isActive &&
+      "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-blue-600"
+  )}
+>
+  {/* CIRCLE ICON */}
+  <span
+    className={cn(
+      "flex h-5 w-5 items-center justify-center rounded-full   transition-colors",
+      isCompleted
+        ? "border-green-700 bg-transparent border-2 border"
+        : isActive
+        ? "border-blue-600 text-blue-600"
+        : "border-gray-300 text-gray-500"
+    )}
+  >
+    {isCompleted ? (
+      <Check className="h-3.5 w-3.5 text-green-700" />
+    ) : (
+      <Icon className="h-3.5 w-3.5" />
+    )}
+  </span>
+
+  {/* LABEL */}
+  <span className="hidden sm:inline">{step.label}</span>
+</button>
+
               );
             })}
           </div>
         </div>
 
         {/* Step Content */}
-        <div className="flex-1 overflow-y-auto px-6 py-6">{children}</div>
+        <div className="flex-1 overflow-y-auto px-6 py-4">{children}</div>
+
 
         {/* Footer Navigation */}
         <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-[#E2E8F0]">

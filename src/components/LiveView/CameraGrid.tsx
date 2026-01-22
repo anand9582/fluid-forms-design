@@ -2,23 +2,31 @@
 // Displays camera feeds in a configurable grid layout with drag-and-drop support
 
 import { useState, useMemo } from "react";
-import { Camera, Video } from "lucide-react";
+import { Camera, Maximize2, Volume2, Settings, Video, X, RotateCcw, Expand } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { gridLayouts, baseCameraFeeds } from "@/components/LiveView/data";
-import type { CameraSlot } from "@/components/LiveView/types";
+import { gridLayouts } from "@/components/LiveView/Data";
+import type { CameraSlot } from "./types";
 
 interface CameraGridProps {
   selectedLayout: string;
   autoSequence: boolean;
+  selectedSlotIndex: number | null;
+  onSlotSelect: (index: number | null) => void;
 }
 
-export function CameraGrid({ selectedLayout, autoSequence }: CameraGridProps) {
-  const [cameraSlots, setCameraSlots] = useState<CameraSlot[]>(baseCameraFeeds);
+export function CameraGrid({ selectedLayout, autoSequence, selectedSlotIndex, onSlotSelect }: CameraGridProps) {
+  // Pre-populated camera slots with some assigned cameras
+  const [cameraSlots, setCameraSlots] = useState<CameraSlot[]>([
+    { id: 1, name: "Lobby Entrance main", location: "Building A > Floor 1 > Lobby", hasCamera: true },
+    { id: 2, name: "Hall Entrance main", location: "Building A > Floor 1 > Lobby", hasCamera: true },
+    { id: 3, name: "Gym area", location: "Building B > Ground Floor", hasCamera: true },
+    { id: 4, name: "Fifth floor", location: "Building A > Floor 5", hasCamera: true },
+  ]);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   // Get current layout configuration
-  const currentLayout = gridLayouts.find(l => l.value === selectedLayout) || gridLayouts[5];
+  const currentLayout = gridLayouts.find(l => l.value === selectedLayout) || gridLayouts[1];
   const totalSlots = currentLayout.cols * currentLayout.rows;
 
   // Generate display slots based on grid size
@@ -81,12 +89,18 @@ export function CameraGrid({ selectedLayout, autoSequence }: CameraGridProps) {
     setDragOverIndex(null);
   };
 
+  const handleSlotClick = (index: number) => {
+    if (displaySlots[index]) {
+      onSlotSelect(selectedSlotIndex === index ? null : index);
+    }
+  };
+
   return (
-    <div className="flex-1 flex flex-col bg-muted/30 overflow-hidden">
+    <div className="flex-1 flex flex-col bg-muted/20 overflow-hidden">
       {/* Grid Container */}
-      <div className="flex-1 p-2 overflow-auto">
+      <div className="flex-1 p-3 overflow-auto">
         <div 
-          className="grid gap-0.5 h-full"
+          className="grid gap-2 h-full"
           style={{ 
             gridTemplateColumns: `repeat(${currentLayout.cols}, minmax(0, 1fr))`,
             gridTemplateRows: `repeat(${currentLayout.rows}, minmax(0, 1fr))`
@@ -96,41 +110,74 @@ export function CameraGrid({ selectedLayout, autoSequence }: CameraGridProps) {
             <div 
               key={index}
               draggable={!!slot}
+              onClick={() => handleSlotClick(index)}
               onDragStart={(e) => handleDragStart(e, index)}
               onDragOver={(e) => handleDragOver(e, index)}
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, index)}
               onDragEnd={handleDragEnd}
               className={cn(
-                "relative bg-muted rounded-sm overflow-hidden flex items-center justify-center min-h-[40px] transition-all duration-200",
-                slot && "cursor-grab active:cursor-grabbing",
-                draggedIndex === index && "opacity-50 scale-95",
-                dragOverIndex === index && "ring-2 ring-primary ring-inset bg-primary/10",
-                !slot && dragOverIndex === index && "bg-primary/20"
+                "relative rounded-lg overflow-hidden flex items-center justify-center min-h-[180px] transition-all duration-200",
+                slot ? [
+                  "bg-slate-900 cursor-pointer",
+                  draggedIndex === index && "opacity-50 scale-95",
+                  selectedSlotIndex === index && "ring-2 ring-primary",
+                ] : [
+                  "bg-card border-2 border-dashed border-primary/40 hover:border-primary/60",
+                  dragOverIndex === index && "border-primary bg-primary/5"
+                ]
               )}
             >
               {slot ? (
                 <>
-                  {/* Camera Feed Background */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900" />
-                  {/* Camera Name Label */}
-                  <div className="absolute top-1 left-1 z-10">
-                    <span className="text-[8px] sm:text-[10px] font-medium text-white bg-black/60 px-1 sm:px-1.5 py-0.5 rounded truncate max-w-[80%]">
+                  {/* Camera Feed Background - simulated video feed */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900">
+                    <div className="absolute inset-0 bg-[url('/placeholder.svg')] bg-cover bg-center opacity-60" />
+                  </div>
+                  
+                  {/* Camera Name Label - Top Left */}
+                  <div className="absolute top-2 left-2 z-10">
+                    <span className="text-xs font-medium text-white bg-slate-800/80 px-2 py-1 rounded">
                       {slot.name}
                     </span>
                   </div>
-                  {/* Live Indicator */}
-                  <div className="absolute bottom-1 right-1 z-10">
-                    <span className="text-[6px] sm:text-[8px] text-white/80 bg-black/60 px-1 py-0.5 rounded">
-                      LIVE
-                    </span>
+                  
+                  {/* Close Button - Top Right */}
+                  <div className="absolute top-2 right-2 z-10">
+                    <button className="text-white/70 hover:text-white bg-black/40 p-1 rounded transition-colors">
+                      <X className="h-4 w-4" />
+                    </button>
                   </div>
-                  <Video className="h-4 w-4 sm:h-6 sm:w-6 text-white/20" />
+                  
+                  {/* Bottom Control Bar - Only visible on hover/selection */}
+                  <div className={cn(
+                    "absolute bottom-2 left-1/2 -translate-x-1/2 z-10 bg-slate-800/90 rounded-lg px-2 py-1.5 flex items-center gap-1.5 transition-opacity",
+                    selectedSlotIndex === index ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                  )}>
+                    <button className="text-white/70 hover:text-white transition-colors p-1">
+                      <Expand className="h-4 w-4" />
+                    </button>
+                    <button className="text-white/70 hover:text-white transition-colors p-1">
+                      <RotateCcw className="h-4 w-4" />
+                    </button>
+                    <button className="text-white/70 hover:text-white transition-colors p-1">
+                      <Video className="h-4 w-4" />
+                    </button>
+                    <button className="text-white/70 hover:text-white transition-colors p-1">
+                      <Volume2 className="h-4 w-4" />
+                    </button>
+                    <button className="text-white/70 hover:text-white transition-colors p-1">
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
                 </>
               ) : (
-                // Empty Slot Placeholder
-                <div className="flex flex-col items-center justify-center text-muted-foreground/30">
-                  <Camera className="h-3 w-3 sm:h-4 sm:w-4" />
+                // Empty Slot Placeholder - Matching design reference
+                <div className="flex flex-col items-center justify-center gap-3 text-muted-foreground/60">
+                  <div className="p-3 rounded-full bg-muted/30">
+                    <Video className="h-6 w-6" />
+                  </div>
+                  <span className="text-sm font-medium">Drop Camera here</span>
                 </div>
               )}
             </div>
@@ -138,20 +185,22 @@ export function CameraGrid({ selectedLayout, autoSequence }: CameraGridProps) {
         </div>
       </div>
 
-      {/* Layout Status Bar */}
-      <div className="flex items-center justify-center gap-4 py-2 bg-card/90 backdrop-blur border-t border-border">
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">Layout:</span>
-          <span className="text-xs font-medium text-primary">{currentLayout.label}</span>
+      {/* Bottom Status Bar */}
+      <div className="flex items-center justify-center gap-4 py-2 border-t border-border bg-card">
+        <div className="flex items-center gap-2 text-sm">
+          <span className="text-muted-foreground">Layout:</span>
+          <span className="text-primary font-medium">{selectedLayout}</span>
         </div>
-        <div className="w-px h-3 bg-border" />
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">Auto-Sequence:</span>
-          <span className={cn("text-xs font-medium", autoSequence ? "text-primary" : "text-muted-foreground")}>
+        <span className="text-muted-foreground">|</span>
+        <div className="flex items-center gap-2 text-sm">
+          <span className="text-muted-foreground">Auto-Sequence:</span>
+          <span className={cn(
+            "font-medium",
+            autoSequence ? "text-green-500" : "text-muted-foreground"
+          )}>
             {autoSequence ? "ON" : "OFF"}
           </span>
         </div>
-        <div className="w-px h-3 bg-border" />
       </div>
     </div>
   );

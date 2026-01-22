@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ExternalLink, ChevronDown, Camera,ChevronLeft, ChevronRight } from "lucide-react";
+import { ExternalLink, ChevronDown, Camera,ChevronLeft, ChevronRight,ZoomOut,ZoomIn  } from "lucide-react";
 import facilityFloorPlan from "@/assets/img/facility-floor-plan.png";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -13,8 +13,6 @@ import {
 import {
   Plus,
   Minus,
-  RightArrow,
-  LeftArrow
 } from "@/components/ui/icons";
 
 export function FacilityMap() {
@@ -196,13 +194,13 @@ export function FacilityMap() {
                   onClick={handleZoomOut}
                   className="w-7 h-7 bg-[#171717] border-1 rounded border border-gray-200 flex items-center justify-center hover:bg-gray-500 transition-colors shadow-sm"
                 >
-                  <Minus className="w-3.5 h-3.5 text-white" />
+                  <ZoomOut className="w-4 h-4 text-white" />
                 </button>
                 <button 
                   onClick={handleZoomIn}
                   className="w-7 h-7 bg-[#171717] rounded border border-gray-200 flex items-center justify-center hover:bg-gray-500 transition-colors shadow-sm"
                 >
-                  <Plus className="w-3.5 h-3.5 text-white" />
+                  <ZoomIn   className="w-4 h-4 text-white" />
                 </button>
               </div>
 
@@ -211,13 +209,13 @@ export function FacilityMap() {
                   onClick={handlePrevSlide}
                   className="w-7 h-7 bg-[#171717] rounded border border-gray-200 flex items-center justify-center hover:bg-gray-500 transition-colors shadow-sm"
                 >
-                  <LeftArrow className="w-3.5 h-3.5 text-white" />
+                  <ChevronLeft className="w-4 h-4 text-white" />
                 </button>
                 <button 
                   onClick={handleNextSlide}
                   className="w-7 h-7 bg-[#171717] rounded border border-gray-200 flex items-center justify-center hover:bg-gray-500 transition-colors shadow-sm"
                 >
-                  <RightArrow className="w-3.5 h-3.5 text-white" />
+                  <ChevronRight className="w-4 h-4 text-white" />
                 </button>
               </div>
             {/* Slide Indicators */}

@@ -6,7 +6,7 @@ import { Camera, ChevronDown, ChevronRight, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { cameraTreeData } from "@/components/LiveView/data";
+import { cameraTreeData } from "@/components/LiveView/Data";
 
 interface CameraTreeSidebarProps {
   isVisible: boolean;

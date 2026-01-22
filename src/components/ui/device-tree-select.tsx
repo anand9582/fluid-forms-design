@@ -98,7 +98,7 @@ function TreeNode({
     <div>
       <div
             className={cn(
-                "flex items-center gap-3 px-3 py-3 hover:bg-muted/40 transition-colors",
+                "flex items-center gap-3 px-3 py-3 hover:bg-muted/40 transition-colors mb-2",
                 level === 0 && index === 0 && "border-b"
               )}
             style={{ paddingLeft: `${level * 24 + 12}px` }}
@@ -168,7 +168,7 @@ function TreeNode({
                 key={child.id}
                 node={child}
                 level={level + 1}
-                index={childIndex}     // ✅ REQUIRED
+                index={childIndex} 
                 selectedIds={selectedIds}
                 expandedIds={expandedIds}
                 onToggleExpand={onToggleExpand}
@@ -282,7 +282,7 @@ export function DeviceTreeSelect({
       </div>
 
       {/* Tree View */}
-      <ScrollArea className="h-[300px] border border-border rounded-md">
+      <ScrollArea className="border border-border rounded-md">
           {filteredData.length > 0 ? (
           filteredData.map((node, index) => (
              <TreeNode

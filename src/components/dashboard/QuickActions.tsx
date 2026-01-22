@@ -8,7 +8,7 @@ import {
 
 const actions = [
   { icon: Harddrive, label: "Add Device" },
-  { icon: Cctv, label: "Add Widget" },
+  { icon: Cctv, label: "Add Storage" },
   { icon: Support, label: "Support" },
 ];
 

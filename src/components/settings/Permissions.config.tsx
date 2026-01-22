@@ -1,76 +1,62 @@
-// permissions.config.ts
-
 export const ALL_PERMISSION_GROUPS = [
   {
-    id: "video-access",
-    name: "Video Access Control",
+    id: "LIVEVIEW",
+    name: "Live View",
     permissions: [
       {
-        id: "live-sd",
-        title: "Live view (SD)",
-        description: "View standard definition streams",
+        id: "LiveView_HD",
+        title: "Live View (HD)",
+        description: "View live video in HD quality",
       },
       {
-        id: "live-hd",
-        title: "Live view (HD)",
-        description: "View high definition streams",
+        id: "LiveView_SD",
+        title: "Live View (SD)",
+        description: "View live video in SD quality",
       },
       {
-        id: "playback",
-        title: "Playback",
-        description: "Access recorded footage",
-      },
-      {
-        id: "ptz",
+        id: "PTZControl",
         title: "PTZ Control",
-        description: "Control Pan-Tilt-Zoom cameras",
+        description: "Pan, Tilt and Zoom camera",
       },
       {
-        id: "two-way",
+        id: "Snapshot",
+        title: "Snapshot",
+        description: "Capture snapshot",
+      },
+      {
+        id: "TwoWayAudio",
         title: "Two-way Audio",
-        description: "Listen and speak through cameras",
+        description: "Talk using camera microphone",
+      },
+    ],
+  },
+  {
+    id: "PLAYBACK",
+    name: "Playback",
+    permissions: [
+      {
+        id: "PlayBack",
+        title: "Playback",
+        description: "Play recorded videos",
       },
       {
-        id: "export",
+        id: "ExportVideo",
         title: "Export Video",
-        description: "Download video clips",
+        description: "Export recorded videos",
       },
     ],
   },
-
-  {
-    id: "system-admin",
-    name: "System Administration",
+   {
+    id: "ALERTS",
+    name: "Alerts",
     permissions: [
       {
-        id: "manage-users",
-        title: "Manage Users",
-        description: "Create and edit user accounts",
-      },
-      {
-        id: "assign-cameras",
-        title: "Assign Cameras",
-        description: "Change camera assignments",
-      },
-      {
-        id: "firmware",
-        title: "Firmware Updates",
-        description: "Update device firmware",
-      },
-    ],
-  },
-
-  {
-    id: "alerts-monitoring",
-    name: "Alerts and Monitoring",
-    permissions: [
-      {
-        id: "view-alerts",
+        id: "View_Alerts",
         title: "View Alerts",
         description: "See real-time alarms",
       },
-      {
-        id: "ack-alerts",
+       {
+        id: "Acknowledge_Alerts",
         title: "Acknowledge Alerts",
         description: "Mark alerts as handled",
       },

@@ -67,7 +67,7 @@ function StorageRow({
         className={cn(
           "flex items-center gap-2 py-2 rounded-md w-full text-left",
           hasChildren ? "hover:bg-muted/50" : "",
-          level > 0 ? "pl-6" : ""
+          level > 0 ? "pl-0" : ""
         )}
         onClick={() => hasChildren && toggleRow(item.id)}
         aria-expanded={isExpanded}
@@ -147,7 +147,7 @@ function StorageRow({
       {/* CHILDREN */}
       {hasChildren && isExpanded && (
         <div className="ml-6 pl-2">
-          <p className="text-[11px] uppercase text-muted-foreground py-1">Mounted disks</p>
+          <p className="text-[11px] uppercase text-muted-foreground py-1 text-left p-6">Mounted disks</p>
           {item.children!.map((child) => (
             <StorageRow
               key={child.id}
@@ -209,14 +209,14 @@ export function StorageVolumes({
                 <span className="text-xs ml-1 text-muted-foreground">TB</span>
               </p>
             </div>
-            <div className="text-left">
+            <div className="text-center ml-5">
               <p className="text-xs uppercase text-muted-foreground font-semibold">Used</p>
               <p className="text-md font-bold text-foreground">
                 331
                 <span className="text-xs ml-1 text-muted-foreground">TB</span>
               </p>
             </div>
-             <div className="text-left">
+             <div className="text-right">
               <p className="text-xs uppercase text-muted-foreground font-semibold">Free</p>
               <p className="text-md font-bold text-black">58%</p>
             </div>

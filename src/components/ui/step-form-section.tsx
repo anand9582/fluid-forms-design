@@ -22,7 +22,7 @@ export function StepFormSection({
             <h3 className="text-sm font-medium text-foreground">{title}</h3>
           )}
           {description && (
-            <p className="text-sm text-blue-600">{description}</p>
+            <p className="text-sm text-blue-600 font-roboto uppercase font-semibold">{description}</p>
           )}
         </div>
       )}

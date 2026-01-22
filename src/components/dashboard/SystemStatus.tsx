@@ -81,7 +81,7 @@ export const SystemStatus = () => {
         </div>
 
         {/* View offline cameras */}
-        <button className="w-full text-center text-fontSize14px text-textlightred  hover:text-primary/80 transition-colors flex items-center justify-center gap-1 pt-4 border-t ">
+        <button className="w-full text-center text-fontSize14px text-textlightred  hover:text-danger transition-colors flex items-center justify-center gap-1 pt-4 border-t ">
           View {stats.offline} Offline Cameras
            <ArrowRight className="w-4 h-4 " />
         </button>

@@ -14,39 +14,42 @@ import {
 
 export function PermissionsContent() {
   const { selectedRoleId } = useRoleStore();
-  const { enabledMap, togglePermission, loadRolePermissions } = usePermissionStore();
+  const { roleName,enabledMap, togglePermission, loadRolePermissions } = usePermissionStore();
   const [initialMap, setInitialMap] = useState<Record<string, boolean>>({});
-const { setUnsavedChanges } = useSettingsStore();
+   const { setUnsavedChanges } = useSettingsStore();
+   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
   const GROUP_ICON_MAP: Record<string, JSX.Element> = {
     "video-access": <Video size={18} />,
     "system-admin": <Settings size={18} />,
   };
-
   const PERMISSION_ICON_MAP: Record<string, JSX.Element> = {
-    "live-sd": <Video size={16} />,
-    "live-hd": <Video size={16} />,
-    playback: <FileText size={16} />,
-    ptz: <Key size={16} />,
-    "two-way": <Users size={16} />,
-    export: <FileText size={16} />,
-    users: <Users size={16} />,
-    roles: <Key size={16} />,
-    settings: <Settings size={16} />,
-    firmware: <Settings size={16} />,
-    logs: <FileText size={16} />,
+      "live-sd": <Video size={16} />,
+      "live-hd": <Video size={16} />,
+      playback: <FileText size={16} />,
+      ptz: <Key size={16} />,
+      "two-way": <Users size={16} />,
+      export: <FileText size={16} />,
+      users: <Users size={16} />,
+      roles: <Key size={16} />,
+      settings: <Settings size={16} />,
+      firmware: <Settings size={16} />,
+      logs: <FileText size={16} />,
   };
 
   // Load permissions whenever role changes
-  useEffect(() => {
-    if (selectedRoleId) loadRolePermissions(selectedRoleId);
-  }, [selectedRoleId, loadRolePermissions]);
+      useEffect(() => {
+        if (!selectedRoleId) return;
+        loadRolePermissions(); 
+        
+      }, [selectedRoleId]);
+
 
   // Set initialMap to detect changes
-useEffect(() => {
-  setInitialMap({ ...enabledMap });
-  setUnsavedChanges(false);
-}, [selectedRoleId]);
+    useEffect(() => {
+      setInitialMap({ ...enabledMap });
+      setUnsavedChanges(false);
+  }, [selectedRoleId]);
 
 
 
@@ -69,17 +72,31 @@ useEffect(() => {
     })).filter((group) => group.permissions.length > 0);
   }, [enabledMap]);
 
-const handleSave = () => {
-  console.log("Saving permissions for role:", selectedRoleId, enabledMap);
-  alert("Permissions saved! Check console.");
-  setInitialMap({ ...enabledMap });
-};
+  
+  const handleSave = () => {
+      console.log("Saving permissions for role:", selectedRoleId, enabledMap);
+      alert("Permissions saved! Check console.");
+      setInitialMap({ ...enabledMap });
+  };
 
 
 useEffect(() => {
-  setUnsavedChanges(hasChanges);
+    setUnsavedChanges(hasChanges);
 }, [hasChanges, setUnsavedChanges]);
 
+
+// Total permissions (hard-coded master list)
+const totalPermissions = useMemo(() => {
+  return ALL_PERMISSION_GROUPS.reduce(
+    (total, group) => total + group.permissions.length,
+    0
+  );
+}, []);
+
+// Enabled permissions (API true wale)
+const enabledPermissions = useMemo(() => {
+  return Object.values(enabledMap).filter(Boolean).length;
+}, [enabledMap]);
 
   return (
    <div className="flex-1 overflow-auto border rounded-md">
@@ -95,7 +112,7 @@ useEffect(() => {
                 {/* Title + Badge */}
                 <div className="flex items-center gap-3">
                   <CardTitle className="font-roboto font-bold text-lg text-black-600">
-                    {selectedRoleId}
+                      {roleName}
                   </CardTitle>
 
                   {hasChanges && (
@@ -105,8 +122,8 @@ useEffect(() => {
                         bg-orange-100
                         text-orange-600
                         border border-orange-200
-                        text-[13px]
-                        font-medium
+                        text-[12px]
+                        font-semibold
                         px-4 py-1
                       "
                     >
@@ -114,16 +131,23 @@ useEffect(() => {
                     </Badge>
                   )}
                 </div>
-                <p className="text-xs md:text-sm text-muted-foreground mt-1">
-                  Showing of permissions available for this Role.
-                 </p>
+               <p className="text-xs md:text-sm text-muted-foreground mt-1">
+              Showing <span className="font-medium text-foreground">
+                {enabledPermissions}
+              </span>{" "}
+              of <span className="font-medium text-foreground">
+                {totalPermissions}
+              </span>{" "}
+              permissions enabled for this role.
+            </p>
+
               </div>
            </div>
             
           </CardHeader>
         </div>
         <div className="flex items-center gap-2 sm:gap-3">
-          <Button variant="outline" className="gap-2 text-sm shadow-lg">
+          <Button variant="outline" className="gap-2 text-sm shadow-sm">
             <Copy size={16} />
             <span className="hidden sm:inline">Duplicate</span>
           </Button>
@@ -142,7 +166,7 @@ useEffect(() => {
       <div className="space-y-6 md:space-y-8 p-4 bg-white">
         {visibleGroups.map((group) => (
           <div key={group.id}>
-            <div className="flex items-center gap-2 mb-3 md:mb-4">
+            <div className="flex items-center gap-2 mb-3 md:mb-2">
               <span className="text-muted-foreground">{group.icon}</span>
               <h3 className="text-sm font-semibold text-foreground">{group.name}</h3>
             </div>

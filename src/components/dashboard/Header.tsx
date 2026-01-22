@@ -44,12 +44,11 @@ export function Header() {
 
   return (
     <header className={`h-16 ${theme.header} flex items-center justify-between px-3 md:px-4 lg:px-6 relative sticky top-0 z-50 transition-colors duration-300`}>
-      {/* Logo - Clickable to toggle theme */}
+      {/* Clickable to toggle theme */}
       <div className="flex items-center gap-2">
         <button onClick={toggleTheme} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <span className="font-roboto text-white font-semibold text-base md:text-lg">CamPulse</span>
           <span className={`text-white text-[10px] md:text-xs font-bold  px-1.5 py-0.5 rounded`}>
-            {/* Logo Image */}
             <img
               src={Logo}
               alt="CamPulse Logo"
@@ -59,7 +58,7 @@ export function Header() {
         </button>
       </div>
 
-      {/* Search - Desktop */}
+      {/* Search Desktop */}
       <div className="hidden md:flex flex-1 max-w-lg mx-6">
         <div className="relative w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -81,7 +80,6 @@ export function Header() {
         </div>
       </div>
 
-      {/* Mobile Search Button */}
       <button 
         onClick={() => setSearchOpen(!searchOpen)}
         className="md:hidden p-2 text-white/70"
@@ -102,10 +100,8 @@ export function Header() {
           </div>
         </div>
       )}
-{/* bg-[#1a2a42] */}
-      {/* Right Side */}
+
       <div className="flex items-center gap-2 md:gap-4">
-        {/* Device Status */}
        <div
           className={`hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full ${theme.searchBg}`}
         >
@@ -115,13 +111,11 @@ export function Header() {
           <span className="text-sm text-white">138 / 142 device online</span>
         </div>
 
-        {/* AI Report Button */}
         <Button className={` ${theme.lightorange} hover:opacity-90 text-white gap-2 px-3 py-2 rounded-sm px-2 md:px-3 transition-colors duration-300`}>
            <span className="hidden sm:inline text-sm">AI Report </span>
         </Button>
 
 
-        {/* 🌐 Language dropdown */}
    <DropdownMenu>
   <DropdownMenuTrigger asChild>
     <Button

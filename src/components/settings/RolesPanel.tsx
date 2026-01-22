@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState,useEffect } from "react"
 import {
   Plus,
   ChevronDown,
@@ -21,17 +21,26 @@ export function RolesPanel({
   roleGroups = [],
   onCreateRole,
 }: RolesPanelProps) {
-  const [expandedGroups, setExpandedGroups] = useState<string[]>(["operator"])
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(["1"])
   const [hoveredRole, setHoveredRole] = useState<string | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [roleToDelete, setRoleToDelete] = useState<Role | null>(null)
   const { selectedRoleId, setSelectedRole } = useRoleStore();
   const { hasUnsavedChanges } = useSettingsStore();
   const [createRoleOpen, setCreateRoleOpen] = useState(false);
-const [newRoleName, setNewRoleName] = useState("");
+  const [newRoleName, setNewRoleName] = useState("");
 
-
-  const getAllRoles = (): Role[] => roleGroups.flatMap((group) => group.roles ?? []);
+useEffect(() => {
+  if (roleGroups.length > 0) {
+    // Expand first group
+    setExpandedGroups([roleGroups[0].id]);
+    // Auto-select first role in the first group
+    const firstRole = roleGroups[0].roles?.[0];
+    if (firstRole) {
+      setSelectedRole(Number(firstRole.id), firstRole.name);
+    }
+  }
+}, [roleGroups, setSelectedRole]);
 
   const toggleGroup = (groupId: string) => {
     setExpandedGroups((prev) =>
@@ -60,7 +69,6 @@ const [newRoleName, setNewRoleName] = useState("");
 
   return (
     <div className="w-[260px] flex flex-col h-full">
-      {/* Create Role */}
       <Button
         className="mb-4 gap-2 bg-blue-600 text-white hover:bg-blue-700"
         onClick={() => setCreateRoleOpen(true)}
@@ -80,10 +88,8 @@ const [newRoleName, setNewRoleName] = useState("");
         <div className="bg-white space-y-2 p-2">
           {roleGroups.map((group) => {
             const isExpanded = expandedGroups.includes(group.id)
-
             return (
               <div key={group.id}>
-                {/* Group Header */}
                 <button
                 onClick={() => toggleGroup(group.id)}
                 className={cn(
@@ -102,10 +108,13 @@ const [newRoleName, setNewRoleName] = useState("");
                 <span className="font-roboto font-medium uppercase">{group.name}</span>
               </button>
 
-
-                {/* Roles */}
                 {isExpanded && (
-                  <div className="border border-t-0 rounded-b-lg overflow-hidden shadow">
+                  <div className="border border-t-0 rounded-b-lg overflow-hidden shadow-xs">
+                      {/* {group.roles.length === 0 && (
+                        <div className="px-4 py-3 text-sm text-gray-400 italic">
+                            No roles available
+                        </div>
+                      )} */}
                     {group.roles.map((role) => (
                       <div
                         key={role.id}
@@ -119,24 +128,24 @@ const [newRoleName, setNewRoleName] = useState("");
                       >
                         <button
                          onClick={() => {
-                            if (hasUnsavedChanges) {
-                              alert("Save changes before switching role");
-                              return;
-                            }
-                            setSelectedRole(role.id);
+                            // if (hasUnsavedChanges) {
+                            //   alert("Save changes before switching role");
+                            //   return;
+                            // }
+                           setSelectedRole(Number(role.id), role.name)
                           }}
 
                           className={cn(
-                            "w-full px-4 py-2 text-left",
-                            selectedRoleId  === role.id
-                              ? "bg-blue-50 border-l-4 border-blue-600"
-                              : "hover:bg-gray-50"
-                          )}
+                              "w-full px-4 py-2 text-left",
+                              selectedRoleId === Number(role.id)
+                                ? "bg-blue-50 border-l-4 border-blue-600"
+                                : "hover:bg-gray-50"
+                            )}
                         >
                           <div className="font-roboto font-medium text-md  text-gray-900">
                             {role.name}
                           </div>
-                          <div className="mt-1 flex items-center gap-1 text-xs text-gray-500">
+                          <div className="flex items-center gap-1 text-xs text-gray-500">
                             <Users size={12} />
                             {role.userCount} users
                           </div>
@@ -163,11 +172,11 @@ const [newRoleName, setNewRoleName] = useState("");
       </Card>
 
       {/* Confirm Dialog */}
-<ConfirmDeleteRoleDialog
-  open={deleteDialogOpen}
-  onClose={() => setDeleteDialogOpen(false)}
-  role={roleToDelete}
-/>
+        <ConfirmDeleteRoleDialog
+          open={deleteDialogOpen}
+          onClose={() => setDeleteDialogOpen(false)}
+          role={roleToDelete}
+        />
 
 
          <CreateRoleDialog

@@ -49,7 +49,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { AddDeviceSheet } from "@/components/settings/AddDeviceSheet";
+import { AddUserSheet } from "@/components/settings/AddUser/AddUserSheet";
 
 // Device type
 interface Device {
@@ -579,7 +579,7 @@ export function AddDevicesPage() {
       )}
 
       {/* Add Device Sheet */}
-      <AddDeviceSheet open={addDeviceOpen} onOpenChange={setAddDeviceOpen} />
+      <AddUserSheet open={addDeviceOpen} onOpenChange={setAddDeviceOpen} />
     </div>
   );
 }

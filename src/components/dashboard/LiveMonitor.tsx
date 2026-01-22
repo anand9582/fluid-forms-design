@@ -3,9 +3,10 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 
 import {
   Minimize,
-  RightArrow,
   LeftArrow
 } from "@/components/ui/icons";
+
+import { ChevronRight,ChevronLeft  } from "lucide-react";
 
 export function LiveMonitor() {
   return (
@@ -52,13 +53,13 @@ export function LiveMonitor() {
                 </button>
                 <div className="flex items-center gap-2">
                   <button className="w-8 h-8 rounded-sm bg-black hover:bg-white/30 flex items-center justify-center text-white transition-colors">
-                    <LeftArrow className="w-3.5 h-3.5" />
+                    <ChevronLeft className="w-4 h-4" />
                   </button>
                   <button className="w-8 h-8 rounded-sm bg-black hover:bg-white/30 flex items-center justify-center text-white transition-colors">
-                    <RightArrow className="w-3.5 h-3.5" />
+                    <ChevronRight  className="w-4 h-4" />
                   </button>
                   <button className="w-8 h-8 rounded-sm bg-black hover:bg-white/30 flex items-center justify-center text-white transition-colors">
-                    <Minimize  className="w-3.5 h-3.5" />
+                    <Minimize  className="w-4 h-4" />
                   </button>
                 </div>
               </div>

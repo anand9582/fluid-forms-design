@@ -46,7 +46,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { UserStatus } from "../../../components/settings/UserStatus";
-import { AddDeviceSheet } from "@/components/settings/AddDeviceSheet";
+import { AddUserSheet } from "@/components/settings/AddUser/AddUserSheet";
 
 // ====================
 // Sample Data
@@ -372,8 +372,7 @@ export default function UserManagementTable() {
   </div>
 </div>
 
-      {/* Add Device Sheet */}
-      <AddDeviceSheet open={addDeviceOpen} onOpenChange={setAddDeviceOpen} />
+   <AddUserSheet open={addDeviceOpen} onOpenChange={setAddDeviceOpen} />
     </div>
   );
 }

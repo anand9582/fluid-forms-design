@@ -13,10 +13,25 @@ import {
 } from "@/components/LiveView/PagesInclude";
 
 
-export default function LiveView() {  
+export default function LiveView() {
   const [showCameraList, setShowCameraList] = useState(true);
-  const [selectedLayout, setSelectedLayout] = useState("8x8");
+  const [selectedLayout, setSelectedLayout] = useState("2x2");
   const [autoSequence, setAutoSequence] = useState(true);
+  const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(null);
+
+  // Camera data matching the grid
+  const cameraData = [
+    { name: "Lobby Entrance main", location: "Building A > Floor 1 > Lobby", bitrate: "4896" },
+    { name: "Hall Entrance main", location: "Building A > Floor 1 > Lobby", bitrate: "4896" },
+    { name: "Gym area", location: "Building B > Ground Floor", bitrate: "3200" },
+    { name: "Fifth floor", location: "Building A > Floor 5", bitrate: "4200" },
+  ];
+
+  // Get selected camera info based on slot index
+  const getSelectedCamera = () => {
+    if (selectedSlotIndex === null) return null;
+    return cameraData[selectedSlotIndex] || null;
+  };
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] animate-fade-in">
@@ -31,16 +46,21 @@ export default function LiveView() {
       {/* Main Content Area */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left Sidebar - Camera Tree */}
-        <CameraTreeSidebar isVisible={showCameraList} />
+        <CameraTreeSidebar 
+          isVisible={showCameraList} 
+          onClose={() => setShowCameraList(false)}
+        />
 
         {/* Center - Camera Grid */}
         <CameraGrid 
           selectedLayout={selectedLayout} 
-          autoSequence={autoSequence} 
+          autoSequence={autoSequence}
+          selectedSlotIndex={selectedSlotIndex}
+          onSlotSelect={setSelectedSlotIndex}
         />
 
-        {/* Right Sidebar - AI Surveillance */}
-        <AISurveillanceSidebar />
+        {/* Right Sidebar - Controls Panel */}
+        <AISurveillanceSidebar selectedCamera={getSelectedCamera()} />
       </div>
 
       {/* Bottom - Live Alerts Bar */}
@@ -48,3 +68,5 @@ export default function LiveView() {
     </div>
   );
 }
+
+

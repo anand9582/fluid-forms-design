@@ -13,37 +13,37 @@ const steps = [
     id: 1,
     title: "Add your first device",
     description:
-      "Connect a camera or device so OmniView can start streaming.\nYou can add vendor devices or use quick-add.",
-    hint: "Need help? Try the device setup wizard.",
+      "Connect a camera or device so Omni View can start streaming.You can use vendor devices or use quick add.",
+    hint: "Pro Tip: Auto-discover cameras from your server to speed things up.",
     primaryAction: "Add device",
-    secondaryAction: "Quick add",
+    secondaryAction: "Skip for now",
   },
   {
     id: 2,
-    title: "Configure your storage",
+    title: "Add Storage",
     description:
-      "Set up storage locations for your recordings.\nChoose between local storage or cloud options.",
-    hint: "Need help? Try the storage setup wizard.",
+      "Set up storage to begin recording.",
+    hint: "Pro Tip: Auto-discover cameras from your server to speed things up.",
     primaryAction: "Add storage",
-    secondaryAction: "Configure later",
+    secondaryAction: "Skip for now",
   },
   {
     id: 3,
-    title: "Open live feed",
+    title: "Open live view",
     description:
-      "View real-time streams from your connected devices.\nMonitor multiple cameras simultaneously.",
-    hint: "Need help? Try the live view tutorial.",
-    primaryAction: "Open feed",
-    secondaryAction: "Skip",
+      "You can monitor multiple cameras, verify device setup, and ensure everything is streaming correctly.",
+    hint: "Pro Tip : You can adjust layouts and save views later.",
+    primaryAction: "Open Live View",
+    secondaryAction: "Skip for now",
   },
   {
     id: 4,
-    title: "Access playback",
+    title: "Open playback",
     description:
-      "Review recorded footage and search through events.\nExport clips and create bookmarks.",
-    hint: "Need help? Try the playback guide.",
+      "Check recordings for events, timeline playback, and export clips if needed.",
+    hint: "Pro Tip : You can switch between synced playback and individual camera playback modes.",
     primaryAction: "Open playback",
-    secondaryAction: "Finish",
+    secondaryAction: "Skip for now",
   },
 ];
 

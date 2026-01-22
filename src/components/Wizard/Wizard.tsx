@@ -73,10 +73,16 @@ export function Wizard({
 
   return (
     <div
-      className={`fixed z-50 ${positionClass} ${widthClass} max-w-[calc(100%-2rem)]
-        bg-card rounded-xl shadow-xl border border-border transition-transform duration-700 ease-out
-        ${slideClass}`}
-    >
+  className={cn(
+    "fixed z-50 max-w-[calc(100%-2rem)] bg-card rounded-xl shadow-xl border border-border",
+    "transition-all duration-700 ease-out",
+    widthClass,
+    positionClass,
+    slideClass,
+    isVisible ? "mt-4" : "mt-0"
+  )}
+>
+
       {/* Header */}
       <div className="flex items-center justify-between p-4">
         <div className="flex items-center gap-3">
@@ -89,12 +95,18 @@ export function Wizard({
               ? "Get started"
               : "Welcome — Let’s get your system ready"}
           </h3>
-           <p className="text-sm font-medium  font-roboto">
+           <p className="text-sm font-normal font-roboto">
               {isExpanded
                 ? "4 quick steps to configure your system"
                 : `${currentStep}/${steps.length} steps completed`}
             </p>
+<p className="text-sm font-medium font-roboto text-gray-500 mt-1">
+              {isExpanded
+                  ? ""
+                  : `This dashboard is currently showing demo data for preview purposes.`}
+              </p>
           </div>
+
         </div>
         <div className="flex items-center gap-1">
           <button onClick={() => setIsVisible(false)} className="p-1.5 bg-muted hover:bg-muted rounded-sm">
@@ -104,6 +116,7 @@ export function Wizard({
             <ChevronUp className={`w-4 h-4 text-muted-foreground transition-transform duration-300 ${isExpanded ? '' : 'rotate-180'}`} />
           </button>
         </div>
+
       </div>
 
       {/* Expanded Content */}
@@ -151,7 +164,7 @@ export function Wizard({
           {/* Step Content */}
           {step && (
             <>
-            <div className="w-[514px]">
+            <div>
               <div className="mb-2">
                 <span className="text-xs font-semibold text-primary tracking-wide">
                   STEP {step.id} OF {steps.length}
@@ -159,7 +172,7 @@ export function Wizard({
               </div>
 
               <div className="mb-4">
-                <h4 className="text-xl  font-roboto font-semibold  mb-1">{step.title}</h4>
+                <h4 className="text-md  font-roboto font-semibold  mb-1">{step.title}</h4>
                 <p className="text-sm text-[#475569] whitespace-pre-line">{step.description}</p>
               </div>
 
@@ -168,15 +181,33 @@ export function Wizard({
                   "flex items-center gap-2 rounded-md border px-4 py-3 text-sm mb-4",
                     "border-blue-200 bg-blue-50 text-blue-600 "
                   )}>
-                  <Info className="w-4 h-4 text-primary flex-shrink-0" />
                   <span className="text-sm text-blue-700">{step.hint}</span>
                 </div>
               )}
 
-                  <div className="flex items-center gap-3 mb-3">
-                    {step.primaryAction && <Button className="flex-1 font-roboto font-medium bg-primary text-primary-foreground" onClick={handleNext}>{step.primaryAction}</Button>}
-                    {step.secondaryAction && <Button variant="outline" className="flex-1 font-roboto font-medium" onClick={handlePrev}>{step.secondaryAction}</Button>}
+                  <div className="gap-3 mb-3 ">
+                      {step.primaryAction && <Button className="flex-1 w-56 font-roboto font-medium bg-primary text-primary-foreground" onClick={handleNext}>{step.primaryAction}</Button>}
                   </div>  
+                  {/* Footer links */}
+              <div className="flex items-center justify-between text-sm">
+                <button
+                  type="button"
+                  className="text-primary font-medium hover:underline"
+                >
+                  Learn more
+                </button>
+
+                {step.secondaryAction && (
+                  <button
+                    type="button"
+                    onClick={handlePrev}
+                    className="text-muted-foreground font-medium hover:text-foreground"
+                  >
+                    {step.secondaryAction}
+                  </button>
+                )}
+              </div>
+                    {/* {step.secondaryAction && <Button variant="outline" className="flex-1 font-roboto font-medium" onClick={handlePrev}>{step.secondaryAction}</Button>} */}
                </div>
             </>
           )}
