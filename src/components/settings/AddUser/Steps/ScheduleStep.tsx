@@ -29,6 +29,8 @@ interface EventType {
 }
 
 interface ScheduleEventsStepProps {
+  currentStep: number;
+  totalSteps: number;
   scheduleData?: DaySchedule[];
   eventTypes?: EventType[];
   onScheduleChange?: (data: DaySchedule[]) => void;
@@ -58,6 +60,8 @@ const timeOptions = [
   "Closed"
 ];
 export function ScheduleStep({
+   currentStep,
+  totalSteps,
   scheduleData: externalScheduleData,
   eventTypes: externalEventTypes,
   onScheduleChange,
@@ -112,6 +116,12 @@ export function ScheduleStep({
 
   return (
     <div className="space-y-6">
+        {/* STEP HEADER */}
+    <div className="flex items-center justify-between">
+      <p className="text-xs font-semibold text-blue-600 uppercase">
+        Step {currentStep + 1} of {totalSteps}
+      </p>
+    </div>
       {/* Info Banner */}
       <div className="flex items-start gap-3 rounded-lg bg-amber-50 border border-amber-200 px-4 py-3">
         <Info className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />

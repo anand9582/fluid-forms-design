@@ -94,8 +94,8 @@ export function AddUserSheet({ open, onOpenChange }: AddUserSheetProps) {
               />
             )}
           {currentStep === 2 && <CameraAssignmentStep  currentStep={currentStep} totalSteps={steps.length} />}
-          {currentStep === 3 && <ScheduleStep  />}
-          {currentStep === 4 && <RestrictionsStep />}
+          {currentStep === 3 && <ScheduleStep currentStep={currentStep} totalSteps={steps.length} />}
+          {currentStep === 4 && <RestrictionsStep  currentStep={currentStep} totalSteps={steps.length}/>}
         </StepWizardDrawer>
       )}
     </Formik>

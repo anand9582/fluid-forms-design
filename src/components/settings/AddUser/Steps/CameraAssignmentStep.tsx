@@ -1,6 +1,7 @@
 import { DeviceTreeSelect, DeviceNode } from "@/components/ui/device-tree-select";
-import { useState, useMemo } from "react";
+import { useState } from "react";
 
+/* ---------------- MOCK DATA ---------------- */
 
 const mockDeviceData: DeviceNode[] = [
   {
@@ -43,48 +44,58 @@ const mockDeviceData: DeviceNode[] = [
   },
 ];
 
-export function CameraAssignmentStep() {
- const initialFormData = {
-  name: "",
-  ipAddress: "",
-  port: "",
-  make: "",
-  model: "",
-  type: "",
-  username: "",
-  password: "",
-  group: "",
-  rtspPort: "",
-  httpPort: "",
-  protocol: "",
+/* ---------------- PROPS TYPE ---------------- */
 
-  selectedCameras: [] as string[], 
-};
+interface CameraAssignmentStepProps {
+  currentStep: number;
+  totalSteps: number;
+}
 
-type FormErrors = Partial<Record<keyof typeof initialFormData, string>>;
+/* ---------------- COMPONENT ---------------- */
 
-    const [formData, setFormData] = useState(initialFormData);
-const handleInputChange = <K extends keyof typeof initialFormData>(
-  key: K,
-  value: (typeof initialFormData)[K]
-) => {
-  setFormData((prev) => ({
-    ...prev,
-    [key]: value,
-  }));
-};
+export function CameraAssignmentStep({
+  currentStep,
+  totalSteps,
+}: CameraAssignmentStepProps) {
+  const initialFormData = {
+    selectedCameras: [] as string[],
+  };
+
+  const [formData, setFormData] = useState(initialFormData);
+
+  const handleInputChange = (
+    value: string[]
+  ) => {
+    setFormData({ selectedCameras: value });
+  };
+
+  const assignedCount = formData.selectedCameras.length;
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold">Network ss</h2>
-       <DeviceTreeSelect
-            data={mockDeviceData}
-            selectedIds={formData.selectedCameras}
-            onSelectionChange={(ids) => handleInputChange("selectedCameras", ids)}
-            searchPlaceholder="Search cameras, buildings or areas..."
-            selectionLabel="Cameras Assigned"
-          />  
+      {/* HEADER ROW */}
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-semibold text-blue-600 uppercase">
+          Step {currentStep + 1} of {totalSteps}
+        </p>
 
+        {assignedCount > 0 && (
+          <span className="text-sm font-medium text-blue-600 flex items-center gap-1">
+            <span className="h-5 w-5 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center">
+              {assignedCount}
+            </span>
+            Cameras Assigned
+          </span>
+        )}
+      </div>
+
+      <DeviceTreeSelect
+        data={mockDeviceData}
+        selectedIds={formData.selectedCameras}
+        onSelectionChange={handleInputChange}
+        searchPlaceholder="Search cameras, buildings or areas..."
+        selectionLabel="Cameras Assigned"
+      />
     </div>
   );
 }

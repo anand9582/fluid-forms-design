@@ -95,7 +95,7 @@ export function Wizard({
               ? "Get started"
               : "Welcome — Let’s get your system ready"}
           </h3>
-           <p className="text-sm font-normal font-roboto">
+           <p className="text-[12px] font-medium font-roboto">
               {isExpanded
                 ? "4 quick steps to configure your system"
                 : `${currentStep}/${steps.length} steps completed`}
@@ -110,10 +110,10 @@ export function Wizard({
         </div>
         <div className="flex items-center gap-1">
           <button onClick={() => setIsVisible(false)} className="p-1.5 bg-muted hover:bg-muted rounded-sm">
-            <X className="w-4 h-4 text-muted-foreground" />
+            <X className="w-4 h-4 " />
           </button>
           <button onClick={() => setIsExpanded(!isExpanded)} className="p-1.5 bg-muted hover:bg-muted rounded-sm">
-            <ChevronUp className={`w-4 h-4 text-muted-foreground transition-transform duration-300 ${isExpanded ? '' : 'rotate-180'}`} />
+            <ChevronUp className={`w-4 h-4  transition-transform duration-300 ${isExpanded ? '' : 'rotate-180'}`} />
           </button>
         </div>
 
@@ -134,17 +134,16 @@ export function Wizard({
               key={index}
               onClick={() => setCurrentStep(index)}
               className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all",
+                "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all font-roboto",
                 
                 isCompleted &&
                   "bg-green-50 text-green-700",
-
                 isActive &&
-                  "border border-neutral-300 bg-white shadow-sm text-foreground",
+                  "border border-neutral-300 bg-white shadow-alert text-foreground",
 
                 !isCompleted &&
                   !isActive &&
-                  "bg-muted text-muted-foreground hover:bg-muted/80"
+                  "bg-muted text-black hover:bg-muted/80"
               )}
             >
               {isCompleted ? (
@@ -172,18 +171,22 @@ export function Wizard({
               </div>
 
               <div className="mb-4">
-                <h4 className="text-md  font-roboto font-semibold  mb-1">{step.title}</h4>
-                <p className="text-sm text-[#475569] whitespace-pre-line">{step.description}</p>
+                  <h4 className="text-md  font-roboto font-semibold  mb-2">{step.title}</h4>
+                  <p className="text-sm text-[#737373] whitespace-pre-line">{step.description}</p>
               </div>
 
-              {step.hint && (
-                <div className={cn(
-                  "flex items-center gap-2 rounded-md border px-4 py-3 text-sm mb-4",
-                    "border-blue-200 bg-blue-50 text-blue-600 "
-                  )}>
-                  <span className="text-sm text-blue-700">{step.hint}</span>
-                </div>
-              )}
+             {step.hint && (
+                    <div
+                      className={cn(
+                        "rounded-md border px-4 py-3 text-sm mb-4",
+                        "border-blue-200 bg-blue-50 text-[#2563EB]"
+                      )}
+                    >
+                      <span className="font-medium font-roboto">Pro Tip:</span>{" "}
+                      <span>{step.hint.replace(/^Pro Tip:\s*/i, "")}</span>
+                    </div>
+                  )}
+
 
                   <div className="gap-3 mb-3 ">
                       {step.primaryAction && <Button className="flex-1 w-56 font-roboto font-medium bg-primary text-primary-foreground" onClick={handleNext}>{step.primaryAction}</Button>}
@@ -201,7 +204,7 @@ export function Wizard({
                   <button
                     type="button"
                     onClick={handlePrev}
-                    className="text-muted-foreground font-medium hover:text-foreground"
+                    className="text-muted-foreground font-medium hover:text-foreground underline"
                   >
                     {step.secondaryAction}
                   </button>

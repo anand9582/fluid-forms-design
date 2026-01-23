@@ -31,7 +31,7 @@ const App = () => (
             <Route path="/login" element={<LoginPage />} />
             <Route element={<AppLayout />}>
               <Route path="/" element={<Index />} />
-              <Route path="/live" element={<LiveView />} />
+              {/* <Route path="/live" element={<LiveView />} /> */}
               <Route path="/settings" element={<SettingsLayout />}>
                 <Route index element={<SettingsOverview />} />
               </Route>

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ArrowLeft, ArrowRight, Check ,LucideIcon } from "lucide-react";
+import { ArrowLeft, ArrowRight ,LucideIcon } from "lucide-react";
 import {
   Drawer,
   DrawerContent,
@@ -9,6 +9,9 @@ import {
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import {
+  Check,
+} from "@/components/ui/icons";
 
 export interface WizardStep {
   id: string;
@@ -146,30 +149,28 @@ export function StepWizardDrawer({
       ? "text-gray-700 bg-gray-100"
       : hasError
       ? "text-destructive"
-      : "text-gray-600",
+      : "text-gray-600 ",
     isActive &&
       "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-blue-600"
   )}
 >
-  {/* CIRCLE ICON */}
   <span
     className={cn(
       "flex h-5 w-5 items-center justify-center rounded-full   transition-colors",
       isCompleted
-        ? "border-green-700 bg-transparent border-2 border"
+        ? "border-green-700 bg-transparent"
         : isActive
         ? "border-blue-600 text-blue-600"
         : "border-gray-300 text-gray-500"
     )}
   >
     {isCompleted ? (
-      <Check className="h-3.5 w-3.5 text-green-700" />
+      <Check className="h-4 w-4 text-green-700" />
     ) : (
       <Icon className="h-3.5 w-3.5" />
     )}
   </span>
 
-  {/* LABEL */}
   <span className="hidden sm:inline">{step.label}</span>
 </button>
 

@@ -8,7 +8,7 @@ import {
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import {Card, CardHeader, CardTitle,CardContent } from "@/components/ui/card";
-import { storageData } from "@/components/dashboard/sampleStorageData";
+import { storageData } from "@/components/dashboard/SampleStorageData";
 import { useTheme } from "@/context/ThemeContext";
 import { themeColors } from "@/theme/themeColors";
 
