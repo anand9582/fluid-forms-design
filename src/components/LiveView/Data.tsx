@@ -1,6 +1,6 @@
 // Static data for Live View components
 
-import type { CameraTreeData, AIFeature, GridLayout, SavedView, Alert, CameraSlot } from "@/components/LiveView/types";
+import type { CameraTreeData, AIFeature, GridLayout, SavedView, Alert, CameraSlot } from "@/components/LiveView/Types";
 
 // Camera tree hierarchy data
 export const cameraTreeData: CameraTreeData = {

@@ -50,7 +50,7 @@ export function CameraTreeSidebar({ isVisible }: CameraTreeSidebarProps) {
 
   return (
     <div className={cn(
-      "w-72 lg:w-80 border-r border-border bg-card flex-shrink-0 flex flex-col transition-all duration-300 overflow-hidden",
+      "w-72 lg:w-72 border-r border-border bg-card flex-shrink-0 flex flex-col transition-all duration-300 overflow-hidden",
       isVisible ? "max-w-72 lg:max-w-80" : "max-w-0 border-0"
     )}>
       {/* Header with Search */}

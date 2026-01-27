@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useSettingsStore } from "@/Store/SettingsStore";
 import {
   Select,
   SelectContent,
@@ -49,7 +50,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { AddUserSheet } from "@/components/settings/AddUser/AddUserSheet";
+
 
 // Device type
 interface Device {
@@ -162,7 +163,7 @@ export function AddDevicesPage() {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [addDeviceOpen, setAddDeviceOpen] = useState(false);
+const { setActiveRoute, setActiveItem } = useSettingsStore();
   const [rowSelection, setRowSelection] = useState({});
 
   // Stats
@@ -170,6 +171,10 @@ export function AddDevicesPage() {
   const onlineDevices = devicesData.filter((d) => d.status === "online").length;
   const offlineDevices = devicesData.filter((d) => d.status === "offline").length;
   const issueDevices = devicesData.filter((d) => d.status === "maintenance").length;
+    const openAddDevicePage = () => {
+      setActiveItem("add-devices"); 
+    setActiveRoute("/settings/devices/adddevices");
+    };
 
   // Columns definition
   const columns = useMemo(
@@ -341,7 +346,7 @@ export function AddDevicesPage() {
             Manage connected hardware, status, and system configuration.
           </p>
         </div>
-        <Button onClick={() => setAddDeviceOpen(true)} className="gap-2">
+        <Button  className="gap-2" onClick={openAddDevicePage}>
           <Plus className="h-4 w-4" />
           Add Device
         </Button>
@@ -578,8 +583,6 @@ export function AddDevicesPage() {
         </div>
       )}
 
-      {/* Add Device Sheet */}
-      <AddUserSheet open={addDeviceOpen} onOpenChange={setAddDeviceOpen} />
     </div>
   );
 }

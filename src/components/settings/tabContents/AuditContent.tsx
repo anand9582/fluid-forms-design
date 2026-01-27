@@ -60,7 +60,7 @@ const auditLogs: AuditLog[] = [
   {
     id: "1",
     timestamp: "2023-10-25 14:32:01",
-    user: { name: "Kate Russell", email: "kate.russell@campulse.com" },
+    user: { name: "Kate Russell DD", email: "kate.russell@campulse.com" },
     action: "Login",
     target: "System",
     ipAddress: "192.168.1.45",
@@ -224,64 +224,64 @@ export default function AuditLogsTable() {
           />
         </div>
 
- <div className="flex items-center gap-2">
-  {/* Event Type */}
-  <Select value={eventFilter} onValueChange={setEventFilter}>
-    <SelectTrigger
-      className="
-        w-[150px]
-        bg-transparent
-        border-border
-        shadow-none
-        hover:bg-muted/10
-        focus:bg-transparent
-      "
-    >
-      <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
-      <SelectValue placeholder="Event Type" />
-    </SelectTrigger>
+    <div className="flex items-center gap-2">
+      {/* Event Type */}
+      <Select value={eventFilter} onValueChange={setEventFilter}>
+        <SelectTrigger
+          className="
+            w-[150px]
+            bg-transparent
+            border-border
+            shadow-none
+            hover:bg-muted/10
+            focus:bg-transparent
+          "
+        >
+          <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
+          <SelectValue placeholder="Event Type" />
+        </SelectTrigger>
 
-    <SelectContent>
-      <SelectItem value="all">All Events</SelectItem>
-      {events.map((e) => (
-        <SelectItem key={e} value={e}>
-          {e}
-        </SelectItem>
-      ))}
-    </SelectContent>
-  </Select>
+        <SelectContent>
+          <SelectItem value="all">All Events</SelectItem>
+          {events.map((e) => (
+            <SelectItem key={e} value={e}>
+              {e}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
-  {/* Result / Date */}
-  <Select value={resultFilter} onValueChange={setResultFilter}>
-    <SelectTrigger
-      className="
-        w-[150px]
-        bg-transparent
-        border-border
-        shadow-none
-        hover:bg-muted/10
-        focus:bg-transparent
-      "
-    >
-      <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-      <SelectValue placeholder="Last 7 Days" />
-    </SelectTrigger>
+      {/* Result / Date */}
+      <Select value={resultFilter} onValueChange={setResultFilter}>
+        <SelectTrigger
+          className="
+            w-[150px]
+            bg-transparent
+            border-border
+            shadow-none
+            hover:bg-muted/10
+            focus:bg-transparent
+          "
+        >
+          <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+          <SelectValue placeholder="Last 7 Days" />
+        </SelectTrigger>
 
-    <SelectContent>
-      <SelectItem value="all">Last 7 Days</SelectItem>
-      <SelectItem value="Success">Success</SelectItem>
-      <SelectItem value="Failed">Failed</SelectItem>
-    </SelectContent>
-  </Select>
+        <SelectContent>
+          <SelectItem value="all">Last 7 Days</SelectItem>
+          <SelectItem value="Success">Success</SelectItem>
+          <SelectItem value="Failed">Failed</SelectItem>
+        </SelectContent>
+      </Select>
 
-  {/* Export */}
-  <Button
-    variant="outline"
-  >
-    <Download className="h-4 w-4" />
-    Export
-  </Button>
-</div>
+      {/* Export */}
+      <Button
+        variant="outline"
+      >
+        <Download className="h-4 w-4" />
+        Export
+      </Button>
+    </div>
 
       </div>
 

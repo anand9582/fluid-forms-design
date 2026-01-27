@@ -23,8 +23,8 @@ export function SettingsTabs({
 }: SettingsTabsProps) {
   return (
     <Tabs
-      value={activeTab}             // controlled if provided
-      defaultValue={defaultValue}   // uncontrolled if activeTab not provided
+      value={activeTab}            
+      defaultValue={defaultValue}  
       onValueChange={onTabChange}
       className="flex-1 flex flex-col overflow-hidden pl-4"
     >

@@ -7,7 +7,7 @@
     CollapsibleContent,
     CollapsibleTrigger,
   } from "@/components/ui/collapsible";
-  import { sidebarItems } from "@/components/settings/sidebarConfigs/Sidebar-config";
+  import { sidebarItems } from "@/components/settings/SidebarConfigs/Sidebar-config";
 
   interface Props {
     activeItem: string;

@@ -326,7 +326,8 @@ export default function UserManagementTable() {
             disabled={!table.getCanPreviousPage()}
             className="h-8 gap-1 text-muted-foreground hover:text-foreground"
           >
-            <ChevronLeft className="h-4 w-4" /> Previous
+            <ChevronLeft className="h-4 w-4" /> 
+            Previous
           </Button>
 
           {getPageNumbers().map((p, idx) =>

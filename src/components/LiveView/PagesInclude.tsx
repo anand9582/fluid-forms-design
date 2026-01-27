@@ -28,4 +28,4 @@ export {
   alertsData,
   savedViewsData,
   baseCameraFeeds,
-} from "@/components/LiveView/data";
+} from "@/components/LiveView/Data";

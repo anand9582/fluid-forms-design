@@ -3,11 +3,12 @@
     import { SettingsTabs, TabsContent } from "./SettingsTab";
     import { manageUsersTabs } from "./tabConfigs/ManageUsers";
     import { AddDeviceTabs } from "./tabConfigs/AddDevices"; 
-    import { AddDevicesPage } from "./AddDevicesPage";
+    import { AddDevicesPage } from "./AddedDevices";
     import RolesContent from "./tabContents/RolesContent";
     import UsersContent from "./tabContents/UsersContent";
     import AuditContent from "./tabContents/AuditContent";
     import ConfigureDevicesPage from "./configure-devices/ConfigureDevicesPage";
+    import { AddedDevicesPage } from "@/components/settings/Added-Devices/AddedDevicesPage";
     import { useSettingsStore } from "@/Store/SettingsStore"; 
     import { useRoleStore } from "@/Store/RoleStore";
 
@@ -62,7 +63,7 @@
             )}
 
             {activeRoute === "/settings/devices/add" && <AddDevicesPage />}
-
+            {activeRoute === "/settings/devices/adddevices" && <AddedDevicesPage />}
             {activeRoute === "/settings/devices/configure" && (
               <ConfigureDevicesPage />
             )}

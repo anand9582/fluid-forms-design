@@ -25,7 +25,7 @@ import {
 import { cn } from "@/lib/utils";
 import { gridLayouts, savedViewsData } from "./Data";
 import type { SavedView } from "./types";
-
+import {Devices} from "@/components/ui/icons";
 interface LiveViewToolbarProps {
   showCameraList: boolean;
   onToggleCameraList: () => void;
@@ -54,7 +54,7 @@ export function LiveViewToolbar({
   };
 
   return (
-    <div className="flex items-center justify-between gap-4 px-4 py-2 border-b border-border bg-muted/30">
+    <div className="flex items-center justify-between gap-4 px-4 py-3 border-b border-border bg-[#E2E8F0]">
       {/* Left Section */}
       <div className="flex items-center gap-3">
         {/* Toggle Camera List Button */}
@@ -62,23 +62,23 @@ export function LiveViewToolbar({
           variant="ghost" 
           size="sm" 
           onClick={onToggleCameraList}
-          className="gap-2 h-8 px-3 text-muted-foreground hover:text-foreground hover:bg-accent"
+          className="gap-2 h-[36px] px-3 text-black hover:text-foreground hover:bg-accent bg-[#F5F5F5]"
         >
-          <Camera className="h-4 w-4 text-primary" />
-          <span className="text-sm">{showCameraList ? "Hide" : "Show"} Camera List</span>
+          <Devices className="" />
+          <span className="text-sm font-roboto font-medium">{showCameraList ? "Hide" : "Show"} Camera List</span>
         </Button>
         
         {/* Saved Views Dropdown */}
-        <DropdownMenu open={viewsDropdownOpen} onOpenChange={setViewsDropdownOpen}>
+        <DropdownMenu open={viewsDropdownOpen} onOpenChange={setViewsDropdownOpen} >
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="gap-2 h-8 px-3 text-foreground hover:bg-accent">
+            <Button variant="ghost" size="sm" className="gap-2 h-[36px]  px-3 text-foreground hover:bg-accent bg-[#F5F5F5] text-black">
               <span className="text-sm">{selectedView}</span>
               <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-[280px] p-0 bg-popover border border-border shadow-lg z-50">
+          <DropdownMenuContent align="start" className="w-[280px] p-0 bg-popover border border-border shadow-lg z-50 ">
             {/* Search Input */}
-            <div className="p-2 border-b border-border">
+            <div className="p-2 border-b border-border ">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input 
@@ -93,7 +93,7 @@ export function LiveViewToolbar({
                 <div 
                   key={view.id}
                   className={cn(
-                    "flex items-center justify-between px-3 py-2.5 cursor-pointer hover:bg-accent transition-colors",
+                    "flex items-center justify-between px-3 py-2.5 cursor-pointer hover:bg-accent transition-colors bg-white",
                     selectedView === view.name && "bg-accent"
                   )}
                   onClick={() => {
@@ -117,59 +117,91 @@ export function LiveViewToolbar({
         </DropdownMenu>
       </div>
 
+ {/* Grid Layout Buttons */}
+    {/* Grid Layout Buttons */}
+<div className="flex items-center gap-2">
+  {/* White Grid Container */}
+  <div
+    className="
+      flex items-center justify-between
+      w-[150px] h-[35px]
+      bg-[#F5F5F5]
+      rounded-md
+      border border-border
+      px-1
+      shadow-sm
+    "
+  >
+    <Button
+      variant="ghost"
+      size="icon"
+      className={cn(
+        "h-7 w-7",
+        selectedLayout === "2x2" && "bg-accent"
+      )}
+      onClick={() => onLayoutChange("2x2")}
+    >
+      <Grid2X2 className="h-4 w-4 text-muted-foreground" />
+    </Button>
+
+    <Button
+      variant="ghost"
+      size="icon"
+      className={cn(
+        "h-7 w-7",
+        selectedLayout === "3x3" && "bg-accent"
+      )}
+      onClick={() => onLayoutChange("3x3")}
+    >
+      <Grid3X3 className="h-4 w-4 text-muted-foreground" />
+    </Button>
+
+    <Button
+      variant="ghost"
+      size="icon"
+      className={cn(
+        "h-7 w-7",
+        selectedLayout === "4x4" && "bg-accent"
+      )}
+      onClick={() => onLayoutChange("4x4")}
+    >
+      <div className="grid grid-cols-4 gap-px w-4 h-4">
+        {[...Array(16)].map((_, i) => (
+          <div key={i} className="bg-current rounded-[1px]" />
+        ))}
+      </div>
+    </Button>
+
+    <Button
+      variant="ghost"
+      size="icon"
+      className={cn(
+        "h-7 w-7",
+        selectedLayout === "1+5" && "bg-accent"
+      )}
+      onClick={() => onLayoutChange("1+5")}
+    >
+      <LayoutGrid className="h-4 w-4 text-muted-foreground" />
+    </Button>
+  </div>
+
+  {/* Plus Button (Outside Box) */}
+  <Button
+    variant="ghost"
+    size="icon"
+    className="h-[24px] w-[24px] bg-white border border-border rounded shadow-sm"
+    onClick={() => setShowGridBuilder(true)}
+  >
+    <Plus className="h-4 w-4 text-black" />
+  </Button>
+</div>
+
+
       {/* Right Section - Grid Layout Buttons + Save View */}
       <div className="flex items-center gap-2">
-        {/* Grid Layout Buttons */}
-        <div className="flex items-center gap-1">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className={cn("h-8 w-8", selectedLayout === "2x2" && "bg-accent")}
-            onClick={() => onLayoutChange("2x2")}
-          >
-            <Grid2X2 className="h-4 w-4 text-muted-foreground" />
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className={cn("h-8 w-8", selectedLayout === "3x3" && "bg-accent")}
-            onClick={() => onLayoutChange("3x3")}
-          >
-            <Grid3X3 className="h-4 w-4 text-muted-foreground" />
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className={cn("h-8 w-8", selectedLayout === "4x4" && "bg-accent")}
-            onClick={() => onLayoutChange("4x4")}
-          >
-            <div className="grid grid-cols-4 gap-px w-4 h-4">
-              {[...Array(16)].map((_, i) => (
-                <div key={i} className="bg-current rounded-[1px]" />
-              ))}
-            </div>
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className={cn("h-8 w-8", selectedLayout === "1+5" && "bg-accent")}
-            onClick={() => onLayoutChange("1+5")}
-          >
-            <LayoutGrid className="h-4 w-4 text-muted-foreground" />
-          </Button>
-          {/* Custom Grid Builder Button */}
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8"
-              onClick={() => setShowGridBuilder(true)}
-          >
-            <Plus className="h-4 w-4 text-muted-foreground" />
-          </Button>
-        </div>
-
+       
         {/* Save View Button */}
-        <Button className="gap-2 h-8 px-4 bg-primary text-primary-foreground hover:bg-primary/90">
+        <Button className="gap-2 h-[36px] px-4 bg-primary text-primary-foreground hover:bg-primary/90">
           <Save className="h-4 w-4" />
           <span className="text-sm">Save View</span>
         </Button>

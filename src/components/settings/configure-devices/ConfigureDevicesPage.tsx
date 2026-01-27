@@ -1,10 +1,9 @@
 import { useState } from "react";
-
 import { SettingsHeader } from "@/components/settings/SettingsHeader";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { configureDeviceTabs } from "@/components/settings/sidebarConfigs/configureDeviceTabs";
+import { configureDeviceTabs } from "@/components/settings/SidebarConfigs/ConfigureDeviceTabs";
 import { SettingsTabs, TabsContent } from "@/components/settings/SettingsTab";
 import CameraDetails from "@/components/settings/tabContents/Tabs_configure/CameraDetails";
 
@@ -273,12 +272,12 @@ const ConfigureDevicesPage = () => {
               </div>
 
               <SettingsTabs defaultValue="network" tabs={configureDeviceTabs}>
-                <TabsContent value="network">
-                  <CameraDetails />
-                </TabsContent>
-                <TabsContent value="recording">
-                  Recording settings here
-                </TabsContent>
+                  <TabsContent value="network">
+                      <CameraDetails />
+                  </TabsContent>
+                  <TabsContent value="recording">
+                    Recording settings here
+                  </TabsContent>
               </SettingsTabs>
             </>
           )}

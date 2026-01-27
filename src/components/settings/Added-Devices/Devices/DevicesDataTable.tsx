@@ -1,0 +1,298 @@
+import { useState } from "react";
+import {
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  getPaginationRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
+import { Camera , Eye, EyeOff } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+export interface DiscoveredDevice {
+  id: string;
+  name: string;
+  ip: string;
+  port: string;
+  make: string;
+  model: string;
+  type: string;
+  username: string;
+  password: string;
+  group: string;
+}
+
+interface DevicesDataTableProps {
+  data: DiscoveredDevice[];
+  selectedCount: number;
+  onSelectionChange: (count: number) => void;
+}
+
+export function DevicesDataTable({ data, selectedCount, onSelectionChange }: DevicesDataTableProps) {
+  const [rowSelection, setRowSelection] = useState({});
+  const [visiblePasswords, setVisiblePasswords] = useState<Set<string>>(new Set());
+
+  const togglePasswordVisibility = (id: string) => {
+    setVisiblePasswords(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const columns: ColumnDef<DiscoveredDevice>[] = [
+    {
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          checked={table.getIsAllPageRowsSelected() ? true : table.getIsSomePageRowsSelected() ? "indeterminate" : false}
+          onCheckedChange={(value) => {
+            table.toggleAllPageRowsSelected(!!value);
+            onSelectionChange(value ? table.getRowCount() : 0);
+          }}
+          aria-label="Select all"
+            className="h-4 w-4 rounded border border-[muted-foreground/40 ]data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+  className="h-4 w-4 rounded border border-muted-foreground/40 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+  checked={row.getIsSelected()}
+  onCheckedChange={(value) => {
+    row.toggleSelected(!!value);
+    const newCount = value ? selectedCount + 1 : selectedCount - 1;
+    onSelectionChange(Math.max(0, newCount));
+  }}
+  aria-label="Select row"
+/>
+
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
+    {
+      accessorKey: "name",
+      header: "Device Name",
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2">
+          <div className="flex h-6 w-6 items-center justify-center rounded-sm bg-gray-200">
+            <Camera className="h-4 w-4 text-gray-600" />
+          </div>
+          <span className="text-foreground">{row.getValue("name")}</span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "ip",
+      header: "IP Address",
+      cell: ({ row }) => <span className="text-foreground">{row.getValue("ip")}</span>,
+    },
+    {
+      accessorKey: "port",
+      header: "Port",
+      cell: ({ row }) => <span className="text-tablecolor">{row.getValue("port")}</span>,
+    },
+    {
+      accessorKey: "makeModel",
+      header: "Make/ Model",
+      cell: ({ row }) => (
+        <div>
+          <div className="text-foreground">{row.original.make}</div>
+          <div className="text-muted-foreground text-sm">{row.original.model}</div>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "type",
+      header: "Type",
+      cell: ({ row }) => (
+        <span className="text-primary cursor-pointer hover:underline">{row.getValue("type")}</span>
+      ),
+    },
+    {
+      accessorKey: "username",
+      header: "Username",
+      cell: ({ row }) => <span className="text-foreground">{row.getValue("username")}</span>,
+    },
+    {
+      accessorKey: "password",
+      header: "Password",
+      cell: ({ row }) => {
+        const id = row.original.id;
+        const isVisible = visiblePasswords.has(id);
+        return (
+          <div className="flex items-center gap-2">
+            <span className="text-foreground">
+              {isVisible ? row.getValue("password") : "••••••••"}
+            </span>
+            <button
+              onClick={() => togglePasswordVisibility(id)}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              {isVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "group",
+      header: "Group",
+      cell: ({ row }) => <span className="text-tablecolor">{row.getValue("group")}</span>,
+    },
+  ];
+
+  const table = useReactTable({
+    data,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    onRowSelectionChange: setRowSelection,
+    state: {
+      rowSelection,
+    },
+    initialState: {
+      pagination: {
+        pageSize: 10,
+      },
+    },
+  });
+
+  const totalRows = data.length;
+  const pageSize = table.getState().pagination.pageSize;
+  const currentPage = table.getState().pagination.pageIndex + 1;
+  const totalPages = table.getPageCount();
+
+  return (
+    <div className="space-y-4">
+       <div className="bg-card border border-border overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-b border-border hover:bg-transparent bg-[#F1F5F9]">
+              {table.getHeaderGroups().map((headerGroup) =>
+                headerGroup.headers.map((header) => (
+                  <TableHead key={header.id} className="text-textpar font-roboto font-medium text-xs sm:text-sm whitespace-nowrap">
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(header.column.columnDef.header, header.getContext())}
+                  </TableHead>
+                ))
+              )}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                  className="border-border hover:bg-muted/50"
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id} className="text-xs sm:text-sm py-2 sm:py-4">
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={columns.length} className="h-24 text-center text-sm">
+                  No devices discovered. Click "Start scan" to begin.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Pagination */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs sm:text-sm">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <span>Showing {Math.min(pageSize, totalRows)} of {totalRows}</span>
+          <Select
+            value={String(pageSize)}
+            onValueChange={(value) => table.setPageSize(Number(value))}
+          >
+            <SelectTrigger className="w-14 sm:w-16 h-7 sm:h-8 border-border text-xs sm:text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="5">5</SelectItem>
+              <SelectItem value="10">10</SelectItem>
+              <SelectItem value="20">20</SelectItem>
+              <SelectItem value="50">50</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground text-xs sm:text-sm h-7 sm:h-8 px-2 sm:px-3"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            ‹ Prev
+          </Button>
+          {Array.from({ length: Math.min(3, totalPages) }, (_, i) => i + 1).map((page) => (
+            <Button
+              key={page}
+              variant={currentPage === page ? "outline" : "ghost"}
+              size="sm"
+              className={`h-7 sm:h-8 w-7 sm:w-8 p-0 text-xs sm:text-sm ${currentPage === page ? "border-border bg-card" : ""}`}
+              onClick={() => table.setPageIndex(page - 1)}
+            >
+              {page}
+            </Button>
+          ))}
+          {totalPages > 5 && (
+            <>
+              <span className="px-1 sm:px-2 text-muted-foreground">...</span>
+              {[totalPages - 1, totalPages].map((page) => (
+                <Button
+                  key={page}
+                  variant={currentPage === page ? "outline" : "ghost"}
+                  size="sm"
+                  className="h-7 sm:h-8 w-7 sm:w-8 p-0 text-xs sm:text-sm"
+                  onClick={() => table.setPageIndex(page - 1)}
+                >
+                  {page}
+                </Button>
+              ))}
+            </>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground text-xs sm:text-sm h-7 sm:h-8 px-2 sm:px-3"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            Next ›
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}

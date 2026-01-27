@@ -85,28 +85,30 @@ export function Wizard({
 
       {/* Header */}
       <div className="flex items-center justify-between p-4">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-sm font-semibold text-black">
-            KR
-          </div>
-          <div>
-           <h3 className="text-md font-medium  font-roboto">
-            {isExpanded
-              ? "Get started"
-              : "Welcome — Let’s get your system ready"}
-          </h3>
-           <p className="text-[12px] font-medium font-roboto">
+        <div className=" items-center gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-sm font-roboto font-medium text-black">
+              KR
+            </div>
+            <div>
+            <h3 className="text-md font-medium  font-roboto">
               {isExpanded
-                ? "4 quick steps to configure your system"
-                : `${currentStep}/${steps.length} steps completed`}
-            </p>
-<p className="text-sm font-medium font-roboto text-gray-500 mt-1">
-              {isExpanded
-                  ? ""
-                  : `This dashboard is currently showing demo data for preview purposes.`}
+                ? "Get started"
+                : "Welcome — Let’s get your system ready"}
+            </h3>
+            <p className="text-sm font-normal font-roboto">
+                {isExpanded
+                  ? "4 quick steps to configure your system"
+                  : `${currentStep}/${steps.length} steps completed`}
               </p>
+            </div>
           </div>
 
+        <p className="text-sm font-normal font-roboto text-gray-500 mt-1">
+            {isExpanded
+                ? ""
+                : `This dashboard is currently showing demo data for preview purposes.`}
+            </p>
         </div>
         <div className="flex items-center gap-1">
           <button onClick={() => setIsVisible(false)} className="p-1.5 bg-muted hover:bg-muted rounded-sm">

@@ -9,6 +9,7 @@ import SettingsOverview from "@/components/settings/SettingsOverview";
 // import ManageUsers from "@/components/settings/ManageUsers";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { SettingsLayout } from "@/components/layout/SettingsLayout";
+// import { AddedDevicesPage } from "@/components/settings/Added-Devices/AddedDevicesPage";
 import NotFound from "./pages/NotFound";
 import LiveView from "@/pages/LiveView";
 const queryClient = new QueryClient();
@@ -31,7 +32,8 @@ const App = () => (
             <Route path="/login" element={<LoginPage />} />
             <Route element={<AppLayout />}>
               <Route path="/" element={<Index />} />
-              {/* <Route path="/live" element={<LiveView />} /> */}
+              {/* <Route path="/" element={<AddedDevicesPage />} /> */}
+              <Route path="/live" element={<LiveView />} />
               <Route path="/settings" element={<SettingsLayout />}>
                 <Route index element={<SettingsOverview />} />
               </Route>
