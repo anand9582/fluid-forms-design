@@ -23,7 +23,7 @@ const steps = [
     title: "Add Storage",
     description:
       "Set up storage to begin recording.",
-    hint: "Auto-discover cameras from your server to speed things up.",
+    hint: "You’re free to edit or add more storage later.",
     primaryAction: "Add storage",
     secondaryAction: "Skip for now",
   },
@@ -41,7 +41,7 @@ const steps = [
     title: "Open playback",
     description:
       "Check recordings for events, timeline playback, and export clips if needed.",
-    hint: "You can switch between synced playback and individual camera playback modes.",
+    hint: "You can switch between synced playback and individual camera playback modes",
     primaryAction: "Open playback",
     secondaryAction: "Skip for now",
   },

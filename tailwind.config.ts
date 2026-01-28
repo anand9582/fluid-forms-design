@@ -44,6 +44,7 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         bgprimary: '#f1f5f9',
+        bgprimarylight:"#E5E5E5",
         bggray:"#E2E8F0",
         textgray:"#475569",
         textpar:"#475569",
@@ -54,7 +55,8 @@ export default {
         Aidarkorange:"#D97706",
         Ailighteronered:"#DC2626",
         tablecolor:"#64748B",
-        primarydarkblack: "#0A0A0A",  
+        primarydarkblack: "#0A0A0A",
+        labelcolor:"#171717",
         pagination: {
             text: "#404040",
             disabled: "#94A3B8",

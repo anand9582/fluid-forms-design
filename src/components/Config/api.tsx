@@ -1,4 +1,4 @@
-export const API_BASE_URL = "http://192.168.11.61:8080/api/v1";
+export const API_BASE_URL = "http://192.168.11.61:9080/api/v1";
 
 export const API_URLS = {
   Login: "/auth/login",

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { X, ChevronUp, Info ,CheckCircle  } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Heading } from "@/components/ui/heading";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -173,7 +174,8 @@ export function Wizard({
               </div>
 
               <div className="mb-4">
-                  <h4 className="text-md  font-roboto font-semibold  mb-2">{step.title}</h4>
+                <Heading weight="medium" className="text-[17px] mb-2">{step.title}</Heading>
+                  {/* <h4 className="text-md  font-roboto font-semibold  mb-2"></h4> */}
                   <p className="text-sm text-[#737373] whitespace-pre-line">{step.description}</p>
               </div>
 
@@ -194,7 +196,7 @@ export function Wizard({
                       {step.primaryAction && <Button className="flex-1 w-56 font-roboto font-medium bg-primary text-primary-foreground" onClick={handleNext}>{step.primaryAction}</Button>}
                   </div>  
                   {/* Footer links */}
-              <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center justify-between text-sm mb-4">
                 <button
                   type="button"
                   className="text-primary font-medium hover:underline"

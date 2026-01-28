@@ -38,7 +38,7 @@ export function AutoDiscoveryTab() {
   return (
     <div className="mt-3 sm:mt-3 space-y-4 sm:space-y-6">
       {/* Network Scanner Section */}
-      <Card className="border-border border-[#BFDEFFB2] bg-blue-50/50 rounded bg-[#EFF6FF]">
+      <Card className="border-border border-[#BFDEFFB2] bg-blue-50/50 rounded-sm bg-[#EFF6FF]">
       <CardContent className="flex items-center justify-between p-4">
         {/* Left Content */}
         <div className="space-y-1">
@@ -60,7 +60,7 @@ export function AutoDiscoveryTab() {
             {isScanning ? "Scanning..." : "Start scan"}
           </Button>
       </CardContent>
-    </Card>
+      </Card>
       {/* Discovered Devices Section */}
       <div className="bg-white rounded-lg">
           <div className="flex border border-b-0 px-3 py-3 rounded-t-lg flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 pt-3">

@@ -9,6 +9,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Formik, Form, Field, FieldProps } from "formik";
+import { FormLabel } from "@/components/ui/FormLabel";
+import { FileText  } from "lucide-react";
 
 interface AddDeviceFormValues {
   deviceName: string;
@@ -48,7 +50,7 @@ export function AddSingleTab() {
             <Form className="space-y-6">
               {/* Device Name */}
               <div className="space-y-2">
-                <Label htmlFor="deviceName">Device Name</Label>
+                <FormLabel htmlFor="deviceName" text="Device Name" className="text-sm" />
                 <Field name="deviceName">
                   {({ field }: FieldProps) => (
                     <Input
@@ -63,7 +65,7 @@ export function AddSingleTab() {
               {/* IP Address + Port */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="ipAddress">IP Address</Label>
+                   <FormLabel htmlFor="IPAddress" text="IP Address" className="text-sm" />
                   <Field name="ipAddress">
                     {({ field }: FieldProps) => (
                       <Input {...field} id="ipAddress" placeholder="192.168.1.1" />
@@ -71,7 +73,7 @@ export function AddSingleTab() {
                   </Field>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="port">Port</Label>
+                 <FormLabel htmlFor="port" text="Port" className="text-sm" />
                   <Field name="port">
                     {({ field }: FieldProps) => (
                       <Input {...field} id="port" placeholder="80" />
@@ -83,7 +85,7 @@ export function AddSingleTab() {
               {/* Make + Model */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="make">Make</Label>
+                   <FormLabel htmlFor="Make" text="Make" className="text-sm" />
                   <Select
                     value={values.make}
                     onValueChange={(value) => setFieldValue("make", value)}
@@ -101,7 +103,7 @@ export function AddSingleTab() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="model">Model</Label>
+                  <FormLabel htmlFor="model" text="model" className="text-sm" />
                   <Field name="model">
                     {({ field }: FieldProps) => (
                       <Input {...field} id="model" placeholder="Model Number" />
@@ -113,7 +115,7 @@ export function AddSingleTab() {
               {/* Device Type + Assignment Group */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="deviceType">Device Type</Label>
+                   <FormLabel htmlFor="deviceType" text="Device Type" className="text-sm" />
                   <Select
                     value={values.deviceType}
                     onValueChange={(value) => setFieldValue("deviceType", value)}
@@ -131,7 +133,7 @@ export function AddSingleTab() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="assignmentGroup">Assignment Group</Label>
+                   <FormLabel htmlFor="assignmentGroup" text="Assignment Group" className="text-sm" />
                   <Select
                     value={values.assignmentGroup}
                     onValueChange={(value) => setFieldValue("assignmentGroup", value)}
@@ -152,8 +154,8 @@ export function AddSingleTab() {
 
               {/* Button */}
               <div className="flex justify-end">
-                <Button type="submit" className="bg-primary hover:bg-primary/90">
-                  Add device to Inventory
+                <Button type="submit" className="bg-primary hover:bg-primary/90 font-roboto font-medium text-sm" disabled>
+                    <FileText  className="w-4 h-4" /> Add device to Inventory
                 </Button>
               </div>
             </Form>

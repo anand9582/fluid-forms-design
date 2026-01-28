@@ -14,6 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useSettingsStore } from "@/Store/SettingsStore";
+import { Heading } from "@/components/ui/heading";
+
 import {
   Select,
   SelectContent,
@@ -341,8 +343,8 @@ const { setActiveRoute, setActiveItem } = useSettingsStore();
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Added Devices</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <Heading weight="medium" className="text-fontSize20px">Added Devices</Heading>
+          <p className="font-roboto font-normal text-sm text-muted-foreground mt-1">
             Manage connected hardware, status, and system configuration.
           </p>
         </div>

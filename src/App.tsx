@@ -12,6 +12,8 @@ import { SettingsLayout } from "@/components/layout/SettingsLayout";
 // import { AddedDevicesPage } from "@/components/settings/Added-Devices/AddedDevicesPage";
 import NotFound from "./pages/NotFound";
 import LiveView from "@/pages/LiveView";
+import { ProtectedRoute } from "@/components/Routes/ProtectedRoute";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -30,6 +32,8 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
+            {/* PROTECTED ROUTES */}
+            <Route element={<ProtectedRoute />}>
             <Route element={<AppLayout />}>
               <Route path="/" element={<Index />} />
               {/* <Route path="/" element={<AddedDevicesPage />} /> */}
@@ -37,8 +41,8 @@ const App = () => (
               <Route path="/settings" element={<SettingsLayout />}>
                 <Route index element={<SettingsOverview />} />
               </Route>
-            </Route>
-
+                  </Route>
+      </Route>
             <Route path="*" element={<NotFound />} />
 
           </Routes>

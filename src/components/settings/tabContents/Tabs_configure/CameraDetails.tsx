@@ -4,7 +4,7 @@ import { Monitor, Wifi, Shield, Bell, Lock, Info,ChevronDown } from "lucide-reac
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { CustomFormLabel } from "@/components/ui/CustomFormLabel";
+import { FormLabel } from "@/components/ui/FormLabel";
 
 import {
   Collapsible,
@@ -16,7 +16,6 @@ import {
   Form,
   FormField,
   FormItem,
-  FormLabel,
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
@@ -64,9 +63,9 @@ export default function CameraDetails() {
       name="deviceMake"
       render={({ field }) => (
         <FormItem className="space-y-2">
-          <CustomFormLabel>
+          <FormLabel>
             Device Make
-          </CustomFormLabel>
+          </FormLabel>
           <FormControl>
             <Select value={field.value} onValueChange={field.onChange}>
               <SelectTrigger> 
@@ -90,9 +89,9 @@ export default function CameraDetails() {
       name="model"
       render={({ field }) => (  
         <FormItem className="space-y-2">
-          <CustomFormLabel>
+          <FormLabel>
             Model Identifier
-          </CustomFormLabel>
+          </FormLabel>
           <FormControl>
             <Input {...field} readOnly className="bg-muted/50" />
           </FormControl>
@@ -106,9 +105,9 @@ export default function CameraDetails() {
       name="logicalGroup"
       render={({ field }) => (
         <FormItem className="space-y-2">
-          <CustomFormLabel>
+          <FormLabel>
             Logical Group
-          </CustomFormLabel>
+          </FormLabel>
           <FormControl>
             <Input {...field} className="bg-muted/50" />
           </FormControl>
@@ -122,9 +121,9 @@ export default function CameraDetails() {
       name="deviceCategory"
       render={({ field }) => (
         <FormItem className="space-y-2">
-          <CustomFormLabel>
+          <FormLabel>
             Device Category
-          </CustomFormLabel>
+          </FormLabel>
           <FormControl>
             <Input {...field} readOnly className="bg-muted/50" />
           </FormControl>

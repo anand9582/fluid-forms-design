@@ -161,6 +161,42 @@
     background-color: hsl(var(--muted));
     border-radius: 3px;
   }
+
+  /* =====  EXACT DASHED BORDER (4,4) ===== */
+  .border-dashed-4 {
+    background-image:
+      repeating-linear-gradient(
+        90deg,
+        hsl(var(--border)) 0 4px,
+        transparent 4px 8px
+      ),
+      repeating-linear-gradient(
+        180deg,
+        hsl(var(--border)) 0 4px,
+        transparent 4px 8px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        hsl(var(--border)) 0 4px,
+        transparent 4px 8px
+      ),
+      repeating-linear-gradient(
+        180deg,
+        hsl(var(--border)) 0 4px,
+        transparent 4px 8px
+      );
+    background-position:
+      top left,
+      top right,
+      bottom left,
+      top left;
+    background-size:
+      100% 1px,
+      1px 100%,
+      100% 1px,
+      1px 100%;
+    background-repeat: no-repeat;
+  }
 }
 
 .Dailogcross > button:last-child{
