@@ -1,6 +1,7 @@
 import { SettingsTabs, TabsContent } from "@/components/settings/SettingsTab";
 import { AddedDevicesTabs } from "@/components/settings/SidebarConfigs/AddedDevicesTabs";
 import { AutoDiscoveryTab } from "@/components/settings/Added-Devices/Devices/AutoDiscoveryTab";
+import { AddSingleTab } from "@/components/settings/Added-Devices/Devices/AddSingleTab";
 
 export function AddedDevicesPage() {
   return (
@@ -9,8 +10,8 @@ export function AddedDevicesPage() {
                  <AutoDiscoveryTab />
             </TabsContent>
 
-            <TabsContent value="recording">
-              Recording settings here
+            <TabsContent value="add-single">
+                <AddSingleTab />
             </TabsContent>
         </SettingsTabs>
     

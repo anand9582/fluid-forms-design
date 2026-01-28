@@ -76,15 +76,15 @@ export function DevicesDataTable({ data, selectedCount, onSelectionChange }: Dev
       ),
       cell: ({ row }) => (
         <Checkbox
-  className="h-4 w-4 rounded border border-muted-foreground/40 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-  checked={row.getIsSelected()}
-  onCheckedChange={(value) => {
-    row.toggleSelected(!!value);
-    const newCount = value ? selectedCount + 1 : selectedCount - 1;
-    onSelectionChange(Math.max(0, newCount));
-  }}
-  aria-label="Select row"
-/>
+        className="h-4 w-4 rounded border  border-muted-foreground/60 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => {
+          row.toggleSelected(!!value);
+          const newCount = value ? selectedCount + 1 : selectedCount - 1;
+          onSelectionChange(Math.max(0, newCount));
+        }}
+        aria-label="Select row"
+      />
 
       ),
       enableSorting: false,
@@ -173,7 +173,7 @@ export function DevicesDataTable({ data, selectedCount, onSelectionChange }: Dev
     },
     initialState: {
       pagination: {
-        pageSize: 10,
+        pageSize: 5,
       },
     },
   });
@@ -185,7 +185,8 @@ export function DevicesDataTable({ data, selectedCount, onSelectionChange }: Dev
 
   return (
     <div className="space-y-4">
-       <div className="bg-card border border-border overflow-hidden">
+      {/* table card */}
+       <div className="bg-card border border-border overflow-hidden rounded-b-md">
         <Table>
           <TableHeader>
             <TableRow className="border-b border-border hover:bg-transparent bg-[#F1F5F9]">
@@ -224,9 +225,9 @@ export function DevicesDataTable({ data, selectedCount, onSelectionChange }: Dev
             )}
           </TableBody>
         </Table>
-      </div>
+       </div>
 
-      {/* Pagination */}
+       {/* Pagination */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs sm:text-sm">
         <div className="flex items-center gap-2 text-muted-foreground">
           <span>Showing {Math.min(pageSize, totalRows)} of {totalRows}</span>
@@ -249,7 +250,7 @@ export function DevicesDataTable({ data, selectedCount, onSelectionChange }: Dev
           <Button
             variant="ghost"
             size="sm"
-            className="text-muted-foreground text-xs sm:text-sm h-7 sm:h-8 px-2 sm:px-3"
+            className="text-pagination-text hover:text-pagination-hover disabled:text-pagination-disabled text-xs sm:text-sm h-7 sm:h-8 px-2 sm:px-3"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
           >
@@ -285,14 +286,15 @@ export function DevicesDataTable({ data, selectedCount, onSelectionChange }: Dev
           <Button
             variant="ghost"
             size="sm"
-            className="text-muted-foreground text-xs sm:text-sm h-7 sm:h-8 px-2 sm:px-3"
+            className="text-pagination-text hover:text-pagination-hover disabled:text-pagination-disabled h-7 sm:h-8 px-2 sm:px-3"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
           >
             Next ›
           </Button>
         </div>
-      </div>
+      </div> 
     </div>
+   
   );
 }

@@ -11,6 +11,10 @@ const mockDiscoveredDevices: DiscoveredDevice[] = [
   { id: "4", name: "Cam-A-103", ip: "192.168.1.103:80", port: "443", make: "Axis", model: "Model-XO", type: "Access Control", username: "Admin", password: "pass3456", group: "Front roof" },
   { id: "5", name: "Cam-A-104", ip: "192.168.1.104:80", port: "78", make: "Axis", model: "Model-XO", type: "IOT Center", username: "Operator", password: "pass7890", group: "First floor" },
   { id: "6", name: "Cam-A-105", ip: "192.168.1.104:80", port: "663", make: "Axis", model: "Model-XO", type: "Camera", username: "Operator", password: "pass1122", group: "Second floor" },
+  { id: "7", name: "Cam-A-105", ip: "192.168.1.104:80", port: "663", make: "Axis", model: "Model-XO", type: "Camera", username: "Operator", password: "pass1122", group: "Second floor" },
+  { id: "8", name: "Cam-A-105", ip: "192.168.1.104:80", port: "663", make: "Axis", model: "Model-XO", type: "Camera", username: "Operator", password: "pass1122", group: "Second floor" },
+  { id: "9", name: "Cam-A-105", ip: "192.168.1.104:80", port: "663", make: "Axis", model: "Model-XO", type: "Camera", username: "Operator", password: "pass1122", group: "Second floor" },
+  { id: "10", name: "Cam-A-105", ip: "192.168.1.104:80", port: "663", make: "Axis", model: "Model-XO", type: "Camera", username: "Operator", password: "pass1122", group: "Second floor" },
 ];
 
 export function AutoDiscoveryTab() {
@@ -32,7 +36,7 @@ export function AutoDiscoveryTab() {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="mt-3 sm:mt-3 space-y-4 sm:space-y-6">
       {/* Network Scanner Section */}
       <Card className="border-border border-[#BFDEFFB2] bg-blue-50/50 rounded bg-[#EFF6FF]">
       <CardContent className="flex items-center justify-between p-4">
@@ -57,26 +61,9 @@ export function AutoDiscoveryTab() {
           </Button>
       </CardContent>
     </Card>
-      {/* <div className="bg-card border border-border rounded-lg p-4 sm:p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h3 className="text-base sm:text-lg font-semibold text-foreground">Network Scanner</h3>
-           
-          </div>
-          <Button 
-            className="bg-primary hover:bg-primary/90 w-full sm:w-auto"
-            onClick={handleStartScan}
-            disabled={isScanning}
-          >
-            <Search className="h-4 w-4 mr-2" />
-            {isScanning ? "Scanning..." : "Start scan"}
-          </Button>
-        </div>
-      </div> */}
-
       {/* Discovered Devices Section */}
-      <div className="space-y-4 border bg-white rounded-lg">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 pt-3">
+      <div className="bg-white rounded-lg">
+          <div className="flex border border-b-0 px-3 py-3 rounded-t-lg flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 pt-3">
             <h3 className="text-base  font-lg font-roboto font-medium text-foreground">
               Discovered Devices ({devices.length})
             </h3>
@@ -90,7 +77,7 @@ export function AutoDiscoveryTab() {
             </Button>
           </div>
 
-        <div className="overflow-x-auto -mx-4 sm:mx-0">
+        <div className="overflow-x-auto">
           <div className="min-w-[800px] px-4 sm:px-0">
             <DevicesDataTable 
               data={devices}

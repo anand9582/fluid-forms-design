@@ -34,7 +34,7 @@ export function SettingsTabs({
             <TabsTrigger
               key={tab.id}
               value={tab.id}
-              className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-3 text-xs sm:text-sm font-medium rounded-none border-b-2 border-transparent
+              className="flex items-center gap-1.5 sm:gap-2 font-roboto px-3 sm:px-4 py-3 text-xs sm:text-sm font-medium rounded-none border-b-2 border-transparent
                 data-[state=active]:border-primary
                 data-[state=active]:text-primary
                 text-muted-foreground hover:text-foreground whitespace-nowrap"
