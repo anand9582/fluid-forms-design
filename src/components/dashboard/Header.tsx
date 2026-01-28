@@ -1,4 +1,4 @@
-import { Search,Languages, Wifi, FileText, Globe, ChevronDown,Bell} from "lucide-react";
+import { Search,Languages, Wifi, FileText, Globe, ChevronDown,Bell,LogOut} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
@@ -12,13 +12,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useNavigate } from "react-router-dom";
 import Logo from "@/assets/img/logo.png";
 import { languages as allLanguages } from "@/components/local/translation";
 
 export function Header() {
   const [searchOpen, setSearchOpen] = useState(false);
   const { isAltTheme, toggleTheme } = useTheme();
+   const navigate = useNavigate();
 
+const handleLogout = () => {
+    localStorage.clear();
+    navigate("/login", { replace: true });
+  };
   const theme = isAltTheme
     ? {
         header: "bg-[#5D6532]",
@@ -167,15 +173,47 @@ export function Header() {
 
 
         {/* User Profile */}
-        <div className="flex items-center gap-2 md:gap-3 pl-2 md:pl-4 border-l border-white/10">
+        {/* <div className="flex items-center gap-2 md:gap-3 pl-2 md:pl-4 border-l border-white/10">
           <div className="hidden md:block text-right">
-            <p className="text-sm font-medium text-white">Kate Russell</p>
+            <p className="text-sm font-medium text-white">Ayush Gupta</p>
             <p className="text-xs text-white/60">Project Manager</p>
           </div>
           <div className="w-8 h-8 rounded-full bg-white  flex items-center justify-center overflow-hidden">
             <span className="text-sm font-semibold text-black font-roboto">KR</span>
           </div>
-        </div>
+        </div> */}
+
+        {/* USER PROFILE DROPDOWN */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex items-center gap-2 pl-3 border-l border-white/10">
+              <div className="hidden md:block text-right">
+                <p className="text-sm font-medium text-white">
+                  Ayush Gupta
+                </p>
+                <p className="text-xs text-white/60">
+                  Project Manager
+                </p>
+              </div>
+
+              <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
+                <span className="text-sm font-semibold text-black">
+                  KR
+                </span>
+              </div>
+            </button>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent align="end" className="w-44">
+            <DropdownMenuItem
+              onClick={handleLogout}
+              className="text-red-600 cursor-pointer flex gap-2"
+            >
+              <LogOut className="h-4 w-4" />
+              Logout
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );
