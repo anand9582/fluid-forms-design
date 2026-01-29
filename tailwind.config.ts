@@ -156,7 +156,9 @@ export default {
           inner: "inset 0 2px 4px 0 rgba(0,0,0,0.06)",
           none: "none",
           custom: "0 4px 20px rgba(0, 0, 0, 0.15), 0 8px 30px rgba(0, 0, 0, 0.1)",
-      },
+          "added":
+            "0 1px 2px -1px rgba(0,0,0,0.10), 0 1px 3px 0 rgba(0,0,0,0.10)",
+              },
 
     },
   },

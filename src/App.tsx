@@ -33,7 +33,7 @@ const App = () => (
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             {/* PROTECTED ROUTES */}
-            <Route element={<ProtectedRoute />}>
+            {/* <Route element={<ProtectedRoute />}> */}
             <Route element={<AppLayout />}>
               <Route path="/" element={<Index />} />
               {/* <Route path="/" element={<AddedDevicesPage />} /> */}
@@ -42,7 +42,7 @@ const App = () => (
                 <Route index element={<SettingsOverview />} />
               </Route>
                   </Route>
-      </Route>
+      {/* </Route> */}
             <Route path="*" element={<NotFound />} />
 
           </Routes>

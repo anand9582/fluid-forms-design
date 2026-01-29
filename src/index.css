@@ -6,6 +6,12 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap');
 
+:root {
+  --primary: 221 83% 47%;  
+  --primary-foreground: 0 0% 100%;
+}
+
+
 @layer base {
   :root {
     --background: 220 20% 97%;

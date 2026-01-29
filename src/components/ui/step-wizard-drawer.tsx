@@ -51,7 +51,7 @@ interface StepWizardDrawerProps {
 export function StepWizardDrawer({
   open,
   onOpenChange,
-  title,
+  title,  
   titleIcon,
   description,
   steps,
@@ -137,42 +137,42 @@ export function StepWizardDrawer({
               const hasError = validation?.[index] && !validation[index].isValid && index < currentStep;
 
               return (
-               <button
-  key={step.id}
-  type="button"
-  onClick={() => handleStepClick(index)}
-  className={cn(
-    "flex items-center gap-2 px-4 py-2 text-sm font-normal relative whitespace-nowrap transition-all rounded-md",
-    isActive
-      ? "text-blue-600 font-semibold"
-      : isCompleted
-      ? "text-gray-700 bg-gray-100"
-      : hasError
-      ? "text-destructive"
-      : "text-gray-600 ",
-    isActive &&
-      "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-blue-600"
-  )}
->
-  <span
-    className={cn(
-      "flex h-5 w-5 items-center justify-center rounded-full   transition-colors",
-      isCompleted
-        ? "border-green-700 bg-transparent"
-        : isActive
-        ? "border-blue-600 text-blue-600"
-        : "border-gray-300 text-gray-500"
-    )}
-  >
-    {isCompleted ? (
-      <Check className="h-4 w-4 text-green-700" />
-    ) : (
-      <Icon className="h-3.5 w-3.5" />
-    )}
-  </span>
+                <button
+                key={step.id}
+                type="button"
+                onClick={() => handleStepClick(index)}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 text-sm font-normal relative whitespace-nowrap transition-all rounded-md",
+                  isActive
+                    ? "text-blue-600 font-semibold"
+                    : isCompleted
+                    ? "text-gray-700 bg-gray-100"
+                    : hasError
+                    ? "text-destructive"
+                    : "text-gray-600 ",
+                  isActive &&
+                    "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-blue-600"
+                )}
+              >
+              <span
+                className={cn(
+                  "flex h-5 w-5 items-center justify-center rounded-full   transition-colors",
+                  isCompleted
+                    ? "border-green-700 bg-transparent"
+                    : isActive
+                    ? "border-blue-600 text-blue-600"
+                    : "border-gray-300 text-gray-500"
+                )}
+              >
+                {isCompleted ? (
+                  <Check className="h-4 w-4 text-green-700" />
+                ) : (
+                  <Icon className="h-3.5 w-3.5" />
+                )}
+              </span>
 
-  <span className="hidden sm:inline">{step.label}</span>
-</button>
+                  <span className="hidden sm:inline">{step.label}</span>
+            </button>
 
               );
             })}

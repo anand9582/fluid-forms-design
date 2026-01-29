@@ -95,9 +95,9 @@ export function DevicesDataTable({ data, selectedCount, onSelectionChange }: Dev
       header: "Device Name",
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <div className="flex h-6 w-6 items-center justify-center rounded-sm bg-gray-200">
-            <Camera className="h-4 w-4 text-gray-600" />
-          </div>
+            <div className="flex h-6 w-6 items-center justify-center rounded-sm bg-gray-200">
+              <Camera className="h-4 w-4 text-gray-600" />
+            </div>
           <span className="text-foreground">{row.getValue("name")}</span>
         </div>
       ),

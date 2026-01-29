@@ -110,11 +110,17 @@ const columns: ColumnDef<AuditLog>[] = [
   {
     accessorKey: "timestamp",
     header: "Timestamp",
-    cell: ({ row }) => (
-      <span className="text-sm text-muted-foreground">
-        {row.original.timestamp}
-      </span>
-    ),
+    cell: ({ row }) => {
+  const [date, time] = row.original.timestamp.split(" ");
+
+  return (
+    <div className="text-sm">
+      <span className="text-black font-medium">{date}</span>{" "}
+      <span className="text-muted-foreground">{time}</span>
+    </div>
+  );
+},
+
   },
   {
     header: "User",
@@ -348,6 +354,7 @@ export default function AuditLogsTable() {
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
+          
           <Button
             size="sm"
             variant="ghost"
