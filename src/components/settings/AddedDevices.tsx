@@ -361,7 +361,7 @@
 
     return (
       <>
-      <div className="animate-fade-in flex-1 flex flex-col overflow-hidden pl-4">
+      <div className="animate-fade-in flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between mb-6 border-b pb-4">
           <div>
@@ -514,56 +514,56 @@
               </Button>
 
           {/* Page Numbers */}
-{pageCount > 0 && (
-  <>
-    {[1, 2, 3].filter((p) => p <= pageCount).map((page) => {
-      const isActive = currentPage === page;
+            {pageCount > 0 && (
+              <>
+                {[1, 2, 3].filter((p) => p <= pageCount).map((page) => {
+                  const isActive = currentPage === page;
 
-      return (
-        <Button
-          key={page}
-          variant="ghost"
-          size="sm"
-          onClick={() => table.setPageIndex(page - 1)}
-          className={cn(
-            "w-8 h-8 p-0",
-            isActive &&
-              "border border-gray shadow-sm bg-transparent text-black font-medium"
-          )}
-        >
-          {page}
-        </Button>
-      );
-    })}
+                  return (
+                    <Button
+                      key={page}
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => table.setPageIndex(page - 1)}
+                      className={cn(
+                        "w-8 h-8 p-0",
+                        isActive &&
+                          "border border-gray shadow-sm bg-transparent text-black font-medium"
+                      )}
+                    >
+                      {page}
+                    </Button>
+                  );
+                })}
 
-    {pageCount > 5 && (
-      <span className="px-2 text-muted-foreground">...</span>
-    )}
+                {pageCount > 5 && (
+                  <span className="px-2 text-muted-foreground">...</span>
+                )}
 
-    {pageCount > 3 &&
-      [pageCount - 1, pageCount]
-        .filter((p) => p > 3)
-        .map((page) => {
-          const isActive = currentPage === page;
+                {pageCount > 3 &&
+                  [pageCount - 1, pageCount]
+                    .filter((p) => p > 3)
+                    .map((page) => {
+                      const isActive = currentPage === page;
 
-          return (
-            <Button
-              key={page}
-              variant="ghost"
-              size="sm"
-              onClick={() => table.setPageIndex(page - 1)}
-              className={cn(
-                "w-8 h-8 p-0",
-                isActive &&
-                  "border border-primary shadow-sm bg-transparent text-primary font-medium"
-              )}
-            >
-              {page}
-            </Button>
-          );
-        })}
-  </>
-)}
+                      return (
+                        <Button
+                          key={page}
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => table.setPageIndex(page - 1)}
+                          className={cn(
+                            "w-8 h-8 p-0",
+                            isActive &&
+                              "border border-primary shadow-sm bg-transparent text-primary font-medium"
+                          )}
+                        >
+                          {page}
+                        </Button>
+                      );
+                    })}
+              </>
+            )}
 
               <Button
                 variant="ghost"

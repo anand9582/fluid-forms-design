@@ -37,7 +37,7 @@
             onNavigate={handleNavigate}
           />
 
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 overflow-hidden pl-4" >
             {activeRoute === "/settings/users" && (
               <SettingsTabs
                 tabs={manageUsersTabs}

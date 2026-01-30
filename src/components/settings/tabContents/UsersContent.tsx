@@ -251,7 +251,7 @@ export default function UserManagementTable() {
           </Select>
 
           {/* Export */}
-          <Button variant="outline" className="h-10 gap-2 bg-transparent border-border hover:bg-muted/5">
+          <Button variant="outline" className="h-10 gap-2 bg-background border-border hover:bg-muted/5">
             <Download className="h-4 w-4" />
             Export
           </Button>

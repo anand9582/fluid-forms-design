@@ -1,4 +1,5 @@
 import { Tabs, TabsList, TabsTrigger, TabsContent as ShadcnTabsContent } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 
 export interface SettingsTab {
   id: string;
@@ -11,6 +12,7 @@ interface SettingsTabsProps {
   defaultValue?: string;       
   onTabChange?: (id: string) => void;
   children?: React.ReactNode;
+  className?: string;  
 }
 
 
@@ -20,13 +22,17 @@ export function SettingsTabs({
   onTabChange,
   defaultValue,
   children,
+   className,
 }: SettingsTabsProps) {
   return (
     <Tabs
       value={activeTab}            
       defaultValue={defaultValue}  
       onValueChange={onTabChange}
-      className="flex-1 flex flex-col overflow-hidden pl-4"
+     className={cn(
+        "flex-1 flex flex-col overflow-hidden",
+        className    
+      )}
     >
       {tabs && tabs.length > 0 && (
         <TabsList className="w-full justify-start h-auto p-0 bg-transparent border-b border-border rounded-none overflow-x-auto flex-shrink-0">

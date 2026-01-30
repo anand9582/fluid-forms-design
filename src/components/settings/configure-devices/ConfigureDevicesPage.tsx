@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { configureDeviceTabs } from "@/components/settings/SidebarConfigs/ConfigureDeviceTabs";
 import { SettingsTabs, TabsContent } from "@/components/settings/SettingsTab";
-import CameraDetails from "@/components/settings/tabContents/Tabs_configure/CameraDetails";
+import Network from "@/components/settings/tabContents/Tabs_configure/NetworkSetting";
 
 import {
   Search,
@@ -14,7 +14,7 @@ import {
   ChevronRight,
   RefreshCw,
   Trash2,
-  VideoOff,
+  VideoOff, 
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -181,14 +181,14 @@ const ConfigureDevicesPage = () => {
   };
 
   return (
-    <div className="flex-1 flex flex-col pl-4 space-y-6">
+    <div className="flex-1 flex flex-col  space-y-6">
       <SettingsHeader
         title="Configure Devices"
         description="Adjust camera-specific settings for analytics processing."
         showActions={false}
       />
 
-      <div className="flex gap-6 min-h-[600px]">
+      <div className="flex gap-6 min-h-[600px] mt-9">
         {/* LEFT TREE */}
         <div className="w-72 border rounded-lg bg-card flex flex-col">
           <div className="p-4 border-b">
@@ -226,18 +226,18 @@ const ConfigureDevicesPage = () => {
         {/* RIGHT PANEL */}
         <div className="flex-1 border rounded-lg bg-card">
           {!selectedCamera ? (
-            <div className="flex flex-col items-center justify-center h-full text-center p-8">
-              <div className="w-12 h-12 rounded-sm bg-gray-100 flex items-center justify-center mb-4">
-                <Devices className="h-6 w-6 text-muted-foreground" />
+              <div className="flex flex-col items-center justify-center h-full text-center p-8">
+                <div className="w-12 h-12 rounded-sm bg-gray-100 flex items-center justify-center mb-4">
+                  <Devices className="h-6 w-6 text-muted-foreground" />
+                </div>
+                  <h3 className="text-lg font-semibold">No Device Selected</h3>
+                  <p className="text-sm text-muted-foreground max-w-xs">
+                    Select a camera from the hierarchy tree on the left to manage its configurations.
+                  </p>
               </div>
-              <h3 className="text-lg font-semibold">No Device Selected</h3>
-              <p className="text-sm text-muted-foreground max-w-xs">
-                Select a camera from the hierarchy tree on the left to manage its configurations.
-              </p>
-            </div>
           ) : (
             <>
-              <div className="flex items-center justify-between p-4 border-b">
+              <div className="flex items-center justify-between p-4 border-b mb-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center">
                     <Monitor className="h-5 w-5 text-muted-foreground" />
@@ -271,13 +271,13 @@ const ConfigureDevicesPage = () => {
                 </div>
               </div>
 
-              <SettingsTabs defaultValue="network" tabs={configureDeviceTabs}>
-                  <TabsContent value="network">
-                      <CameraDetails />
-                  </TabsContent>
-                  <TabsContent value="recording">
-                    Recording settings here
-                  </TabsContent>
+              <SettingsTabs defaultValue="network" tabs={configureDeviceTabs} className="px-4">
+                    <TabsContent value="network" >
+                        <Network />
+                    </TabsContent>
+                    <TabsContent value="recording">
+                      Recording settings here
+                    </TabsContent>
               </SettingsTabs>
             </>
           )}
