@@ -13,8 +13,13 @@ import {
   MoveRight,
   Moon,
   X,
-  Sparkles,
-  Search
+  Search,
+  Settings,
+  User,
+  ScanFace,
+  Flame,
+  Car,
+  Activity,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +34,15 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
+import {
+  AISurveillanceIcons,
+  PersonIcons,
+  FaceIcons,
+  FireIcons,
+  CareIcons,
+  BehavioralIcons
+} from "@/components/Icons/Svg/liveViewIcons";
+
 interface ControlsSidebarProps {
   selectedCamera?: {
     name: string;
@@ -39,11 +53,17 @@ interface ControlsSidebarProps {
 
 // AI Features data
 const aiFeatures = [
-  { id: "person", name: "Person Detection", enabled: true },
-  { id: "face", name: "Face Recognition", enabled: true },
-  { id: "fire", name: "Fire & Smoke Alert", enabled: false },
-  { id: "vehicle", name: "Vehicle Tracking", enabled: true },
-  { id: "behavior", name: "Behavioral Anomaly", enabled: false },
+  { id: "person", name: "Person Detection", enabled: true, icon:PersonIcons },
+  { id: "face", name: "Face Recognition", enabled: true, icon: FaceIcons },
+  { id: "fire", name: "Fire & Smoke Alert", enabled: false, icon: FireIcons },
+  { id: "vehicle", name: "Vehicle Tracking", enabled: true, icon: CareIcons },
+  {
+    id: "behavior",
+    name: "Behavioral Anomaly",
+    enabled: false,
+    icon: BehavioralIcons,
+    proOnly: true,
+  },
 ];
 
 export function AISurveillanceSidebar({ selectedCamera }: ControlsSidebarProps) {
@@ -60,45 +80,71 @@ export function AISurveillanceSidebar({ selectedCamera }: ControlsSidebarProps) 
   // If no camera is selected, show workspace management view
   if (!selectedCamera) {
     return (
-      <div className="hidden lg:flex w-72 border-l border-border bg-card flex-col flex-shrink-0">
-        {/* Workspace Management Header */}
-        <div className="p-4 border-b border-border">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Workspace Management
+      <div className="hidden lg:flex w-72 border-l border-border bg-white flex-col flex-shrink-0">
+
+      {/* Workspace Management */}
+      <div className="p-4">
+        <div className="flex items-center gap-2 mb-5">
+          <Settings className="h-5 w-5 text-slate-500" />
+            <span className="text-sm font-roboto font-medium text-slate-500 uppercase tracking-wide">
+                Workspace Management
             </span>
-          </div>
-          <Button variant="ghost" size="sm" className="w-full justify-between mt-3 h-9 text-sm text-muted-foreground hover:text-foreground">
-            Clear all grid slot
-            <X className="h-4 w-4" />
-          </Button>
         </div>
 
-        {/* AI Surveillance Suite */}
-        <div className="p-4">
-          <div className="flex items-center gap-2 mb-4">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              AI Surveillance Suite
-            </span>
-            <Badge className="bg-primary text-primary-foreground text-[10px] px-1.5 py-0 ml-auto">
-              PRO
-            </Badge>
-          </div>
+          <Button
+              variant="outline"
+              size="sm"
+              className="w-full justify-between rounded-sm h-10 text-sm font-roboto font-medium shadow-sm bg-white"
+            >
+              <span className="text-slate-500"> 
+                Clear all grid slot
+              </span>
+              <X className="h-4 w-4 text-slate-500" />
+            </Button>
 
-          <div className="space-y-3">
+      </div>
+
+      {/* AI Surveillance Suite */}
+      <div className="p-4">
+        <div className="flex items-center gap-2 mb-4">
+          <AISurveillanceIcons className="h-4 w-4" />
+          <span className="text-[12px] font-semibold text-slate-500  uppercase tracking-wide">
+              AI Surveillance Suite
+          </span>
+          <span className="ml-auto rounded-lg bg-violet-600 px-3 py-2 text-sm font-roboto font-medium text-white">
+              PRO
+          </span>
+        </div>
+
+        {/* Feature List */}
+          <div className="space-y-2">
             {features.map((feature) => (
-              <div key={feature.id} className="flex items-center justify-between">
-                <span className="text-sm text-foreground">{feature.name}</span>
-                <Switch 
-                  checked={feature.enabled} 
+              <div
+                key={feature.id}
+                className={cn(
+                  "flex items-center justify-between rounded-lg px-3 py-3",
+                  feature.enabled
+                    ? "bg-slate-100"
+                    : "bg-slate-100 "
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <feature.icon className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-roboto font-medium text-foreground">
+                     {feature.name}
+                  </span>
+                </div>
+
+                <Switch
+                  checked={feature.enabled}
                   onCheckedChange={() => toggleFeature(feature.id)}
+                  disabled={!feature.enabled && feature.proOnly}
                 />
               </div>
             ))}
           </div>
-        </div>
       </div>
+    </div>
     );
   }
 

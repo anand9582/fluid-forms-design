@@ -45,6 +45,7 @@ export default {
         foreground: "hsl(var(--foreground))",
         bgprimary: '#f1f5f9',
         bgprimarylight:"#E5E5E5",
+        bglightblue:"#F8FAFC",
         bggray:"#E2E8F0",
         textgray:"#475569",
         textpar:"#475569",

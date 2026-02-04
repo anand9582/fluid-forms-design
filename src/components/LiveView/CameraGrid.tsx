@@ -100,7 +100,7 @@ export function CameraGrid({ selectedLayout, autoSequence, selectedSlotIndex, on
       {/* Grid Container */}
       <div className="flex-1 p-3 overflow-auto">
         <div 
-          className="grid gap-2 h-full"
+          className="grid h-full"
           style={{ 
             gridTemplateColumns: `repeat(${currentLayout.cols}, minmax(0, 1fr))`,
             gridTemplateRows: `repeat(${currentLayout.rows}, minmax(0, 1fr))`
@@ -117,7 +117,7 @@ export function CameraGrid({ selectedLayout, autoSequence, selectedSlotIndex, on
               onDrop={(e) => handleDrop(e, index)}
               onDragEnd={handleDragEnd}
               className={cn(
-                "relative rounded-lg overflow-hidden flex items-center justify-center min-h-[180px] transition-all duration-200",
+                "relative overflow-hidden flex items-center justify-center min-h-[180px] transition-all duration-200",
                 slot ? [
                   "bg-slate-900 cursor-pointer",
                   draggedIndex === index && "opacity-50 scale-95",
@@ -131,23 +131,26 @@ export function CameraGrid({ selectedLayout, autoSequence, selectedSlotIndex, on
               {slot ? (
                 <>
                   {/* Camera Feed Background - simulated video feed */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900">
+                  {/* <div className="absolute inset-0 bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900">
                     <div className="absolute inset-0 bg-[url('/placeholder.svg')] bg-cover bg-center opacity-60" />
-                  </div>
+                  </div> */}
                   
+                    <div className="absolute inset-0 bg-white border">
+                  </div>
+
                   {/* Camera Name Label - Top Left */}
-                  <div className="absolute top-2 left-2 z-10">
+                  {/* <div className="absolute top-2 left-2 z-10">
                     <span className="text-xs font-medium text-white bg-slate-800/80 px-2 py-1 rounded">
                       {slot.name}
                     </span>
-                  </div>
+                  </div> */}
                   
                   {/* Close Button - Top Right */}
-                  <div className="absolute top-2 right-2 z-10">
+                  {/* <div className="absolute top-2 right-2 z-10">
                     <button className="text-white/70 hover:text-white bg-black/40 p-1 rounded transition-colors">
-                      <X className="h-4 w-4" />
+                       <X className="h-4 w-4" />
                     </button>
-                  </div>
+                  </div> */}
                   
                   {/* Bottom Control Bar - Only visible on hover/selection */}
                   <div className={cn(

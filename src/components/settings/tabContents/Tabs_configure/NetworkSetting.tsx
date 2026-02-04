@@ -8,7 +8,6 @@ import { FormLabel } from "@/components/ui/FormLabel";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Card,CardHeader,CardTitle } from "@/components/ui/card";
-
 import {
   Collapsible,
   CollapsibleTrigger,
@@ -212,18 +211,6 @@ export default function NetworkSetting() {
   <div className="border rounded-lg overflow-hidden">
     {/* Header */}
     <div className="grid grid-cols-3 gap-4 px-4 py-3 bg-muted/30 border-b text-sm font-medium bg-bgprimary">
-     {/* <CardHeader className="flex flex-row items-center justify-between  rounded-t">
-        <CardTitle className="font-roboto font-medium uppercase tracking-wide text-textgray">
-            REAL-TIME AI ALERTS
-        </CardTitle>
-          <div className="flex items-center gap-2">
-              <span className="bg-red-500 text-white text-[12px] font-medium px-2 py-0.5 rounded-full">
-                122
-              </span>
-         
-          </div>
-      </CardHeader> */}
-
       <span className="text-gray-500 font-roboto">Alert Trigger</span>
       <span className="text-gray-500 font-roboto text-center">Enabled</span>
       <span className="text-gray-500 font-roboto space-x-2 text-end mr-5">Notification Channels</span>

@@ -1,6 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Video ,AlertCircle, Bell, RefreshCw, Info,ChevronDown,Mail,Smartphone,MonitorSmartphone,Webhook} from "lucide-react";
+import { Video,Volume,AlertCircle, Bell, RefreshCw, Info,ChevronDown,Mail,Smartphone,MonitorSmartphone,Webhook} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -139,7 +139,7 @@ export default function RecordingPage() {
                   </div>
                 </ConfigSection>
                 
-                <ConfigSection icon={<Video  className="h-4 w-4" />} title="Audio Settings">
+                <ConfigSection icon={<Volume  className="h-4 w-4" />} title="Audio Settings">
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
@@ -162,18 +162,35 @@ export default function RecordingPage() {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="space-y-2">
-                        <label className="text-sm text-muted-foreground">Input Gain</label>
-                        <div className="flex items-center gap-4">
-                          <div className="flex-1 h-2 bg-muted rounded-full relative">
-                            <div className="absolute left-0 top-0 h-full w-1/2 bg-primary rounded-full" />
-                          </div>
-                          <div className="flex gap-8 text-xs text-muted-foreground">
-                            <span>0%</span>
-                            <span>100%</span>
-                          </div>
-                        </div>
-                      </div>
+                     <div className="space-y-3">
+                              <label className="text-sm font-medium">Input Gain</label>
+
+                              {/* Percentage labels */}
+                              <div className="relative">
+                                <span className="absolute left-0 -top-5 text-xs text-muted-foreground">0%</span>
+                                <span className="absolute left-1/2 -translate-x-1/2 -top-5 text-xs text-muted-foreground">
+                                  75%
+                                </span>
+                                <span className="absolute right-0 -top-5 text-xs text-muted-foreground">100%</span>
+
+                                {/* Slider */}
+                                <input
+                                  type="range"
+                                  min={0}
+                                  max={100}
+                                  defaultValue={75}
+                                  className="w-full h-2 appearance-none rounded-full bg-muted accent-blue-600"
+                                  style={{
+                                    background: `linear-gradient(
+                                      to right,
+                                      rgb(37 99 235) 75%,
+                                      rgb(229 231 235) 75%
+                                    )`,
+                                  }}
+                                />
+                              </div>
+                            </div>
+
                     </div>
                   </div>
                 </ConfigSection>
@@ -313,7 +330,7 @@ export default function RecordingPage() {
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm text-muted-foreground">Storage Allocation</label>
+                        <label className="text-sm text-muted-foreground">Volume Utilization</label>
                         <div className="space-y-1">
                           <div className="h-2 bg-muted rounded-full relative overflow-hidden">
                             <div className="absolute left-0 top-0 h-full w-1/3 bg-primary rounded-full" />
