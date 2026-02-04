@@ -174,7 +174,7 @@ export function Wizard({
               </div>
 
               <div className="mb-4">
-                <Heading weight="medium" className="text-[17px] mb-2">{step.title}</Heading>
+                <Heading weight="semibold" className="text-[17px] mb-2">{step.title}</Heading>
                   {/* <h4 className="text-md  font-roboto font-semibold  mb-2"></h4> */}
                   <p className="text-sm text-[#737373] whitespace-pre-line">{step.description}</p>
               </div>

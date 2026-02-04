@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { configureDeviceTabs } from "@/components/settings/SidebarConfigs/ConfigureDeviceTabs";
 import { SettingsTabs, TabsContent } from "@/components/settings/SettingsTab";
 import Network from "@/components/settings/tabContents/Tabs_configure/NetworkSetting";
+import Recording from "@/components/settings/tabContents/Tabs_configure/Recording";
 
 import {
   Search,
@@ -275,8 +276,8 @@ const ConfigureDevicesPage = () => {
                     <TabsContent value="network" >
                         <Network />
                     </TabsContent>
-                    <TabsContent value="recording">
-                      Recording settings here
+                    <TabsContent value="recording" >
+                        <Recording />
                     </TabsContent>
               </SettingsTabs>
             </>

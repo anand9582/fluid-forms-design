@@ -119,7 +119,7 @@ export function StepWizardDrawer({
           className
         )}
       >
-        <DrawerHeader className="border-b border-border px-6 pt-0">
+        <DrawerHeader className="border-b border-border px-6">
           <DrawerTitle className="flex items-center gap-2 text-xl">
             {titleIcon}
             {title}

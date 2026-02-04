@@ -5,7 +5,6 @@ import {
   Video,
   PlayCircle,
   Settings,
-  Bell,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -18,6 +17,7 @@ import {
 
 import { useTheme } from "@/context/ThemeContext";
 import { SettingsSubNav } from "@/./components/layout/SettingsSubNav";
+
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/" },
@@ -65,7 +65,7 @@ export function Sidebar() {
                   >
                     <item.icon
                       className={cn(
-                        "w-7 h-7 p-1 rounded",
+                        "w-6 h-6 p-1 rounded",
                         isActive
                           ? "bg-slate-200 text-black"
                           : "text-black-500"
@@ -99,9 +99,9 @@ export function Sidebar() {
                         : "text-black-500 hover:text-gray-700"
                     )}
                   >
-                    <item.icon className="w-5 h-5" strokeWidth={1.5} />
-                    <span className="text-[10px]">
-                      {item.label}
+                    <item.icon className="w-4 h-4" strokeWidth={1.5} />
+                    <span className="text-[12px] font-medium font-roboto">
+                        {item.label}
                     </span>
                   </NavLink>
                 </li>
@@ -124,7 +124,6 @@ export function Sidebar() {
         <ul className="flex items-center justify-around py-2">
           {menuItems.slice(0, 5).map((item) => {
             const isActive = location.pathname === item.path;
-
             return (
               <li key={item.path}>
                 <NavLink
@@ -135,7 +134,7 @@ export function Sidebar() {
                   )}
                 >
                   <item.icon className="w-5 h-5" strokeWidth={1.5} />
-                  <span className="text-[9px]">{item.label}</span>
+                    <span className="text-[9px]">{item.label}</span>
                 </NavLink>
               </li>
             );
@@ -143,9 +142,9 @@ export function Sidebar() {
 
           <li>
             <NavLink
-              to="/settings"
-              className="flex flex-col items-center gap-1 px-3 py-2 text-white/50"
-            >
+                to="/settings"
+                className="flex flex-col items-center gap-1 px-3 py-2 text-white/50"
+              >
               <Settings className="w-5 h-5" strokeWidth={1.5} />
               <span className="text-[9px]">More</span>
             </NavLink>
