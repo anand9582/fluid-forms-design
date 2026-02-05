@@ -3,7 +3,6 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 
 import {
   Minimize,
-  LeftArrow
 } from "@/components/ui/icons";
 
 import { ChevronRight,ChevronLeft  } from "lucide-react";

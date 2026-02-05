@@ -1,8 +1,8 @@
 import { useState, useMemo } from "react";
-import { Video, Volume2, RotateCcw, Expand, X } from "lucide-react";
+import { Video, Volume2, RotateCcw, Camera, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { gridLayouts } from "@/components/LiveView/Data";
-import { Devices } from "@/components/Icons/Svg/liveViewIcons";
+import { Devices,RefershIcons,Minimize,VioceIcons } from "@/components/Icons/Svg/liveViewIcons";
 
 export interface CameraSlot {
   id: number;
@@ -81,7 +81,7 @@ export function CameraGrid({
                   <div
                       className={cn(
                         "absolute bottom-2 left-1/2 -translate-x-1/2 z-10",
-                        "bg-slate-800/90 rounded-lg px-2 py-1.5 flex gap-2",
+                        " px-2 py-1 flex gap-1",
                         "opacity-0 translate-y-4",
                         "group-hover:opacity-100 group-hover:translate-y-0",
                         "transition-all duration-300 ease-out",
@@ -89,11 +89,21 @@ export function CameraGrid({
                       )}
                     >
 
-                      <Expand className="h-4 w-4 text-white" />
-                      <RotateCcw className="h-4 w-4 text-white" />
-                      <Video className="h-4 w-4 text-white" />
-                      <Volume2 className="h-4 w-4 text-white" />
-                      <X className="h-4 w-4 text-white" />
+                     <button className="p-2 bg-black text-white/90 hover:text-white transition-colors rounded">
+                    <RefershIcons size={16} />
+                  </button>
+                      <button className="p-2 bg-black text-white/90 hover:text-white transition-colors rounded">
+                        <VioceIcons size={16} />
+                      </button>
+                      <button className="p-2 bg-black text-white/90 hover:text-white transition-colors rounded">
+                        <Camera size={16} />
+                      </button>
+                      <button className="p-2 bg-black text-white/90 hover:text-white transition-colors rounded">
+                        <Minimize size={16} />
+                      </button>
+                      <button className="p-2 bg-black text-white/90 hover:text-white transition-colors rounded">
+                        <X size={16} />
+                      </button>
                     </div>
                   </>
                 ) : (

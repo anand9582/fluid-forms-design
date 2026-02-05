@@ -61,7 +61,7 @@ export function CustomGridBuilder({
       />
 
       {/* Modal */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center">
         <div className="bg-white w-[420px] rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
           
           {/* Header */}

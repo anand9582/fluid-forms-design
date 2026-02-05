@@ -214,6 +214,7 @@ export function LiveViewToolbar({
           open={showGridBuilder}
           onClose={() => setShowGridBuilder(false)}
           onConfirm={handleCustomGridConfirm}
+          
         />
     </div>
   );
