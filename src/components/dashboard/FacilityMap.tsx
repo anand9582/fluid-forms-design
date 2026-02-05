@@ -77,7 +77,7 @@ export function FacilityMap() {
       <Card className=" border-border/80 shadow-none"  style={{ animationDelay: "0.35s" }}>
           
            <CardHeader className="flex flex-row items-center justify-between pb-2 bg-bgprimary pt-4 rounded-t border-b pb-4">
-              <CardTitle className="text-sm font-roboto font-medium uppercase tracking-wide text-textgray">
+              <CardTitle className="text-fontSize14px font-roboto font-semibold uppercase tracking-wide text-textgray">
                 FACILITY MAP
               </CardTitle>
                 <button className="text-gray-600 hover:text-gray-600  transition-colors pt-0">
@@ -109,7 +109,6 @@ export function FacilityMap() {
   </DropdownMenuTrigger>
 
   <DropdownMenuContent className="w-40 bg-white border border-gray-200">
-    <DropdownMenuLabel>Select Floor</DropdownMenuLabel>
     {floorPlans.map((floor, index) => (
       <DropdownMenuItem
         key={floor.id}

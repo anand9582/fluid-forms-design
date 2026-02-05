@@ -25,7 +25,8 @@ import {
 import { cn } from "@/lib/utils";
 import { gridLayouts, savedViewsData } from "./Data";
 import type { SavedView } from "./types";
-import {Devices} from "@/components/ui/icons";
+import {Devices,Squaredot,Tablecells} from "@/components/Icons/Svg/liveViewIcons";
+
 interface LiveViewToolbarProps {
   showCameraList: boolean;
   onToggleCameraList: () => void;
@@ -54,7 +55,7 @@ export function LiveViewToolbar({
   };
 
   return (
-    <div className="flex items-center justify-between gap-4 px-4 py-3 border-b border-border bg-[#E2E8F0]">
+    <div className="flex items-center justify-between gap-4 px-4 py-2 border-b border-border bg-[#E2E8F0]">
       {/* Left Section */}
       <div className="flex items-center gap-3">
         {/* Toggle Camera List Button */}
@@ -71,7 +72,7 @@ export function LiveViewToolbar({
         {/* Saved Views Dropdown */}
         <DropdownMenu open={viewsDropdownOpen} onOpenChange={setViewsDropdownOpen} >
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="gap-2 h-[36px]  px-3 text-foreground hover:bg-accent bg-[#F5F5F5] text-black">
+            <Button variant="ghost" size="sm" className="gap-2 h-[36px]  px-3 text-foreground hover:bg-accent bg-white text-black">
               <span className="text-sm">{selectedView}</span>
               <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
             </Button>
@@ -117,102 +118,103 @@ export function LiveViewToolbar({
         </DropdownMenu>
       </div>
 
- {/* Grid Layout Buttons */}
     {/* Grid Layout Buttons */}
-<div className="flex items-center gap-2">
-  {/* White Grid Container */}
-  <div
-    className="
-      flex items-center justify-between
-      w-[150px] h-[35px]
-      bg-[#F5F5F5]
-      rounded-md
-      border border-border
-      px-1
-      shadow-sm
-    "
-  >
-    <Button
-      variant="ghost"
-      size="icon"
-      className={cn(
-        "h-7 w-7",
-        selectedLayout === "2x2" && "bg-accent"
-      )}
-      onClick={() => onLayoutChange("2x2")}
-    >
-      <Grid2X2 className="h-4 w-4 text-muted-foreground" />
-    </Button>
+    <div className="flex items-center gap-2">
+      {/* White Grid Container */}
+      <div
+        className="
+          flex items-center justify-between
+          w-[160px] h-[38px]
+          bg-[#F5F5F5]
+          rounded-md
+          border border-border
+          px-1 py-2
+          shadow-sm
+        "
+      >
+        <Button
+          variant="ghost"
+          className={cn(
+            "h-7 w-7",
+                selectedLayout === "2x2"
+                ? "bg-white shadow-md"
+                : "hover:bg-slate-200"
+            )}
+          onClick={() => onLayoutChange("2x2")}
+        >
+          <Grid2X2 className="h-8 w-8 text-gray-600" />
+        </Button>
 
-    <Button
-      variant="ghost"
-      size="icon"
-      className={cn(
-        "h-7 w-7",
-        selectedLayout === "3x3" && "bg-accent"
-      )}
-      onClick={() => onLayoutChange("3x3")}
-    >
-      <Grid3X3 className="h-4 w-4 text-muted-foreground" />
-    </Button>
+        <Button
+          variant="ghost"
+          size="iconLg"
+          className={cn(
+           "h-7 w-7",
+            selectedLayout === "3x3"
+                ? "bg-white shadow-md"
+                : "hover:bg-slate-200"
+          )}
+          onClick={() => onLayoutChange("3x3")}
+        >
+          <Grid3X3 className="h-4 w-4 text-gray-600" />
+        </Button>
 
-    <Button
-      variant="ghost"
-      size="icon"
-      className={cn(
-        "h-7 w-7",
-        selectedLayout === "4x4" && "bg-accent"
-      )}
-      onClick={() => onLayoutChange("4x4")}
-    >
-      <div className="grid grid-cols-4 gap-px w-4 h-4">
-        {[...Array(16)].map((_, i) => (
-          <div key={i} className="bg-current rounded-[1px]" />
-        ))}
+        <Button
+          variant="ghost"
+          size="iconLg"
+          className={cn(
+           "h-7 w-7",
+            selectedLayout === "4x4"
+                ? "bg-white shadow-md"
+                : "hover:bg-slate-200"
+          )}
+          onClick={() => onLayoutChange("4x4")}
+        >
+          <Tablecells className="h-4 w-4 text-gray-600" />
+        </Button>
+
+        <Button
+          variant="ghost"
+          size="iconLg"
+          className={cn(
+            "h-7 w-7",
+            selectedLayout === "1+5"
+               ? "bg-white shadow-md"
+                : "hover:bg-slate-200"
+          )}
+          onClick={() => onLayoutChange("1+5")}
+        >
+          <Squaredot className="h-6 w-6 text-gray-600" />
+        </Button>
       </div>
-    </Button>
 
-    <Button
-      variant="ghost"
-      size="icon"
-      className={cn(
-        "h-7 w-7",
-        selectedLayout === "1+5" && "bg-accent"
-      )}
-      onClick={() => onLayoutChange("1+5")}
-    >
-      <LayoutGrid className="h-4 w-4 text-muted-foreground" />
-    </Button>
-  </div>
-
-  {/* Plus Button (Outside Box) */}
-  <Button
-    variant="ghost"
-    size="icon"
-    className="h-[24px] w-[24px] bg-white border border-border rounded shadow-sm"
-    onClick={() => setShowGridBuilder(true)}
-  >
-    <Plus className="h-4 w-4 text-black" />
-  </Button>
-</div>
+      {/* Plus Button (Outside Box) */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-[24px] w-[24px] bg-white border border-border rounded shadow-sm"
+        onClick={() => setShowGridBuilder(true)}
+      >
+        <Plus className="h-4 w-4 text-black" />
+      </Button>
+    </div>
 
 
       {/* Right Section - Grid Layout Buttons + Save View */}
       <div className="flex items-center gap-2">
-       
-        {/* Save View Button */}
-        <Button className="gap-2 h-[36px] px-4 bg-primary text-primary-foreground hover:bg-primary/90">
-          <Save className="h-4 w-4" />
-          <span className="text-sm">Save View</span>
-        </Button>
+          {/* Save View Button */}
+          <Button className="gap-2 h-[36px] px-4 bg-primary text-primary-foreground hover:bg-primary/90">
+            <Save className="h-4 w-4" />
+            <span className="text-sm">Save View</span>
+          </Button>
       </div>
 
       {/* Custom Grid Builder Modal */}
-      <CustomGridBuilder
-        open={showGridBuilder}
-        onClose={() => setShowGridBuilder(false)}
-        onConfirm={handleCustomGridConfirm}
-      />
+        <CustomGridBuilder
+          open={showGridBuilder}
+          onClose={() => setShowGridBuilder(false)}
+          onConfirm={handleCustomGridConfirm}
+        />
     </div>
   );
 }

@@ -4,10 +4,11 @@ import * as Yup from "yup";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { User, Lock, EyeOff, Eye } from "lucide-react";
+import { User, Lock, EyeOff, Eye,ArrowRight  } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL, API_URLS } from "@/components/Config/api";
 import { showToast } from "@/components/SweetAlertpopup/ToastService";
+import { cn } from "@/lib/utils"; 
 
 interface Props {
   goToView: (view: "forgotPassword") => void;
@@ -88,7 +89,7 @@ export const Login = ({ goToView }: Props) => {
         validationSchema={loginSchema}
         onSubmit={handleLogin}
       >
-        {({ isSubmitting, values, setFieldValue }) => (
+        {({ isSubmitting, values, setFieldValue, isValid, dirty }) => (
           <Form className="space-y-6">
             {/* Username */}
             <div className="space-y-2">
@@ -148,6 +149,7 @@ export const Login = ({ goToView }: Props) => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Checkbox
+                variant="soft"
                   checked={values.rememberMe}
                   onCheckedChange={(val) =>
                     setFieldValue("rememberMe", val)
@@ -165,13 +167,20 @@ export const Login = ({ goToView }: Props) => {
               </button>
             </div>
 
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full h-12 bg-blue-700 text-white"
-            >
-              {isSubmitting ? "Connecting..." : "Connect to server"}
-            </Button>
+           <Button
+          type="submit"
+          disabled={!dirty || !isValid || isSubmitting}
+          className={cn(
+            "w-full h-12 transition-colors font-roboto font-medium",
+            !dirty || !isValid
+              ? "bg-slate-500 text-white cursor-not-allowed"
+              : "bg-blue-700 text-white hover:bg-blue-800"
+          )}
+        >
+          {isSubmitting ? "Connecting..." : "Connect to server"}
+          <ArrowRight className="h-4 w-4" />
+        </Button>
+
           </Form>
         )}
       </Formik>

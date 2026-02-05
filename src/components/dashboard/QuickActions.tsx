@@ -7,8 +7,8 @@ import {
 } from "@/components/ui/icons";
 
 const actions = [
-  { icon: Harddrive, label: "Add Device" },
-  { icon: Cctv, label: "Add Storage" },
+  { icon: Cctv, label: "Add Device" },
+  { icon: Harddrive, label: "Add Storage" },
   { icon: Support, label: "Support" },
 ];
 

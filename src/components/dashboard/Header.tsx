@@ -67,16 +67,16 @@ const handleLogout = () => {
       {/* Search Desktop */}
       <div className="hidden md:flex flex-1 max-w-lg mx-6">
         <div className="relative w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          {/* <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white" /> */}
           <Input
-            placeholder="Search..."
+            placeholder="Search Cameras, event, location or device IDs..."
             className={`
-              pl-10 h-9 rounded-full w-full
+              h-9 rounded-full w-full
               border border-s-violet-50
               ${theme.searchBg}
               ${theme.border}
               text-white
-              placeholder:text-white/60
+              placeholder:text-white
               focus-visible:ring-0
               focus-visible:ring-offset-0
             `}

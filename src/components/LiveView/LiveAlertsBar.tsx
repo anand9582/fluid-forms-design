@@ -14,7 +14,7 @@ export function LiveAlertsBar() {
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border">
       {/* Alert Bar Header - Always visible */}
-      <div className="flex items-center justify-between px-4 py-2">
+      <div className="flex items-center justify-between px-4 py-2 bg-[#E2E8F0]">
         <div className="flex items-center gap-4">
           {/* Alert Indicator */}
           <div className="flex items-center gap-2">
