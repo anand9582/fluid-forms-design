@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ArrowLeft, ArrowRight ,LucideIcon } from "lucide-react";
+import { ArrowLeft, ArrowRight ,LucideIcon,X } from "lucide-react";
 import {
   Drawer,
   DrawerContent,
@@ -46,6 +46,7 @@ interface StepWizardDrawerProps {
   direction?: "top" | "bottom" | "left" | "right";
   validation?: StepValidation;
   onValidateStep?: (stepIndex: number) => boolean;
+  showCloseIcon?: boolean;
 }
 
 export function StepWizardDrawer({
@@ -68,6 +69,7 @@ export function StepWizardDrawer({
   direction = "right",
   validation,
   onValidateStep,
+  showCloseIcon = false, 
 }: StepWizardDrawerProps) {
   const handleNext = () => {
     if (onValidateStep && !onValidateStep(currentStep)) {
@@ -121,10 +123,20 @@ export function StepWizardDrawer({
       >
         <DrawerHeader className="border-b border-border px-6">
           <DrawerTitle className="flex items-center gap-2 text-xl">
-            {titleIcon}
-            {title}
+                {titleIcon}
+                {title}
           </DrawerTitle>
           {description && <DrawerDescription>{description}</DrawerDescription>}
+          {showCloseIcon && (
+                  <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onOpenChange(false)}
+                      className="bg-accent h-8 w-8 rounded-sm absolute right-10 top-7"
+                    >
+                  <X className="h-3 w-3" />
+             </Button>
+            )}
         </DrawerHeader>
 
         {/* Step Navigation */}

@@ -18,7 +18,7 @@ export function LiveAlertsBar() {
         <div className="flex items-center gap-3 bg-white text-xs px-4 py-2 rounded-full border border-border shadow-sm">
           <span className="font-roboto font-medium">Layout:</span>
 
-          {["2x2", "3x3", "4x4"].map((l) => (
+          {["2x2"].map((l) => (
             <button
               key={l}
               onClick={() => setLayout(l as any)}

@@ -1,5 +1,4 @@
 "use client";
-
 import { Formik, FormikHelpers } from "formik";
 import { useState } from "react";
 import { StepWizardDrawer, WizardStep } from "@/components/ui/step-wizard-drawer";
@@ -84,6 +83,7 @@ export function AddUserSheet({ open, onOpenChange }: AddUserSheetProps) {
           submitLabel="Create User"
           nextLabel="Save and Next"
           cancelLabel="Cancel"
+          showCloseIcon={true}
         >
          {currentStep === 0 && <UserInfoStep formik={formik} currentStep={currentStep} totalSteps={steps.length} />}
          {currentStep === 1 && (

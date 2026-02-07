@@ -15,8 +15,8 @@ const Slider = React.forwardRef<
   (
     {
       className,
-      trackHeight = 3,   // default thin line
-      thumbSize = 16,    // default knob
+      trackHeight = 3,   
+      thumbSize = 16,   
       ...props
     },
     ref
@@ -31,10 +31,10 @@ const Slider = React.forwardRef<
     >
       {/* TRACK */}
       <SliderPrimitive.Track
-        className="relative w-full grow overflow-hidden rounded-full bg-muted"
+        className="relative w-full grow overflow-hidden rounded-full bg-neutral-200"
         style={{ height: `${trackHeight}px` }}
       >
-        <SliderPrimitive.Range className="absolute h-full bg-primary/60" />
+        <SliderPrimitive.Range className="absolute h-full bg-blue-700" />
       </SliderPrimitive.Track>
 
       {/* THUMB */}

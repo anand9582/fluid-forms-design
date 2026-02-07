@@ -3,10 +3,15 @@ import { SettingsHeader } from "@/components/settings/SettingsHeader";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+  import { useSettingsStore } from "@/Store/SettingsStore";
+  import { Heading } from "@/components/ui/heading";
 import { configureDeviceTabs } from "@/components/settings/SidebarConfigs/ConfigureDeviceTabs";
 import { SettingsTabs, TabsContent } from "@/components/settings/SettingsTab";
-import Network from "@/components/settings/tabContents/Tabs_configure/NetworkSetting";
-import Recording from "@/components/settings/tabContents/Tabs_configure/Recording";
+import Network from "@/components/settings/configure-devices/pages/NetworkSetting";
+import Recording from "@/components/settings/configure-devices/pages/Recording";
+import LiveViewTabs from "@/components/settings/configure-devices/pages/LiveViewTabs";
+import OtherStreamTabs from "@/components/settings/configure-devices/pages/OtherStreamTabs";
+import ArchivingTabs from "@/components/settings/configure-devices/pages/ArchivingTabs";
 
 import {
   Search,
@@ -15,11 +20,12 @@ import {
   ChevronRight,
   RefreshCw,
   Trash2,
-  VideoOff, 
+  Plus, 
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Devices } from "@/components/ui/icons";
+
 
 /* ---------------- MOCK CAMERA TREE ---------------- */
 
@@ -163,6 +169,7 @@ const ConfigureDevicesPage = () => {
     new Set(["property-1", "building-a", "floor-1"])
   );
   const [searchQuery, setSearchQuery] = useState("");
+  const { setActiveRoute, setActiveItem } = useSettingsStore();
 
   const toggleExpand = (id: string) => {
     setExpandedIds((prev) => {
@@ -181,18 +188,32 @@ const ConfigureDevicesPage = () => {
     });
   };
 
+
+  const openAddDevicePage = () => {
+  setActiveItem("add-devices"); 
+  setActiveRoute("/settings/devices/adddevices");
+};
+
   return (
     <div className="flex-1 flex flex-col  space-y-6">
-      <SettingsHeader
-        title="Configure Devices"
-        description="Adjust camera-specific settings for analytics processing."
-        showActions={false}
-      />
+             {/* Header */}
+        <div className="flex items-center justify-between  border-b pb-4">
+          <div>
+              <Heading weight="medium" className="text-fontSize20px text-black">Configure Devices</Heading>
+              <p className="font-roboto font-normal text-sm text-muted-foreground">
+                  Adjust camera-specific settings for analytics processing.
+              </p>
+          </div>
+          <Button  className="gap-2" onClick={openAddDevicePage}>
+            <Plus className="h-4 w-4" />
+              Add Device
+          </Button> 
+        </div>
 
-      <div className="flex gap-6 min-h-[600px] mt-9">
+      <div className="flex gap-6 min-h-[600px]">
         {/* LEFT TREE */}
         <div className="w-72 border rounded-lg bg-card flex flex-col">
-          <div className="p-4 border-b">
+          <div className="p-4 pb-0">
             <div className="flex items-center gap-2 mb-3">
               <Devices className="h-5 w-5 text-muted-foreground" />
               <span className="text-lg font-semibold">Cameras</span>
@@ -262,24 +283,33 @@ const ConfigureDevicesPage = () => {
                 </div>
 
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Sync
+                  <Button variant="outline" size="sm" className="bg-white shadow-md font-roboto font-semibold">
+                    <RefreshCw className="h-4 w-4" />
+                      Reboot Device
                   </Button>
-                  <Button variant="outline" size="icon">
+                  <Button variant="outline" size="sm" className="bg-white shadow-md font-roboto font-medium">
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
 
-              <SettingsTabs defaultValue="network" tabs={configureDeviceTabs} className="px-4">
-                    <TabsContent value="network" >
-                        <Network />
-                    </TabsContent>
-                    <TabsContent value="recording" >
-                        <Recording />
-                    </TabsContent>
-              </SettingsTabs>
+                <SettingsTabs defaultValue="network" tabs={configureDeviceTabs} className="px-4">
+                        <TabsContent value="network" >
+                            <Network />
+                        </TabsContent>
+                        <TabsContent value="recording" >
+                            <Recording />
+                        </TabsContent>
+                        <TabsContent value="liveView" >
+                           <LiveViewTabs />
+                      </TabsContent>
+                      <TabsContent value="OtherStream" >
+                           <OtherStreamTabs />
+                      </TabsContent>
+                       <TabsContent value="Archiving" >
+                           <ArchivingTabs />
+                      </TabsContent>
+                </SettingsTabs>
             </>
           )}
         </div>

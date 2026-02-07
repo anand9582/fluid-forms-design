@@ -10,4 +10,16 @@ export const configureDeviceTabs = [
     id: "recording",
     label: "Recording",
   },
+  {
+    id: "liveView",
+    label: "live View",
+  },
+   {
+    id: "OtherStream",
+    label: "Other Streams",
+  },
+  {
+    id: "Archiving",
+    label: "Archiving",
+  },
 ];

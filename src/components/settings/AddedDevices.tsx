@@ -205,7 +205,7 @@
 
       const openAddDevicePage = () => {
         setActiveItem("add-devices"); 
-      setActiveRoute("/settings/devices/adddevices");
+        setActiveRoute("/settings/devices/adddevices");
       };
 
     // Columns definition

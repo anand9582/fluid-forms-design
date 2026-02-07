@@ -188,7 +188,6 @@ export function LiveViewToolbar({
         </Button>
       </div>
 
-      {/* Plus Button (Outside Box) */}
       <Button
         variant="ghost"
         size="icon"
@@ -200,7 +199,6 @@ export function LiveViewToolbar({
     </div>
 
 
-      {/* Right Section - Grid Layout Buttons + Save View */}
       <div className="flex items-center gap-2">
           {/* Save View Button */}
           <Button className="gap-2 h-[36px] px-4 bg-primary text-primary-foreground hover:bg-primary/90">
@@ -209,7 +207,6 @@ export function LiveViewToolbar({
           </Button>
       </div>
 
-      {/* Custom Grid Builder Modal */}
         <CustomGridBuilder
           open={showGridBuilder}
           onClose={() => setShowGridBuilder(false)}

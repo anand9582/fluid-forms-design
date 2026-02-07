@@ -28,6 +28,8 @@ import {
 
 import {
     RecordingIcons,
+    AlertIcons,
+    SettingIcons
   } from "@/components/Icons/Svg/RecordingIcons";
 
 
@@ -71,87 +73,111 @@ export default function RecordingPage() {
   return (
        <TabsContent value="recording" className="space-y-4 mt-0">
                 <ConfigSection icon={<Video  className="h-4 w-4" />} title="Device Stream Settings" defaultOpen>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <label className="text-sm text-muted-foreground">Stream URL</label>
-                      <Input value="rtsp://192.168.10.101:554/live/main" />
-                    </div>
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <label className="text-sm text-muted-foreground">Stream Type</label>
-                        <Select defaultValue="tcp">
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="tcp">TCP</SelectItem>
-                            <SelectItem value="udp">UDP</SelectItem>
-                          </SelectContent>
-                        </Select>
+                          <div className="space-y-2 col-span-1">
+                              <FormLabel text="Stream URI" />
+                              <Input value="rtsp://192.168.10.101:554/live/main" />
+                          </div>
                       </div>
-                      <div className="space-y-2">
-                        <label className="text-sm text-muted-foreground">Profile</label>
-                        <Select defaultValue="main">
+
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Stream Over */}
+                    <div className="space-y-2">
+                      <label className="text-sm text-muted-foreground">Stream Over</label>
+                        <Select defaultValue="TCP">
                           <SelectTrigger>
-                            <SelectValue />
+                              <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="main">Main Stream</SelectItem>
+                            <SelectItem value="TCP">TCP</SelectItem>
                             <SelectItem value="sub">Sub Stream</SelectItem>
                           </SelectContent>
                         </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm text-muted-foreground">Codec</label>
-                        <Select defaultValue="h264">
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="h264">H.264</SelectItem>
-                            <SelectItem value="h265">H.265</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm text-muted-foreground">Resolution</label>
-                        <Select defaultValue="1080p">
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="4k">3840x2160 (4K)</SelectItem>
-                            <SelectItem value="1080p">1920x1080 (FHD)</SelectItem>
-                            <SelectItem value="720p">1280x720 (HD)</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm text-muted-foreground">FPS</label>
-                        <Select defaultValue="30">
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="15">15 FPS</SelectItem>
-                            <SelectItem value="25">25 FPS</SelectItem>
-                            <SelectItem value="30">30 FPS</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm text-muted-foreground">Bitrate (kbps)</label>
-                        <Input value="4096" />
-                      </div>
                     </div>
+
+                    {/* Codec */}
+                    <div className="space-y-2">
+                      <label className="text-sm text-muted-foreground">Profile</label>
+                      <Select defaultValue="Main Stream">
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Main Stream">Main Stream</SelectItem>
+                          <SelectItem value="h265">H.265</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Resolution */}
+                    <div className="space-y-2">
+                      <label className="text-sm text-muted-foreground">Codec</label>
+                      <Select defaultValue="h265">
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                           <SelectItem value="h265">H.265</SelectItem>
+                           <SelectItem value="h266">H.266</SelectItem>
+                          <SelectItem value="h267">H.267</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* FPS */}
+                    <div className="space-y-2">
+                      <label className="text-sm text-muted-foreground">Resolution</label>
+                        <Select defaultValue="7272x2161">
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="7272x2161">7272x2161 (4K)</SelectItem>
+                              <SelectItem value="7272x2162">7272x2162 (4K)</SelectItem>
+                              <SelectItem value="7272x2163">7272x2163 (4K)</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+  
+                  {/* FPS */}
+                    <div className="space-y-2">
+                      <label className="text-sm text-muted-foreground">FPS</label>
+                        <Select defaultValue="30">
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="30">30</SelectItem>
+                              <SelectItem value="31">31</SelectItem>
+                              <SelectItem value="32">32</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    {/* Bitrate (Kbps) */}
+                      <div className="space-y-2">
+                            <label className="text-sm text-muted-foreground">Bitrate (Kbps)</label>
+                              <Select defaultValue="4096">
+                                  <SelectTrigger>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="4096">4096</SelectItem>
+                                    <SelectItem value="4097">4097</SelectItem>
+                                    <SelectItem value="4098">4098</SelectItem>
+                                  </SelectContent>
+                              </Select>
+                          </div>
                   </div>
+
+
                 </ConfigSection>
 
                 <ConfigSection icon={<Volume2   className="h-4 w-4" />} title="Audio Settings">
                   <div className="space-y-4">
-                        <div className="flex items-center justify-between rounded-md border border-slate-200 bg-bglightblue px-4 py-4 mt-3">
+                        <div className="flex items-center justify-between rounded-md border border-slate-200 bg-slate-50 px-4 py-4 mt-3">
                               <div className="space-y-0.5">
-                                <p className="text-md font-medium  font-roboto text-neutral-600">
+                                <p className="text-md font-medium  font-roboto text-neutral-700">
                                     Enable Microphone / Audio In
                                 </p>
                                 <p className="text-xs text-neutral-600 font-roboto font-normal">
@@ -185,7 +211,14 @@ export default function RecordingPage() {
                               <span>75%</span>
                               <span>100%</span>
                             </div>
-                            <Slider defaultValue={[75]} max={100} step={1} />
+                             <Slider
+                                defaultValue={[75]} 
+                                max={100}
+                                step={1}
+                                trackHeight={8}
+                                thumbSize={14}
+                                className="flex-1"
+                            />
                           </div>
                       </div>
                     </div>
@@ -313,7 +346,7 @@ export default function RecordingPage() {
                   </div>
                 </ConfigSection>
 
-                <ConfigSection icon={<Video  className="h-4 w-4" />} title="Recording Retention">
+                <ConfigSection icon={<AlertIcons  className="h-4 w-4" />} title="Recording Retention">
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1">
@@ -362,7 +395,7 @@ export default function RecordingPage() {
                   </div>
                 </ConfigSection>
 
-                <ConfigSection icon={<Video  className="h-4 w-4" />} title="Other Settings">
+                <ConfigSection icon={<SettingIcons  className="h-4 w-4" />} title="Other Settings">
                       <div className="space-y-4">
                   {/* Checkbox Grid */}
                   <div className="grid grid-cols-2 gap-4">
@@ -410,12 +443,12 @@ export default function RecordingPage() {
                           <Ban className="h-4 w-4" />
                           Force Stop Recording
                         </Button>
-                         <p className="text-sm text-center text-muted-foreground">
+                         <p className="text-sm text-center text-slate-700">
                                   Stops all active recordings on this device. Recording can be resumed at any time.
-                                </p>
+                          </p>
                 </ConfigSection>
 
-              <ConfigSection icon={<Bell className="h-4 w-4" />} title="Network Module Alerts" defaultOpen>
+              <ConfigSection icon={<AlertIcons className="h-4 w-4" />} title="Network Module Alerts" defaultOpen>
               <div className="border rounded-lg overflow-hidden">
                 {/* Header */}
                 <div className="grid grid-cols-3 gap-4 px-4 py-3  border-b text-sm font-medium bg-slate-100">
@@ -429,7 +462,9 @@ export default function RecordingPage() {
                   { id: "connection-lost", name: "Recording Aborted", enabled: true },
                   { id: "ip-conflict", name: "Recording Connected", enabled: true },
                   { id: "auth-failure", name: "Recording Stopped", enabled: true },
-                  { id: "packet-loss", name: "Storage Full", enabled: false },
+                  { id: "Storage-full", name: "Storage Full", enabled: false },
+                  { id: "disk-error", name: "Disk Read Error", enabled: false },
+                  { id: "Speed-low", name: "Write Speed Low", enabled: false },
                 ].map((alert, index) => (
                   <div
                     key={alert.id}
@@ -448,21 +483,24 @@ export default function RecordingPage() {
 
                     {/* Notification Buttons */}
                     <div className="flex justify-end space-x-2">
-                      {[
+                    {[
                         <Mail key="mail" className="h-4 w-4" />,
                         <Smartphone key="phone" className="h-4 w-4" />,
-                        <MonitorSmartphone key="monitor" className="h-4 w-4" />,
-                        <Webhook key="webhook" className="h-4 w-4 "/>,
+                        <Monitor key="monitor" className="h-4 w-4" />,
+                        <Webhook key="webhook" className="h-4 w-4" />,
                       ].map((icon, idx) => (
-                        <Button
-                          key={idx}
-                          variant="outline"
-                          size="icon"
-                          className={cn(
-                            "h-8 w-8 flex items-center justify-center",
-                            alert.enabled && "text-primary border-primary/30 bg-primary/5"
-                          )}
-                        >
+                          <Button
+                            key={idx}
+                            variant="outline"
+                            size="icon"
+                            disabled={!alert.enabled} 
+                            className={cn(
+                              "h-8 w-8 flex items-center justify-center transition-colors",
+                              alert.enabled
+                                ? "text-primary border-primary/30 bg-primary/5 hover:bg-primary/10"
+                                : "text-muted-foreground border-muted/20 bg-muted/10 cursor-not-allowed"
+                            )}
+                          >
                           {icon}
                         </Button>
                       ))}
