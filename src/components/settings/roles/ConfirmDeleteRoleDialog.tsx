@@ -95,7 +95,7 @@ export function ConfirmDeleteRoleDialog({ open, onClose, role }: ConfirmDeleteRo
         </p>
 
         {/* Label + Select together */}
-        <div className="space-y-2">
+        {/* <div className="space-y-2">
           <FormLabel className="text-sm font-medium">
             Reassign Users To
           </FormLabel>
@@ -114,7 +114,7 @@ export function ConfirmDeleteRoleDialog({ open, onClose, role }: ConfirmDeleteRo
               </SelectContent>
             </Select>
           </FormControl>
-        </div>
+        </div> */}
       </FormItem>
     )}
   />

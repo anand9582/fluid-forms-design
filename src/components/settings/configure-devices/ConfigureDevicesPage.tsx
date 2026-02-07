@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { SettingsHeader } from "@/components/settings/SettingsHeader";
+// import { SettingsHeader } from "@/components/settings/SettingsHeader";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-  import { useSettingsStore } from "@/Store/SettingsStore";
-  import { Heading } from "@/components/ui/heading";
+import { useSettingsStore } from "@/Store/SettingsStore";
+import { Heading } from "@/components/ui/heading";
 import { configureDeviceTabs } from "@/components/settings/SidebarConfigs/ConfigureDeviceTabs";
 import { SettingsTabs, TabsContent } from "@/components/settings/SettingsTab";
 import Network from "@/components/settings/configure-devices/pages/NetworkSetting";
@@ -12,7 +12,7 @@ import Recording from "@/components/settings/configure-devices/pages/Recording";
 import LiveViewTabs from "@/components/settings/configure-devices/pages/LiveViewTabs";
 import OtherStreamTabs from "@/components/settings/configure-devices/pages/OtherStreamTabs";
 import ArchivingTabs from "@/components/settings/configure-devices/pages/ArchivingTabs";
-
+import DeviceAlertTabs from "@/components/settings/configure-devices/pages/DeviceAlertTabs";
 import {
   Search,
   Monitor,
@@ -170,6 +170,7 @@ const ConfigureDevicesPage = () => {
   );
   const [searchQuery, setSearchQuery] = useState("");
   const { setActiveRoute, setActiveItem } = useSettingsStore();
+   const [activeTab, setActiveTab] = useState("network");
 
   const toggleExpand = (id: string) => {
     setExpandedIds((prev) => {
@@ -190,8 +191,8 @@ const ConfigureDevicesPage = () => {
 
 
   const openAddDevicePage = () => {
-  setActiveItem("add-devices"); 
-  setActiveRoute("/settings/devices/adddevices");
+    setActiveItem("add-devices"); 
+    setActiveRoute("/settings/devices/adddevices");
 };
 
   return (
@@ -259,41 +260,51 @@ const ConfigureDevicesPage = () => {
               </div>
           ) : (
             <>
-              <div className="flex items-center justify-between p-4 border-b mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center">
-                    <Monitor className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold">{selectedCamera.name}</span>
-                      <Badge
+              <div className="flex items-center justify-between p-4 border-b mb-2">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-sm bg-primary/10 flex items-center justify-center">
+                   <Devices className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold">{selectedCamera?.name}</span>
+                      <Badge 
+                        variant="outline"
                         className={cn(
-                          "text-xs",
-                          selectedCamera.status === "online" && "bg-green-500"
+                          "text-xs font-medium border-0",
+                          selectedCamera?.status === "online" 
+                            ? "bg-green-100 text-green-700" 
+                            : "bg-red-100 text-red-700"
                         )}
                       >
-                        {selectedCamera.status}
-                      </Badge>
-                    </div>
-                    <span className="text-sm text-muted-foreground">
-                      IP: {selectedCamera.ip}
-                    </span>
+                      {selectedCamera?.status === "online" ? "Online" : "Offline"}
+                    </Badge>
                   </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="bg-white shadow-md font-roboto font-semibold">
-                    <RefreshCw className="h-4 w-4" />
-                      Reboot Device
-                  </Button>
-                  <Button variant="outline" size="sm" className="bg-white shadow-md font-roboto font-medium">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <span className="text-sm text-muted-foreground">IP: {selectedCamera?.ip}</span>
                 </div>
               </div>
+              
+              {/* Actions */}
+             <div className="flex items-center gap-2">
+                {/* {tabConfig[activeTab]?.showSyncButton && (
+                    <Button variant="outline" size="sm" className="gap-2 h-9">
+                      <RefreshCw className="h-4 w-4" />
+                      Sync {activeTabConfig?.label}
+                    </Button>
+                  )} */}
+                <Button variant="outline" size="sm" className="gap-2 h-9">
+                  <RefreshCw className="h-4 w-4" />
+                  Reboot Device
+                </Button>
+                <Button variant="outline" size="icon" className="h-9 w-9">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+              </div>
 
-                <SettingsTabs defaultValue="network" tabs={configureDeviceTabs} className="px-4">
+
+
+                <SettingsTabs defaultValue="network" tabs={configureDeviceTabs}  className="px-4">
                         <TabsContent value="network" >
                             <Network />
                         </TabsContent>
@@ -308,6 +319,9 @@ const ConfigureDevicesPage = () => {
                       </TabsContent>
                        <TabsContent value="Archiving" >
                            <ArchivingTabs />
+                      </TabsContent>
+                        <TabsContent value="DeviceAlert" >
+                           <DeviceAlertTabs />
                       </TabsContent>
                 </SettingsTabs>
             </>

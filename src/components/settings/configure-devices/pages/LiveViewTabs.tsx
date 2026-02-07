@@ -1,21 +1,15 @@
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Monitor,Video,Volume2,Ban,Clock,Bell,RefreshCw,CircleDot, Info,ChevronDown,Mail,Smartphone,Webhook,Plug } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Monitor,Video,Volume2,Clock,RefreshCw,CircleDot,Mail,Smartphone,Webhook} from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { FormLabel } from "@/components/ui/FormLabel";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { TabsContent } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
-
-import {
-  Collapsible,
-  CollapsibleTrigger,
-  CollapsibleContent,
-} from "@/components/ui/collapsible";
+import { AlertsTable } from "@/components/Common/AlertsTable";
+import { ConfigSection } from "@/components/Common/ConfigSection";
 
 import {
   Form,
@@ -26,7 +20,6 @@ import {
 } from "@/components/ui/form";
 
 import {
-    RecordingIcons,
     AlertIcons,
     SettingIcons,
   } from "@/components/Icons/Svg/RecordingIcons";
@@ -35,34 +28,6 @@ import {
  DisconnectIcon
   } from "@/components/Icons/Svg/liveViewIcons";
 
-
-import { IconWrapper } from "@/components/ui/icon-wrapper";
-
-const ConfigSection = ({ icon, title, defaultOpen = false, children }) => {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-
-
-  return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <CollapsibleTrigger className="flex items-center gap-3 w-full p-3 hover:bg-muted/50 transition-colors border-b" >
-            <IconWrapper icon={icon} isActive={isOpen} />
-              <span className="font-medium flex-1 text-left font-roboto">
-                {title}
-              </span>
-              <ChevronDown
-                className={cn(
-                  "h-5 w-5 text-muted-foreground transition-transform p-1 rounded-full",
-                  isOpen && "rotate-180 bg-blue-100 text-blue-700"
-                )}
-              />
-      </CollapsibleTrigger>
-
-      <CollapsibleContent>
-          <div className="px-4 pb-4 pt-3 space-y-4">{children}</div>
-      </CollapsibleContent>
-    </Collapsible>
-  );
-};
 
 export default function LiveViewTabs() {
   const form = useForm({
@@ -264,11 +229,10 @@ export default function LiveViewTabs() {
             </Select>
           </div>
         </div>
-
               
-                </ConfigSection>
+</ConfigSection>
 
-       <ConfigSection icon={<Volume2   className="h-4 w-4" />} title="Live Audio">
+<ConfigSection icon={<Volume2   className="h-4 w-4" />} title="Live Audio">
                   <div className="space-y-4">
                         <div className="flex items-center justify-between rounded-md border border-slate-200 bg-slate-50 px-4 py-4 mt-3">
                               <div className="space-y-0.5">
@@ -363,7 +327,7 @@ export default function LiveViewTabs() {
                               </div>
                     </div>
                   </div>
-                </ConfigSection>
+      </ConfigSection>
 
                <ConfigSection icon={<CircleDot className="h-4 w-4" />} title="OSD Settings">
                 <div className="space-y-4">
@@ -450,88 +414,11 @@ export default function LiveViewTabs() {
                 </ConfigSection>
 
               <ConfigSection icon={<AlertIcons className="h-4 w-4" />} title="Network Module Alerts" defaultOpen>
-              <div className="border rounded-lg overflow-hidden">
-
-                {/* Header */}
-                <div className="grid grid-cols-3 gap-4 px-4 py-3 border-b text-sm font-medium bg-slate-100">
-                  <span className="text-slate-600 font-roboto">Alert Trigger</span>
-                  <span className="text-slate-600 font-roboto text-center">Enabled</span>
-                  <span className="text-slate-600 font-roboto text-end mr-5">
-                    Notification Channels
-                  </span>
-                </div>
-
-                {/* Rows */}
-                  {alerts.map((alert, index) => (
-                    <div
-                      key={alert.id}
-                      className={cn(
-                        "grid grid-cols-3 gap-4 px-4 py-3 items-center",
-                        index !== alerts.length - 1 && "border-b"
-                      )}
-                    >
-                      {/* Alert name */}
-                      <span className="text-sm font-roboto font-medium">
-                        {alert.name}
-                      </span>
-
-                      {/* Enable switch */}
-                      <div className="flex justify-center">
-                        <Switch
-                          checked={alert.enabled}
-                          onCheckedChange={(checked) => {
-                            setAlerts((prev) =>
-                              prev.map((a) =>
-                                a.id === alert.id ? { ...a, enabled: checked } : a
-                              )
-                            );
-                          }}
-                        />
-                      </div>
-
-                      {/* Notification channels */}
-                      <div className="flex justify-end space-x-2">
-                        {CHANNELS.map(({ key, icon: Icon }) => {
-                          const active = alert.channels[key];
-                          return (
-                            <Button
-                              key={key}
-                              variant="outline"
-                              size="icon"
-                              disabled={!alert.enabled}
-                              onClick={() => {
-                                setAlerts((prev) =>
-                                  prev.map((a) =>
-                                    a.id === alert.id
-                                      ? {
-                                          ...a,
-                                          channels: {
-                                            ...a.channels,
-                                            [key]: !a.channels[key],
-                                          },
-                                        }
-                                      : a
-                                  )
-                                );
-                              }}
-                                className={cn(
-                                  "h-8 w-8 transition-colors",
-                                  !alert.enabled &&
-                                    "cursor-not-allowed text-muted-foreground bg-muted/10",
-                                  alert.enabled && active &&
-                                    "text-primary border-primary/40 bg-primary/10 hover:bg-primary/20",
-                                  alert.enabled && !active &&
-                                    "text-muted-foreground border-muted bg-background hover:bg-muted/50"
-                                )}
-                              >
-                              <Icon className="h-4 w-4" />
-                            </Button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
-              </div>
+                    <AlertsTable
+                          alerts={alerts}
+                          setAlerts={setAlerts}
+                          channels={CHANNELS}
+                      />
             </ConfigSection>
 
       </div>

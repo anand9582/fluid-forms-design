@@ -32,9 +32,7 @@ export function RolesPanel({
 
 useEffect(() => {
   if (roleGroups.length > 0) {
-    // Expand first group
     setExpandedGroups([roleGroups[0].id]);
-    // Auto-select first role in the first group
     const firstRole = roleGroups[0].roles?.[0];
     if (firstRole) {
       setSelectedRole(Number(firstRole.id), firstRole.name);
@@ -81,7 +79,7 @@ useEffect(() => {
       <Card className="flex-1 overflow-auto shadow-none border border-border ">
         <CardHeader className="flex py-2 px-4 border-b bg-[#f1f5f9] rounded-t-md h-12">
           <CardTitle className="font-roboto text-md font-medium uppercase text-gray-500 mt-1">
-            Defined Roles
+              Defined Roles
           </CardTitle>
         </CardHeader>
 
@@ -112,7 +110,7 @@ useEffect(() => {
                   <div className="border border-t-0 rounded-b-lg overflow-hidden shadow-xs">
                       {/* {group.roles.length === 0 && (
                         <div className="px-4 py-3 text-sm text-gray-400 italic">
-                            No roles available
+                              No roles available
                         </div>
                       )} */}
                     {group.roles.map((role) => (
@@ -143,19 +141,19 @@ useEffect(() => {
                             )}
                         >
                           <div className="font-roboto font-medium text-md  text-gray-900">
-                            {role.name}
+                             {role.name}
                           </div>
                           <div className="flex items-center gap-1 text-xs text-gray-500">
                             <Users size={12} />
-                            {role.userCount} users
+                             {role.userCount} users
                           </div>
                         </button>
 
                         {hoveredRole === role.id && (
                           <button
                             onClick={(e) =>
-                              handleDeleteClick(e, role)
-                            }
+                               handleDeleteClick(e, role)
+                             }
                             className="absolute right-2 top-1/2 -translate-y-1/2 text-destructive"
                           >
                             <Trash2 size={14} />

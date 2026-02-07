@@ -114,7 +114,7 @@ export function StepWizardDrawer({
         className={cn(
           "flex flex-col",
           isHorizontal 
-            ? "h-full w-[100vw] max-w-4xl inset-y-0 mt-0 rounded-none bg-white" 
+            ? "h-full w-[100vw] max-w-5xl inset-y-0 mt-0 rounded-none bg-white" 
             : "max-h-[90vh]",
           direction === "right" && "ml-auto right-0 left-auto rounded-l-[10px]",
           direction === "left" && "mr-auto left-0 right-auto rounded-r-[10px]",

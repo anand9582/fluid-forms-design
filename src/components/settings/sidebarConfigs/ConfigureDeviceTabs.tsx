@@ -22,4 +22,8 @@ export const configureDeviceTabs = [
     id: "Archiving",
     label: "Archiving",
   },
+   {
+    id: "DeviceAlert",
+    label: "Device Alerts",
+  },
 ];

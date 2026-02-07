@@ -1,18 +1,12 @@
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Monitor, Wifi, Shield, Bell, Lock, Info,ChevronDown,Mail,Smartphone,MonitorSmartphone,Webhook} from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Monitor, Wifi, Shield,Lock, Info,Mail,Smartphone,Webhook} from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { FormLabel } from "@/components/ui/FormLabel";
-import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
-import { Card,CardHeader,CardTitle } from "@/components/ui/card";
-import {
-  Collapsible,
-  CollapsibleTrigger,
-  CollapsibleContent,
-} from "@/components/ui/collapsible";
+import { ConfigSection } from "@/components/Common/ConfigSection";
+import { AlertsTable } from "@/components/Common/AlertsTable";
+
 import {
   Form,
   FormField,
@@ -25,32 +19,6 @@ import {
     AlertIcons,
   } from "@/components/Icons/Svg/RecordingIcons";
 
-import { IconWrapper } from "@/components/ui/icon-wrapper";
-
-const ConfigSection = ({ icon, title, defaultOpen = false, children }) => {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-
-  return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <CollapsibleTrigger className="flex items-center gap-3 w-full p-3 hover:bg-muted/50 transition-colors border-b" >
-          <IconWrapper icon={icon} isActive={isOpen} />
-            <span className="font-medium flex-1 text-left font-roboto">
-              {title}
-            </span>
-            <ChevronDown
-              className={cn(
-                "h-5 w-5 text-muted-foreground transition-transform p-1 rounded-full",
-                isOpen && "rotate-180 bg-blue-100 text-blue-700"
-              )}
-            />
-      </CollapsibleTrigger>
-
-      <CollapsibleContent>
-        <div className="px-4 pb-4 pt-2 space-y-4">{children}</div>
-      </CollapsibleContent>
-    </Collapsible>
-  );
-};
 
 export default function NetworkSetting() {
   const form = useForm({
@@ -61,6 +29,60 @@ export default function NetworkSetting() {
     deviceCategory: "Camera",
   },
 });
+
+ const [alerts, setAlerts] = useState([
+    {
+      id: "connection-lost",
+      name: "Connection Lost",
+      enabled: true,
+      channels: {
+        mail: true,
+        sms: true,
+        desktop: false,
+        webhook: false,
+      },
+    },
+    {
+      id: "Ip-conflict",
+      name: "IP Conflict",
+      enabled: true,
+      channels: {
+        mail: false,
+        sms: true,
+        desktop: false,
+        webhook: false,
+      },
+    },
+    {
+      id: "Authentication-failure",
+      name: "Authentication Failure",
+      enabled: true,
+      channels: {
+        mail: false,
+        sms: true,
+        desktop: false,
+        webhook: true,
+      },
+    },
+      {
+      id: "packet-loss",
+      name: "Packet Loss High",
+      enabled: false,
+      channels: {
+        mail: false,
+        sms: true,
+        desktop: false,
+        webhook: false,
+      },
+    }
+  ]);
+
+  const CHANNELS = [
+    { key: "mail", icon: Mail },
+    { key: "sms", icon: Smartphone },
+    { key: "desktop", icon: Monitor },
+    { key: "webhook", icon: Webhook },
+  ];
 
   return (
     <Form {...form}>
@@ -212,63 +234,12 @@ export default function NetworkSetting() {
       </ConfigSection>
 
         <ConfigSection icon={<AlertIcons className="h-4 w-4" />} title="Network Module Alerts" defaultOpen>
-        <div className="border rounded-lg overflow-hidden">
-          {/* Header */}
-          <div className="grid grid-cols-3 gap-4 px-4 py-3 bg-muted/30 border-b text-sm font-medium bg-bgprimary">
-            <span className="text-gray-500 font-roboto">Alert Trigger</span>
-            <span className="text-gray-500 font-roboto text-center">Enabled</span>
-            <span className="text-gray-500 font-roboto space-x-2 text-end mr-5">Notification Channels</span>
-          </div>
-
-          {/* Alert Rows */}
-          {[
-            { id: "connection-lost", name: "Connection Lost", enabled: true },
-            { id: "ip-conflict", name: "IP Conflict", enabled: true },
-            { id: "auth-failure", name: "Authentication Failure", enabled: true },
-            { id: "packet-loss", name: "Packet Loss High", enabled: false },
-          ].map((alert, index) => (
-            <div
-              key={alert.id}
-              className={cn(
-                "grid grid-cols-3 gap-4 px-4 py-3 items-center",
-                index !== 3 && "border-b"
-              )}
-            >
-              {/* Alert Name */}
-              <span className="text-sm">{alert.name}</span>
-
-              {/* Enabled Switch */}
-              <div className="flex justify-center">
-                <Switch defaultChecked={alert.enabled} />
-              </div>
-
-              {/* Notification Buttons */}
-              <div className="flex justify-end space-x-2">
-                {[
-                  <Mail key="mail" className="h-4 w-4" />,
-                  <Smartphone key="phone" className="h-4 w-4" />,
-                  <MonitorSmartphone key="monitor" className="h-4 w-4" />,
-                  <Webhook key="webhook" className="h-4 w-4" />,
-                ].map((icon, idx) => (
-                  <Button
-                    key={idx}
-                    variant="outline"
-                    size="icon"
-                    className={cn(
-                      "h-8 w-8 flex items-center justify-center",
-                      alert.enabled && "text-primary border-primary/30 bg-primary/5"
-                    )}
-                  >
-                    {icon}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
+         <AlertsTable
+                    alerts={alerts}
+                    setAlerts={setAlerts}
+                    channels={CHANNELS}
+                />
         </ConfigSection>
-
-
 
     </div>
     </Form>

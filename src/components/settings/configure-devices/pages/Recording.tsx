@@ -1,7 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Monitor,Video,Volume2,Ban,Clock,Bell,RefreshCw,CircleDot, Info,ChevronDown,Mail,Smartphone,MonitorSmartphone,Webhook} from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Monitor,Video,Volume2,Ban,Clock,RefreshCw,CircleDot, Info,Mail,Smartphone,Webhook} from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { FormLabel } from "@/components/ui/FormLabel";
@@ -10,13 +9,6 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { TabsContent } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
-
-import {
-  Collapsible,
-  CollapsibleTrigger,
-  CollapsibleContent,
-} from "@/components/ui/collapsible";
-
 import {
   Form,
   FormField,
@@ -25,6 +17,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 
+import { AlertsTable } from "@/components/Common/AlertsTable";
+import { ConfigSection } from "@/components/Common/ConfigSection";
 
 import {
     RecordingIcons,
@@ -33,42 +27,91 @@ import {
   } from "@/components/Icons/Svg/RecordingIcons";
 
 
-import { IconWrapper } from "@/components/ui/icon-wrapper";
+  export default function RecordingPage() {
+    const form = useForm({
+      defaultValues: {
+          deviceMake: "axis",
+          model: "DS-2CD2043G2-I",
+          logicalGroup: "HQ / Floor 1",
+          deviceCategory: "Camera",
+      },
+  });
+   
+    const [alerts, setAlerts] = useState([
+    {
+      id: "recording-aborted",
+      name: "Recording Aborted",
+      enabled: true,
+      channels: {
+        mail: true,
+        sms: true,
+        desktop: false,
+        webhook: false,
+      },
+    },
+    {
+      id: "recording-connect",
+      name: "Recording Connected",
+      enabled: true,
+      channels: {
+        mail: false,
+        sms: true,
+        desktop: false,
+        webhook: false,
+      },
+    },
+    {
+      id: "recording-stopped",
+      name: "Recording Stopped",
+      enabled: true,
+      channels: {
+        mail: false,
+        sms: true,
+        desktop: false,
+        webhook: true,
+      },
+    },
+    {
+      id: "storage-full",
+      name: "Storage Full",
+      enabled: false,
+      channels: {
+         mail: false,
+        sms: true,
+        desktop: false,
+        webhook: false,
+      },
+    },
+      {
+      id: "disk-read",
+      name: "Disk Read Error",
+      enabled: false,
+      channels: {
+        mail: false,
+        sms: true,
+        desktop: false,
+        webhook: false,
+      },
+    },
+     {
+      id: "write-speed",
+      name: "Write Speed Low",
+      enabled: false,
+      channels: {
+        mail: false,
+        sms: true,
+        desktop: false,
+        webhook: false,
+      },
+    },
+  ]);
 
-const ConfigSection = ({ icon, title, defaultOpen = false, children }) => {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-
-  return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <CollapsibleTrigger className="flex items-center gap-3 w-full p-3 hover:bg-muted/50 transition-colors border-b" >
-            <IconWrapper icon={icon} isActive={isOpen} />
-              <span className="font-medium flex-1 text-left font-roboto">
-                {title}
-              </span>
-              <ChevronDown
-                className={cn(
-                  "h-5 w-5 text-muted-foreground transition-transform p-1 rounded-full",
-                  isOpen && "rotate-180 bg-blue-100 text-blue-700"
-                )}
-              />
-      </CollapsibleTrigger>
-
-      <CollapsibleContent>
-          <div className="px-4 pb-4 pt-3 space-y-4">{children}</div>
-      </CollapsibleContent>
-    </Collapsible>
-  );
-};
-
-export default function RecordingPage() {
-  const form = useForm({
-  defaultValues: {
-    deviceMake: "axis",
-    model: "DS-2CD2043G2-I",
-    logicalGroup: "HQ / Floor 1",
-    deviceCategory: "Camera",
-  },
-});
+  const CHANNELS = [
+    { key: "mail", icon: Mail },
+    { key: "sms", icon: Smartphone },
+    { key: "desktop", icon: Monitor },
+    { key: "webhook", icon: Webhook },
+  ];
 
   return (
        <TabsContent value="recording" className="space-y-4 mt-0">
@@ -421,10 +464,7 @@ export default function RecordingPage() {
                       />
                     </label>
                   </div>
-                  
-                
-               
-                      </div>
+            </div>
                   
                        <Button
                           variant="outline"
@@ -449,65 +489,11 @@ export default function RecordingPage() {
                 </ConfigSection>
 
               <ConfigSection icon={<AlertIcons className="h-4 w-4" />} title="Network Module Alerts" defaultOpen>
-              <div className="border rounded-lg overflow-hidden">
-                {/* Header */}
-                <div className="grid grid-cols-3 gap-4 px-4 py-3  border-b text-sm font-medium bg-slate-100">
-                  <span className="text-slate-600 font-roboto">Alert Trigger</span>
-                  <span className="text-slate-600 font-roboto text-center">Enabled</span>
-                  <span className="text-slate-600  font-roboto space-x-2 text-end mr-5">Notification Channels</span>
-                </div>
-
-                {/* Alert Rows */}
-                {[
-                  { id: "connection-lost", name: "Recording Aborted", enabled: true },
-                  { id: "ip-conflict", name: "Recording Connected", enabled: true },
-                  { id: "auth-failure", name: "Recording Stopped", enabled: true },
-                  { id: "Storage-full", name: "Storage Full", enabled: false },
-                  { id: "disk-error", name: "Disk Read Error", enabled: false },
-                  { id: "Speed-low", name: "Write Speed Low", enabled: false },
-                ].map((alert, index) => (
-                  <div
-                    key={alert.id}
-                    className={cn(
-                      "grid grid-cols-3 gap-4 px-4 py-3 items-center",
-                      index !== 3 && "border-b"
-                    )}
-                  >
-                    {/* Alert Name */}
-                    <span className="text-sm font-roboto font-medium">{alert.name}</span>
-
-                    {/* Enabled Switch */}
-                    <div className="flex justify-center">
-                      <Switch defaultChecked={alert.enabled} />
-                    </div>
-
-                    {/* Notification Buttons */}
-                    <div className="flex justify-end space-x-2">
-                    {[
-                        <Mail key="mail" className="h-4 w-4" />,
-                        <Smartphone key="phone" className="h-4 w-4" />,
-                        <Monitor key="monitor" className="h-4 w-4" />,
-                        <Webhook key="webhook" className="h-4 w-4" />,
-                      ].map((icon, idx) => (
-                          <Button
-                            key={idx}
-                            variant="outline"
-                            size="icon"
-                            disabled={!alert.enabled} 
-                            className={cn(
-                              "h-8 w-8 flex items-center justify-center transition-colors",
-                              alert.enabled
-                                ? "text-primary border-primary/30 bg-primary/5 hover:bg-primary/10"
-                                : "text-muted-foreground border-muted/20 bg-muted/10 cursor-not-allowed"
-                            )}
-                          >
-                          {icon}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
+                <AlertsTable
+                            alerts={alerts}
+                            setAlerts={setAlerts}
+                            channels={CHANNELS}
+                        />
             </ConfigSection>
 
       </TabsContent>

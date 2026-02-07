@@ -35,7 +35,7 @@ export function SettingsTabs({
       )}
     >
       {tabs && tabs.length > 0 && (
-        <TabsList className="w-full justify-start h-auto p-0 bg-transparent border-b border-border rounded-none overflow-x-auto flex-shrink-0">
+        <TabsList className="w-full justify-start h-auto  gap-4 p-0 bg-transparent border-b border-border rounded-none overflow-x-auto flex-shrink-0">
           {tabs.map((tab) => (
             <TabsTrigger
               key={tab.id}
