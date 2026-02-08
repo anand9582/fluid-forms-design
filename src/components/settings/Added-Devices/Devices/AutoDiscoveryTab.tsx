@@ -21,14 +21,19 @@ export function AutoDiscoveryTab() {
   const [selectedCount, setSelectedCount] = useState(0);
   const [isScanning, setIsScanning] = useState(false);
   const [devices, setDevices] = useState<DiscoveredDevice[]>(mockDiscoveredDevices);
+  const [hasScanned, setHasScanned] = useState(false);
 
-  const handleStartScan = () => {
-    setIsScanning(true);
-    // Simulate scanning
-    setTimeout(() => {
-      setIsScanning(false);
-    }, 2000);
-  };
+
+const handleStartScan = () => {
+  setIsScanning(true);
+  setHasScanned(true);
+
+  setTimeout(() => {
+    setIsScanning(false);
+  }, 2000);
+};
+
+
 
   const handleAddSelected = () => {
     // Handle adding selected devices
@@ -79,11 +84,12 @@ export function AutoDiscoveryTab() {
 
         <div className="overflow-x-auto">
           <div className="min-w-[800px] px-4 sm:px-0">
-            <DevicesDataTable 
-              data={devices}
-              selectedCount={selectedCount}
-              onSelectionChange={setSelectedCount}
-            />
+       <DevicesDataTable
+  data={hasScanned ? devices : []}   
+  selectedCount={selectedCount}
+  onSelectionChange={setSelectedCount}
+/>
+
           </div>
         </div>
 

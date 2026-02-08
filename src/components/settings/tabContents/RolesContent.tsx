@@ -70,46 +70,33 @@ useEffect(() => {
 
       const res = await fetch(
         `${API_BASE_URL}${API_URLS.GetRolesByRoleType}?roleType=${roleType}`,
-        { headers: getAuthHeaders() }
+         { headers: getAuthHeaders() }
       );
 
       const data: RolesApiResponse = await res.json();
 
-      if (!data.success) {
-        setRoleGroups(ALL_ROLE_GROUPS);
-        return;
+      if (!data.success && data.errorCode === "FORBIDDEN") {
+          setRoleGroups(ALL_ROLE_GROUPS);
+          setErrorMessage("You do not have permission to view roles");
+          return;
       }
 
-      const groupsMap: Record<string, RoleGroup> = {
-        ADMINISTRATOR: { id: "ADMINISTRATOR", name: "ADMINISTRATOR", roles: [] },
-        OPERATOR: { id: "OPERATOR", name: "OPERATOR", roles: [] },
-        VIEWER: { id: "VIEWER", name: "VIEWER", roles: [] },
-      };
+      if (data.success && data.data && data.data.length > 0) {
+        const updatedGroups = ALL_ROLE_GROUPS.map((group) =>
+          group.id === roleType
+            ? {
+                ...group,
+                roles: data.data.map((role) => ({
+                  id: role.roleId.toString(),
+                  name: role.roleName,
+                  userCount: role.permissionGroups.length,
+                })),
+              }
+            : group
+        );
 
-      data.data.forEach((role) => {
-        if (groupsMap[role.roleType]) {
-          groupsMap[role.roleType].roles.push({
-            id: role.roleId.toString(),
-            name: role.roleName,
-            userCount: role.permissionGroups.length,
-          });
-        }
-      });
-
-      let visibleGroups: RoleGroup[] = [];
-
-      if (roleType === "ADMINISTRATOR") {
-        visibleGroups = Object.values(groupsMap);
-      } else if (roleType === "OPERATOR") {
-        visibleGroups = [
-          groupsMap.OPERATOR,
-          groupsMap.VIEWER,
-        ];
-      } else {
-        visibleGroups = [groupsMap.VIEWER];
+        setRoleGroups(updatedGroups);
       }
-
-      setRoleGroups(visibleGroups);
     } catch (error) {
       setErrorMessage("Something went wrong while loading roles");
     } finally {
@@ -119,7 +106,6 @@ useEffect(() => {
 
   fetchRoles();
 }, []);
-
 
   return (
     <div className="flex flex-1 overflow-hidden mt-4 bg-muted/30 gap-3">

@@ -2,14 +2,15 @@
 // Main page component that composes all Live View components together
 
 import { useState } from "react";
+// import { useCameraTree } from "@/components/LiveView";
+import { useCameraTree } from "@/hooks/TreeSidebar";
+import { dummyCameraData } from "@/components/LiveView/DummyTreeData";
 import {
   CameraTreeSidebar,
   LiveViewToolbar,
   CameraGrid,
   AISurveillanceSidebar,
   LiveAlertsBar,
-  gridLayouts,
-  savedViewsData,
 } from "@/components/LiveView/PagesInclude";
 
 
@@ -18,7 +19,7 @@ export default function LiveView() {
   const [selectedLayout, setSelectedLayout] = useState("2x2");
   const [autoSequence, setAutoSequence] = useState(true);
   const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(null);
-
+   const hook = useCameraTree(dummyCameraData);
   // Camera data matching the grid
   const cameraData = [
     { name: "Lobby Entrance main", location: "Building A > Floor 1 > Lobby", bitrate: "4896" },
@@ -34,7 +35,7 @@ export default function LiveView() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] animate-fade-in">
+    <div className="flex flex-col h-[calc(100vh-4rem)]">
       {/* Top Toolbar */}
       <LiveViewToolbar
         showCameraList={showCameraList}
@@ -44,27 +45,32 @@ export default function LiveView() {
       />
 
       {/* Main Content Area */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Left Sidebar - Camera Tree */}
-        <CameraTreeSidebar 
-          isVisible={showCameraList} 
-          onClose={() => setShowCameraList(false)}
-        />
+    <div className="flex flex-1 overflow-hidden gap-3">
+      <div className="flex gap-3 p-3 flex-1">
+          <CameraTreeSidebar
+            isVisible={showCameraList}
+            data={dummyCameraData}
+            hook={hook}
+            onCameraClick={camera => console.log("Clicked:", camera)}
+          />
 
-        {/* Center - Camera Grid */}
-        <CameraGrid 
-          selectedLayout={selectedLayout} 
-          autoSequence={autoSequence}
-          selectedSlotIndex={selectedSlotIndex}
-          onSlotSelect={setSelectedSlotIndex}
-        />
+          <CameraGrid 
+            selectedLayout={selectedLayout} 
+            autoSequence={autoSequence}
+            selectedSlotIndex={selectedSlotIndex}
+            onSlotSelect={setSelectedSlotIndex}
+          />
+      </div>
 
         {/* Right Sidebar - Controls Panel */}
         <AISurveillanceSidebar selectedCamera={getSelectedCamera()} />
       </div>
 
-      {/* Bottom - Live Alerts Bar */}
-      <LiveAlertsBar />
+
+   {/* Bottom - Live Alerts Bar */}
+        <div className="h-[53px] shrink-0">
+          <LiveAlertsBar />
+        </div>
     </div>
   );
 }

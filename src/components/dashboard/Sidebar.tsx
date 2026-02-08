@@ -68,9 +68,9 @@ export function Sidebar() {
                 >
                     <item.icon
                       className={cn(
-                        "w-6 h-6 p-1 rounded",
+                        "w-5 h-5  rounded",
                         isActive
-                          ? "bg-slate-200 text-black"
+                          ? "bg-slate-200 text-black w-7 h-7 p-1"
                           : "text-black-500"
                       )}
                       strokeWidth={1.5}
@@ -104,9 +104,9 @@ export function Sidebar() {
                   >
                     <item.icon
                       className={cn(
-                        "w-6 h-6 p-1 rounded",
+                        "w-5 h-5  rounded",
                         isActive
-                          ? "bg-slate-200 text-black"
+                          ? "bg-slate-200  text-black w-7 h-7 p-1"
                           : "text-black-500"
                       )} />
                     <span className="text-[12px] font-medium font-roboto">
@@ -138,11 +138,11 @@ export function Sidebar() {
                 <NavLink
                   to={item.path}
                   className={cn(
-                    "flex flex-col items-center gap-1 px-3 py-2",
+                    "flex flex-col items-center gap-1 px-2 py-2",
                     isActive ? "text-white" : "text-white/50"
                   )}
                 >
-                  <item.icon className="w-5 h-5" strokeWidth={1.5} />
+                  <item.icon className="w-7 h-7" strokeWidth={1.5} />
                     <span className="text-[9px]">{item.label}</span>
                 </NavLink>
               </li>

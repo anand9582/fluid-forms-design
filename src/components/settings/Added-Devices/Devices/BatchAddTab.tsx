@@ -283,7 +283,7 @@ export function BatchAddTab() {
 
       {/* Add all devices button */}
       <div className="flex justify-end">
-        <Button className="bg-primary hover:bg-primary/90">
+        <Button className="bg-primary hover:bg-primary/90" disabled>
           <CheckCircle className="h-4 w-4" />
           Add all devices
         </Button>

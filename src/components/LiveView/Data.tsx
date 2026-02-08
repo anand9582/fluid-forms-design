@@ -51,11 +51,11 @@ export const cameraTreeData: CameraTreeData = {
 
 // AI Surveillance features configuration
 export const defaultAIFeatures: AIFeature[] = [
-  { name: "Person Detection", icon: "👤", enabled: true },
-  { name: "Face Recognition", icon: "🎭", enabled: true },
-  { name: "Fire & Smoke Alert", icon: "🔥", enabled: true },
-  { name: "Vehicle Tracking", icon: "🚗", enabled: true },
-  { name: "Behavioral Anomaly", icon: "🧠", enabled: false },
+  { name: "Person Detection", icon: "", enabled: true },
+  { name: "Face Recognition", icon: "", enabled: true },
+  { name: "Fire & Smoke Alert", icon: "", enabled: true },
+  { name: "Vehicle Tracking", icon: "", enabled: true },
+  { name: "Behavioral Anomaly", icon: "", enabled: false },
 ];
 
 // Available grid layout options
@@ -78,7 +78,7 @@ export const alertsData: Alert[] = [
   { 
     type: "Security Alert", 
     description: "Unattended Baggage Detected", 
-    icon: "🛡️", 
+    icon: "", 
     camera: "Cam-lobby-04, First floor desk", 
     status: "New", 
     statusColor: "text-primary", 
@@ -89,7 +89,7 @@ export const alertsData: Alert[] = [
   { 
     type: "Jerome Bell", 
     description: "VIP Guest Arrival: Mr. Varun Gupta", 
-    icon: "👤", 
+    icon: "", 
     camera: "Cam-lobby-04, First floor desk", 
     status: "Acknowledged", 
     statusColor: "text-yellow-500", 
@@ -100,7 +100,7 @@ export const alertsData: Alert[] = [
   { 
     type: "System Alert", 
     description: "Loitering in guest corridor", 
-    icon: "⚠️", 
+    icon: "", 
     camera: "Cam-lobby-04, First floor desk", 
     status: "Resolved", 
     statusColor: "text-green-500", 

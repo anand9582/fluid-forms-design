@@ -49,7 +49,7 @@ export const SystemStatus = () => {
             value={stats.online}
             label="Online"
             icon={<Cctv className="w-5 h-5" />}
-            variant="statusbg"
+            variant="slatebg"
           />
           <StatCard
             value={String(stats.offline).padStart(2, "0")}

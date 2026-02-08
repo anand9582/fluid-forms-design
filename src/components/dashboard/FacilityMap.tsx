@@ -188,33 +188,33 @@ export function FacilityMap() {
               ))}
               
             </div>
-<div className="absolute bottom-3 left-3 flex items-center gap-1">
+<div className="absolute bottom-4 left-3 flex items-center gap-1">
                 <button 
                   onClick={handleZoomOut}
-                  className="w-7 h-7 bg-[#171717] border-1 rounded border border-gray-200 flex items-center justify-center hover:bg-gray-500 transition-colors shadow-sm"
+                  className="w-9 h-9 bg-[#171717] border-1 rounded-md border border-gray-200 flex items-center justify-center hover:bg-gray-500 transition-colors shadow-sm"
                 >
-                  <ZoomOut className="w-4 h-4 text-white" />
+                  <ZoomOut className="w-5 h-5 text-white" />
                 </button>
                 <button 
                   onClick={handleZoomIn}
-                  className="w-7 h-7 bg-[#171717] rounded border border-gray-200 flex items-center justify-center hover:bg-gray-500 transition-colors shadow-sm"
+                  className="w-9 h-9 bg-[#171717] rounded-md border border-gray-200 flex items-center justify-center hover:bg-gray-500 transition-colors shadow-sm"
                 >
-                  <ZoomIn   className="w-4 h-4 text-white" />
+                  <ZoomIn   className="w-5 h-5 text-white" />
                 </button>
               </div>
 
               <div className="absolute bottom-3 right-3 flex items-center gap-1">
                 <button 
                   onClick={handlePrevSlide}
-                  className="w-7 h-7 bg-[#171717] rounded border border-gray-200 flex items-center justify-center hover:bg-gray-500 transition-colors shadow-sm"
+                  className="w-9 h-9 bg-[#171717] rounded-md border border-gray-200 flex items-center justify-center hover:bg-gray-500 transition-colors shadow-sm"
                 >
-                  <ChevronLeft className="w-4 h-4 text-white" />
+                  <ChevronLeft className="w-5 h-5 text-white" />
                 </button>
                 <button 
                   onClick={handleNextSlide}
-                  className="w-7 h-7 bg-[#171717] rounded border border-gray-200 flex items-center justify-center hover:bg-gray-500 transition-colors shadow-sm"
+                  className="w-9 h-9 bg-[#171717] rounded-md border border-gray-200 flex items-center justify-center hover:bg-gray-500 transition-colors shadow-sm"
                 >
-                  <ChevronRight className="w-4 h-4 text-white" />
+                  <ChevronRight className="w-5 h-5 text-white" />
                 </button>
               </div>
             {/* Slide Indicators */}

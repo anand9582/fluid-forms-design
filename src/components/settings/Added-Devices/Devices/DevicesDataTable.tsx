@@ -64,19 +64,22 @@ export function DevicesDataTable({ data, selectedCount, onSelectionChange }: Dev
     {
       id: "select",
       header: ({ table }) => (
-        <Checkbox
-          checked={table.getIsAllPageRowsSelected() ? true : table.getIsSomePageRowsSelected() ? "indeterminate" : false}
-          onCheckedChange={(value) => {
-            table.toggleAllPageRowsSelected(!!value);
-            onSelectionChange(value ? table.getRowCount() : 0);
-          }}
-          aria-label="Select all"
-            className="h-4 w-4 rounded border border-[muted-foreground/40 ]data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-        />
+      <Checkbox
+        checked={
+          table.getIsAllPageRowsSelected()
+        }
+        onCheckedChange={(value) => {
+          table.toggleAllPageRowsSelected(!!value);
+          onSelectionChange(value ? table.getRowCount() : 0);
+        }}
+        aria-label="Select all"
+        variant="soft"
+      />
+
       ),
       cell: ({ row }) => (
         <Checkbox
-        className="h-4 w-4 rounded border  border-muted-foreground/60 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+        variant="soft"
         checked={row.getIsSelected()}
         onCheckedChange={(value) => {
           row.toggleSelected(!!value);
@@ -218,8 +221,8 @@ export function DevicesDataTable({ data, selectedCount, onSelectionChange }: Dev
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center text-sm">
-                  No devices discovered. Click "Start scan" to begin.
+                <TableCell colSpan={columns.length} className="h-24 text-center text-sm font-roboto font-medium text-slate-500">
+                     No devices discovered. Click "Start scan" to begin.
                 </TableCell>
               </TableRow>
             )}

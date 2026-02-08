@@ -590,7 +590,7 @@
             </div>
             <div className="flex items-center gap-3">
     
-              <Button variant="secondary" size="sm" className="bg-white hover:bg-gray-100 text-slate-800 border-2 shadow-sm">
+              <Button variant="secondary" size="sm" className="bg-white hover:bg-gray-100 text-slate-800 border shadow-sm">
                 Assign to Group
               </Button>
               <Button variant="destructive" size="sm">

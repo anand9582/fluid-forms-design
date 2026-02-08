@@ -63,7 +63,7 @@ const Gauge = ({
       <p className={`font-roboto font-medium text-center text-[16px] ${textAlignClass}`}>
         {value}%
       </p>
-      <p className={`font-roboto font-medium text-gray-600 text-sm ${textAlignClass}`}>
+      <p className={`font-roboto font-medium text-slate-600 text-fontSize12px text-center`}>
         {label}
       </p>
     </div>

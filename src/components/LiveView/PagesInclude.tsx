@@ -1,5 +1,3 @@
-// Live View Components - Export all components from a single entry point
-
 // Components
 export { CameraTreeSidebar } from "@/components/LiveView/CameraTreeSidebar";
 export { LiveViewToolbar } from "@/components/LiveView/LiveViewToolbar";

@@ -23,10 +23,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { gridLayouts, savedViewsData } from "./Data";
-import type { SavedView } from "./types";
-import {Devices,Squaredot,Tablecells} from "@/components/Icons/Svg/liveViewIcons";
+import {savedViewsData } from "./Data";
+import useGridStore from "@/Store/UseGridStore";
 
+import {Devices,Squaredot,Tablecells} from "@/components/Icons/Svg/liveViewIcons";
 interface LiveViewToolbarProps {
   showCameraList: boolean;
   onToggleCameraList: () => void;
@@ -40,13 +40,15 @@ export function LiveViewToolbar({
   selectedLayout, 
   onLayoutChange 
 }: LiveViewToolbarProps) {
-  const [savedViews, setSavedViews] = useState<SavedView[]>(savedViewsData);
+  const [savedViews, setSavedViews] = useState(savedViewsData);
   const [selectedView, setSelectedView] = useState("Main entrance surveillance");
   const [viewsDropdownOpen, setViewsDropdownOpen] = useState(false);
   const [showGridBuilder, setShowGridBuilder] = useState(false);
+  const { layout, setLayout } = useGridStore();
+  const selectedSize = layout.rows;
 
   const handleCustomGridConfirm = (layout: string) => {
-    onLayoutChange(layout);
+      onLayoutChange(layout);
   };
 
   const deleteView = (id: number, e: React.MouseEvent) => {
@@ -136,11 +138,11 @@ export function LiveViewToolbar({
           variant="ghost"
           className={cn(
             "h-7 w-7",
-                selectedLayout === "2x2"
+                selectedSize === 2
                 ? "bg-white shadow-md"
                 : "hover:bg-slate-200"
             )}
-          onClick={() => onLayoutChange("2x2")}
+         onClick={() => setLayout(2, 2)} 
         >
           <Grid2X2 className="h-8 w-8 text-gray-600" />
         </Button>
@@ -150,11 +152,11 @@ export function LiveViewToolbar({
           size="iconLg"
           className={cn(
            "h-7 w-7",
-            selectedLayout === "3x3"
+             selectedSize === 3
                 ? "bg-white shadow-md"
                 : "hover:bg-slate-200"
           )}
-          onClick={() => onLayoutChange("3x3")}
+          onClick={() => setLayout(3, 3)}
         >
           <Grid3X3 className="h-4 w-4 text-gray-600" />
         </Button>
@@ -164,11 +166,11 @@ export function LiveViewToolbar({
           size="iconLg"
           className={cn(
            "h-7 w-7",
-            selectedLayout === "4x4"
+           selectedSize === 4
                 ? "bg-white shadow-md"
                 : "hover:bg-slate-200"
           )}
-          onClick={() => onLayoutChange("4x4")}
+          onClick={() => setLayout(5, 5)}
         >
           <Tablecells className="h-4 w-4 text-gray-600" />
         </Button>
@@ -182,7 +184,7 @@ export function LiveViewToolbar({
                ? "bg-white shadow-md"
                 : "hover:bg-slate-200"
           )}
-          onClick={() => onLayoutChange("1+5")}
+       onClick={() => setLayout(1, 1)}
         >
           <Squaredot className="h-6 w-6 text-gray-600" />
         </Button>

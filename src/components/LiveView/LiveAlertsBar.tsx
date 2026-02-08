@@ -4,12 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { alertsData } from "@/components/LiveView/Data";
+import useGridStore from "@/Store/UseGridStore";
 
 export function LiveAlertsBar() {
+    const { layout } = useGridStore();
   const [alertsExpanded, setAlertsExpanded] = useState(false);
-  const [layout, setLayout] = useState<"2x2" | "3x3" | "4x4">("2x2");
   const [autoSequence, setAutoSequence] = useState(false);
-
+ const layoutLabel = `${layout.rows}x${layout.cols}`;
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50">
 
@@ -18,20 +19,9 @@ export function LiveAlertsBar() {
         <div className="flex items-center gap-3 bg-white text-xs px-4 py-2 rounded-full border border-border shadow-sm">
           <span className="font-roboto font-medium">Layout:</span>
 
-          {["2x2"].map((l) => (
-            <button
-              key={l}
-              onClick={() => setLayout(l as any)}
-              className={cn(
-                "font-roboto font-medium",
-                layout === l
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {l}
-            </button>
-          ))}
+        <span className="font-roboto font-medium text-primary">
+    {layout.rows}x{layout.cols}
+  </span>
 
           <span className="text-muted-foreground/40">|</span>
 

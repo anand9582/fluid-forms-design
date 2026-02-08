@@ -60,12 +60,12 @@ function StorageRow({
   const theme = isAltTheme ? themeColors.dark : themeColors.light;
   
   return (
-    <div>
+    <div className="pb-1">
       {/* ROW */}
       <button
         type="button"
         className={cn(
-          "flex items-center gap-2 py-2 rounded-md w-full text-left",
+          "flex items-center gap-2 rounded-md w-full text-left",
           hasChildren ? "hover:bg-muted/50" : "",
           level > 0 ? "pl-0" : ""
         )}
@@ -92,20 +92,35 @@ function StorageRow({
           )}
         </div>
 
-        {/* NAME */}
-        <span className="flex-1 text-sm font-medium text-foreground">
-          {item.name}
-        </span>
+      
+          <span
+            className={cn(
+              "flex-1 text-sm font-medium font-roboto",
+              level === 0 ? "text-black" : "text-slate-600 font-regular"
+            )}
+          >
+            {item.name}
+          </span>
 
         {/* SIZE */}
         {item.total && (
-          <span className="text-xs text-muted-foreground mr-2">{item.total}</span>
+            <span
+            className={cn(
+              "text-xs font-medium font-roboto",
+              level === 0 ? "text-black" : "text-slate-600 font-regular"
+            )}
+          >
+           {item.total}
+          </span>
+       
         )}
 
         {/* % */}
-        <span className={cn("text-sm font-semibold", getTextColor(item.percentage))}>
-          {item.percentage}%
-        </span>
+        {level === 0 && (
+          <span className={cn("text-sm font-medium text-slate-600 font-roboto", getTextColor(item.percentage))}>
+            {item.percentage}%
+          </span>
+        )}
       </button>
 
       {/* TOP-LEVEL BAR */}
@@ -135,7 +150,7 @@ function StorageRow({
         className="h-full rounded-full transition-all"
         style={{
           width: `${item.percentage}%`,
-          background: "linear-gradient(90deg, #2563EB, #153885)", // fixed light blue
+          background: "linear-gradient(90deg, #2563EB, #153885)",
         }}
       />
     </div>
@@ -147,7 +162,7 @@ function StorageRow({
       {/* CHILDREN */}
       {hasChildren && isExpanded && (
         <div className="ml-6 pl-2">
-          <p className="text-[11px] uppercase text-muted-foreground py-1 text-left p-6">Mounted disks</p>
+          <p className="text-[11px] uppercase font-medium text-slate-600 font-roboto py-1 text-left p-6">Mounted disks</p>
           {item.children!.map((child) => (
             <StorageRow
               key={child.id}
@@ -201,24 +216,24 @@ export function StorageVolumes({
       {/* BODY */}
       <CardContent className="py-4 px-4">
         {/* STATS */}
-          <div className="grid grid-cols-3 gap-4 mb-4">
+          <div className="grid grid-cols-3 gap-4 mb-2">
             <div className="text-left">
-              <p className="text-xs uppercase text-muted-foreground font-semibold">Total Space</p>
-              <p className="text-md font-bold text-foreground ">
+              <p className="text-sm  font-roboto text-slate-600 font-semibold">Total Space</p>
+              <p className="text-lg font-bold text-foreground ">
                 780
                 <span className="text-xs ml-1 text-muted-foreground">TB</span>
               </p>
             </div>
-            <div className="text-center ml-5">
-              <p className="text-xs uppercase text-muted-foreground font-semibold">Used</p>
-              <p className="text-md font-bold text-foreground">
+            <div className="ml-5">
+              <p className="text-sm uppercase font-roboto text-slate-600 font-semibold mr-4">Used</p>
+              <p className="text-lg font-bold text-foreground">
                 331
                 <span className="text-xs ml-1 text-muted-foreground">TB</span>
               </p>
             </div>
              <div className="text-right">
-              <p className="text-xs uppercase text-muted-foreground font-semibold">Free</p>
-              <p className="text-md font-bold text-black">58%</p>
+              <p className="text-sm uppercase font-roboto text-slate-600 font-medium mr-1.5">Free</p>
+              <p className="text-lg font-bold text-black">58%</p>
             </div>
           </div>
 

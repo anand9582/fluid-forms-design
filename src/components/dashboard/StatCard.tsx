@@ -4,7 +4,7 @@ interface StatCardProps {
   value: string | number;
   label: string;
   icon: React.ReactNode;
-  variant?: 'default' | 'highlight' | 'danger' | 'statusbg'; 
+  variant?: 'default' | 'highlight' | 'danger' | 'statusbg'| 'slatebg'; 
   className?: string;
 }
 
@@ -13,7 +13,8 @@ const StatCard = ({ value, label, icon, variant = 'default', className }: StatCa
     default: 'bg-card',
     highlight: 'bg-primary/10',
     danger: 'bg-[#FFE2E2]',
-    statusbg: 'bg-[#F1F5F9]', 
+    statusbg: 'bg-green-50',
+    slatebg:'bg-slate-100', 
   };
 
   const iconVariants = {

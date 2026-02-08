@@ -92,7 +92,7 @@ export function Wizard({
               KR
             </div>
             <div>
-            <h3 className="text-md font-medium  font-roboto">
+            <h3 className="text-md font-semibold  font-roboto">
               {isExpanded
                 ? "Get started"
                 : "Welcome — Let’s get your system ready"}
