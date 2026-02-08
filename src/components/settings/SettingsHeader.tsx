@@ -4,7 +4,7 @@ import { sidebarItems } from "@/components/settings/SidebarConfigs/Sidebar-confi
 import { useNavigate } from "react-router-dom";
 
 export function SettingsHeader() {
-  const { activeItem } = useSettingsStore();
+  const { activeItem,goBack  } = useSettingsStore();
   const navigate = useNavigate();
 
   // Breadcrumb ko build karna
