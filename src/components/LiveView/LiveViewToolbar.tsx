@@ -58,9 +58,7 @@ export function LiveViewToolbar({
 
   return (
     <div className="flex items-center justify-between gap-4 px-4 py-2 border-b border-border bg-[#E2E8F0]">
-      {/* Left Section */}
       <div className="flex items-center gap-3">
-        {/* Toggle Camera List Button */}
         <Button 
           variant="ghost" 
           size="sm" 

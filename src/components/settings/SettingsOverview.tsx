@@ -33,7 +33,6 @@
       return (
         <div className="flex min-h-screen bg-muted/20">
           <SettingsSidebar
-            activeItem={activeItem}
             onNavigate={handleNavigate}
           />
 
@@ -45,11 +44,11 @@
                 onTabChange={setActiveTab}
               >
                 <TabsContent value="roles">
-                  <RolesContent
-                    selectedRole={selectedRoleId}
-                    onRoleSelect={setSelectedRole}
-                    getRoleName={() => ""}
-                  />
+                    <RolesContent
+                      selectedRole={selectedRoleId}
+                      onRoleSelect={setSelectedRole}
+                      getRoleName={() => ""}
+                    />
                 </TabsContent>
 
                 <TabsContent value="users">

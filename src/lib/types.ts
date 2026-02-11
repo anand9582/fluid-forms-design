@@ -1,5 +1,5 @@
 export interface Role {
-  id: string
+ id: number 
   name: string
   userCount: number
 }
@@ -41,14 +41,14 @@ export interface User {
 // This Use RolePanel
 export interface RolesPanelProps {
     roleGroups?: RoleGroup[]
-    selectedRole: string
-    onRoleSelect: (id: string) => void
+     selectedRole: number     
+    onRoleSelect: (id: number, name: string) => void;
     onCreateRole: () => void
 }
 
 // permissioncontent interface
 export interface PermissionsContentProps {
-  roleId: string
+  roleId: number                 
   roleName?: string 
 }
 

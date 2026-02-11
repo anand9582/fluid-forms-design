@@ -1,100 +1,178 @@
 import { useState } from "react";
-import { Search, Plus } from "lucide-react";
+import axios from "axios";
+import { Search, Plus,Loader2 } from "lucide-react";
 import { DevicesDataTable, DiscoveredDevice } from "@/components/settings/Added-Devices/Devices/DevicesDataTable";
 import { Card, CardContent } from "@/components/ui/card";
+import { API_BASE_URL2, API_URLS, getAuthHeaders } from "@/components/Config/api";
 import { Button } from "@/components/ui/button";
-
-const mockDiscoveredDevices: DiscoveredDevice[] = [
-  { id: "1", name: "Cam-A-100", ip: "192.168.1.100:80", port: "80", make: "Axis", model: "Model-XO", type: "Camera", username: "Admin", password: "pass1234", group: "Main Hall" },
-  { id: "2", name: "Cam-A-101", ip: "192.168.1.101:80", port: "8080", make: "Axis", model: "Model-XO", type: "NVR", username: "Operator", password: "pass5678", group: "Server Room" },
-  { id: "3", name: "Cam-A-102", ip: "192.168.1.102:80", port: "80", make: "Axis", model: "Model-XO", type: "Router", username: "Admin", password: "pass9012", group: "Lobby" },
-  { id: "4", name: "Cam-A-103", ip: "192.168.1.103:80", port: "443", make: "Axis", model: "Model-XO", type: "Access Control", username: "Admin", password: "pass3456", group: "Front roof" },
-  { id: "5", name: "Cam-A-104", ip: "192.168.1.104:80", port: "78", make: "Axis", model: "Model-XO", type: "IOT Center", username: "Operator", password: "pass7890", group: "First floor" },
-  { id: "6", name: "Cam-A-105", ip: "192.168.1.104:80", port: "663", make: "Axis", model: "Model-XO", type: "Camera", username: "Operator", password: "pass1122", group: "Second floor" },
-  { id: "7", name: "Cam-A-105", ip: "192.168.1.104:80", port: "663", make: "Axis", model: "Model-XO", type: "Camera", username: "Operator", password: "pass1122", group: "Second floor" },
-  { id: "8", name: "Cam-A-105", ip: "192.168.1.104:80", port: "663", make: "Axis", model: "Model-XO", type: "Camera", username: "Operator", password: "pass1122", group: "Second floor" },
-  { id: "9", name: "Cam-A-105", ip: "192.168.1.104:80", port: "663", make: "Axis", model: "Model-XO", type: "Camera", username: "Operator", password: "pass1122", group: "Second floor" },
-  { id: "10", name: "Cam-A-105", ip: "192.168.1.104:80", port: "663", make: "Axis", model: "Model-XO", type: "Camera", username: "Operator", password: "pass1122", group: "Second floor" },
-];
+import { showToast } from "@/components/SweetAlertpopup/ToastService";
 
 export function AutoDiscoveryTab() {
-  const [selectedCount, setSelectedCount] = useState(0);
   const [isScanning, setIsScanning] = useState(false);
-  const [devices, setDevices] = useState<DiscoveredDevice[]>(mockDiscoveredDevices);
-  const [hasScanned, setHasScanned] = useState(false);
+  const [devices, setDevices] = useState<DiscoveredDevice[]>([]);
+  const [selectedCount, setSelectedCount] = useState(0);
+  const [selectedDevices, setSelectedDevices] = useState<DiscoveredDevice[]>([]);
 
+  /* ---------------- SCAN DEVICES ---------------- */
+  const handleStartScan = async () => {
+    setIsScanning(true);
+    setDevices([]); 
 
-const handleStartScan = () => {
-  setIsScanning(true);
-  setHasScanned(true);
+    try {
+      const res = await axios.post(
+        `${API_BASE_URL2}${API_URLS.DiscoverDevices}`,
+        {},
+        { headers: getAuthHeaders() }
+      );
 
-  setTimeout(() => {
-    setIsScanning(false);
-  }, 2000);
-};
+      if (res.data.message) {
+        showToast({
+          title: res.data.message,
+          type: res.data.success ? "success" : "error",
+        });
+      }
 
-
-
-  const handleAddSelected = () => {
-    // Handle adding selected devices
-    console.log(`Adding ${selectedCount} devices`);
+      if (res.data.success) {
+        const discovered: DiscoveredDevice[] = res.data.data.map(
+          (d: any, index: number) => ({
+            id: String(index + 1),
+            name: d.name || "N/A",
+            ip: d.ipAddress || "N/A",
+            port: d.port || "80",
+            make: d.make || "N/A",
+            model: d.model || "N/A",
+            type: d.deviceType || "N/A",
+            username: d.username || "",
+            password: d.password || "",
+            group: "N/A",
+          })
+        );
+        setDevices(discovered);
+      } else {
+        setDevices([]);
+      }
+    } catch (err: any) {
+      showToast({
+        title: err?.message || "Failed to discover devices",
+        type: "error",
+      });
+      setDevices([]);
+    } finally {
+      setIsScanning(false); 
+    }
   };
 
-  return (
-    <div className="mt-3 sm:mt-3 space-y-4 sm:space-y-6">
-      {/* Network Scanner Section */}
-      <Card className="border-border border-[#BFDEFFB2] bg-blue-50/50 rounded-sm bg-[#EFF6FF]">
-      <CardContent className="flex items-center justify-between p-4">
-        {/* Left Content */}
-        <div className="space-y-1">
-          <h3 className="text-fontSize16px font-semibold text-blue-600 font-roboto">
-            Network Scanner
-          </h3>
-           <p className="text-xs sm:text-sm font-normal text-blue-600 font-roboto">
-              Scan the local subnet (192.168.1.0/24) for ONVIF compatible devices.
-            </p>
-        </div>
+  /* ---------------- ADD SELECTED ---------------- */
+  const handleAddSelected = async () => {
+     try {
+    const payload = selectedDevices.map((d) => ({
+        name: d.name,
+        ipAddress: d.ip,
+        port: Number(d.port),
+        username: d.username,
+        password: d.password,
+        make: d.make,
+        model: d.model,
+        authType: "DIGEST",
+    }));
+     console.log("Payload to send API:", payload);
 
-        {/* Right Button */}
-        <Button 
-            className="bg-primary hover:bg-primary/90 w-full sm:w-auto px-4"
+      const response = await axios.post(
+        "http://192.168.10.107:8081/api/v1/devices/add-devices",
+        payload
+      );
+
+    const { addedDevices, failedDevices, totalAdded, totalFailed } = response.data.data;
+
+      if (totalAdded > 0 && totalFailed === 0) {
+        alert(`${totalAdded} device added successfully`);
+      } else if (totalAdded > 0 && totalFailed > 0) {
+        alert(` ${totalAdded} added, ${totalFailed} failed`);
+      } else {
+        alert("All devices failed to add");
+      }
+
+      console.log("Added Devices:", addedDevices);
+      console.log("Failed Devices:", failedDevices);
+    } catch (error: any) {
+      if (axios.isAxiosError(error)) {
+        alert(error.response?.data?.message || "API error occurred");
+      } else {
+        alert("Unexpected error occurred");
+      }
+    }
+  };
+
+
+  return (
+    <div className="space-y-4">
+      {/* Network Scanner */}
+      <Card className="border border-blue-200 bg-blue-50">
+        <CardContent className="flex items-center justify-between p-4">
+          <div>
+              <h3 className="text-blue-600 font-medium">Network Scanner</h3>
+                <p className="text-sm text-blue-600">
+                  Scan for ONVIF compatible devices
+                </p>
+          </div>
+
+            <Button
             onClick={handleStartScan}
             disabled={isScanning}
+            className="flex items-center gap-2"
           >
-            <Search className="h-4 w-4 " />
-            {isScanning ? "Scanning..." : "Start scan"}
+            {isScanning ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Scanning...
+              </>
+            ) : (
+              <>
+                <Search className="h-4 w-4" />
+                Start Scan
+              </>
+            )}
           </Button>
-      </CardContent>
+        </CardContent>
       </Card>
-      {/* Discovered Devices Section */}
-      <div className="bg-white rounded-lg">
-          <div className="flex border border-b-0 px-3 py-3 rounded-t-lg flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 pt-3">
-            <h3 className="text-base  font-lg font-roboto font-medium text-foreground">
+
+      {/* Discovered Devices */}
+      <div className="bg-white rounded-lg border">
+        <div className="px-4 py-3 border-b">
+          <h3 className="font-medium">
               Discovered Devices ({devices.length})
-            </h3>
-            <Button 
-              className="bg-primary hover:bg-primary/90 w-full sm:w-auto"
-              onClick={handleAddSelected}
-              disabled={selectedCount === 0}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add selected ({selectedCount})
-            </Button>
-          </div>
-
-        <div className="overflow-x-auto">
-          <div className="min-w-[800px] px-4 sm:px-0">
-       <DevicesDataTable
-  data={hasScanned ? devices : []}   
-  selectedCount={selectedCount}
-  onSelectionChange={setSelectedCount}
-/>
-
-          </div>
+          </h3>
         </div>
 
-
+        <div className="overflow-x-auto">
+          <DevicesDataTable
+            data={devices}
+            onSelectionChange={setSelectedCount}
+            onSelectedDevicesChange={setSelectedDevices}
+            onDataChange={setDevices}
+          />
+        </div>
       </div>
+
+      {selectedCount > 0 && (
+          <div className="bottom-0 left-0 right-0 bg-slate-200 rounded-md mt-4 text-white px-6 py-3 flex items-center justify-between z-50">
+            <div className="flex items-center gap-3">
+              <span className="bg-primary text-primary-foreground w-7 h-7 rounded-full flex items-center justify-center text-sm font-medium">
+                {selectedCount}
+              </span>
+              <span className="text-sm font-medium text-gray-700">
+                Device selected for bulk processing
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3">
+                <Button size="sm" onClick={handleAddSelected}>
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add Selected ({selectedCount})
+                 </Button>
+            </div>
+          </div>
+      )}
     </div>
   );
 }

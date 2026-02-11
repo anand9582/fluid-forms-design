@@ -33,7 +33,7 @@ interface ConfirmDialogProps {
   onOpenChange: (open: boolean) => void;
   title: string;
   description?: string | ReactNode;
-  icon?: IconType; // icon optional
+   icon?: IconType | React.ComponentType<any>; 
   size?: SizeVariant;
   headerCentered?: boolean; 
 
@@ -141,14 +141,29 @@ export function ConfirmDialog({
           headerCentered ? "items-center gap-3" : "items-start"
         )}
       >
-        {icon && (() => {
-          const { icon: IconComponent, bgClass, iconClass } = iconConfig[icon];
-          return (  
-            <div className={cn("rounded-full flex items-center justify-center", bgClass, iconSizeClass)}>
-              <IconComponent className={iconClass} size={iconSize} />
-            </div>
-          );
-        })()}
+     {icon && (() => {
+            let IconComponent: React.ComponentType<any> | undefined;
+            let bgClass = "bg-gray-100";     
+            let iconClass = "text-gray-600";   
+
+            if (typeof icon === "string") {
+              const cfg = iconConfig[icon as IconType];
+              if (cfg) {
+                IconComponent = cfg.icon;
+                bgClass = cfg.bgClass;
+                iconClass = cfg.iconClass;
+              }
+            } else {
+              IconComponent = icon as React.ComponentType<any>;
+            }
+
+            return IconComponent ? (
+              <div className={cn("rounded-full flex items-center justify-center", bgClass, iconSizeClass)}>
+                <IconComponent className={iconClass} size={iconSize} />
+              </div>
+            ) : null;
+          })()}
+
 
         <DialogTitle
           className={cn(
@@ -220,11 +235,11 @@ export function ConfirmDialog({
           }
 
 // Hook for easy dialog management
-export function useConfirmDialog() {
-  const [isOpen, setIsOpen] = useState(false);
+  export function useConfirmDialog() {
+    const [isOpen, setIsOpen] = useState(false);
 
-  const openDialog = () => setIsOpen(true);
-  const closeDialog = () => setIsOpen(false);
+    const openDialog = () => setIsOpen(true);
+    const closeDialog = () => setIsOpen(false);
 
-  return { isOpen, openDialog, closeDialog, setIsOpen };
-}
+    return { isOpen, openDialog, closeDialog, setIsOpen };
+  }

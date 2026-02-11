@@ -43,7 +43,14 @@ import {
   MoreVertical,
   ChevronLeft,
   ChevronRight,
+  Edit2,
+  Video,
+  RefreshCcw,
+  LogOut,
+  Lock,
+  Trash2
 } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 import { UserStatus } from "../../../components/settings/UserStatus";
 import { AddUserSheet } from "@/components/settings/AddUser/AddUserSheet";
@@ -137,18 +144,38 @@ export default function UserManagementTable() {
       header: "Actions",
       cell: () => (
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <MoreVertical className="h-4 w-4 text-muted-foreground" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem>Edit User</DropdownMenuItem>
-            <DropdownMenuItem>Reset Password</DropdownMenuItem>
-            <DropdownMenuItem>Manage Cameras</DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive">Delete User</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+  <DropdownMenuTrigger asChild>
+    <Button variant="ghost" size="icon" className="h-8 w-8">
+      <MoreVertical className="h-4 w-4 text-muted-foreground" />
+    </Button>
+  </DropdownMenuTrigger>
+
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem className="flex items-center gap-2">
+              <Edit2 className="h-4 w-4" /> Edit user
+            </DropdownMenuItem>
+
+              <DropdownMenuItem className="flex items-center gap-2">
+                <Video className="h-4 w-4" /> Assign cameras
+              </DropdownMenuItem>
+
+              <DropdownMenuItem className="flex items-center gap-2">
+                <RefreshCcw className="h-4 w-4" /> Reset password
+              </DropdownMenuItem>
+
+              <DropdownMenuItem className="flex items-center gap-2 text-orange-500">
+                <LogOut className="h-4 w-4" /> Force logout
+              </DropdownMenuItem>
+
+              <DropdownMenuItem className="flex items-center gap-2 text-orange-600">
+                <Lock className="h-4 w-4" /> Lock account
+              </DropdownMenuItem>
+
+              <DropdownMenuItem className="flex items-center gap-2 text-red-600">
+                <Trash2 className="h-4 w-4" /> Remove user
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
       ),
     }),
   ], []);

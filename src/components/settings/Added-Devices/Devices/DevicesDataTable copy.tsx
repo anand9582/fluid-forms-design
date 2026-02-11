@@ -1,4 +1,4 @@
-import { useState, useEffect,useRef } from "react";
+import { useState, useEffect } from "react";
 import {
   ColumnDef,
   flexRender,
@@ -25,8 +25,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
-
 
 export interface DiscoveredDevice {
   id: string;
@@ -43,76 +41,43 @@ export interface DiscoveredDevice {
 
 interface DevicesDataTableProps {
   data: DiscoveredDevice[];
+  selectedCount: number;
   onSelectionChange: (count: number) => void;
-  onSelectedDevicesChange: (devices: DiscoveredDevice[]) => void;
-  onDataChange: (data: DiscoveredDevice[]) => void;
+  onSelectedDevicesChange: (devices: DiscoveredDevice[]) => void; 
 }
 /* ---------------- EDITABLE CELL ---------------- */
 function EditableCell({
   value,
   onChange,
-  className,
 }: {
   value: string | number;
   onChange: (val: string) => void;
-  className?: string;
 }) {
   const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(String(value));
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [localValue, setLocalValue] = useState(String(value));
 
-  useEffect(() => {
-    if (editing) inputRef.current?.focus();
-  }, [editing]);
-
-  useEffect(() => {
-    setDraft(String(value));
-  }, [value]);
-
-  const commit = () => {
-    setEditing(false);
-    if (draft !== String(value)) {
-      onChange(draft);
-    } else {
-      setDraft(String(value));
-    }
-  };
-
-  return (
-    <div className="relative min-h-[28px] flex items-center">
-      {/* READ MODE */}
-      <span
-        onDoubleClick={() => setEditing(true)}
-        className={cn(
-          "cursor-pointer text-sm px-1.5 py-0.5 rounded hover:bg-muted/40 transition-colors",
-          editing && "invisible",
-          className
-        )}
-      >
+  return editing ? (
+    <input className="px-2 py-1 rounded  text-sm focus:outline-none focus:ring-0 focus:border-slate-300"
+      autoFocus
+      value={localValue}
+      onChange={(e) => setLocalValue(e.target.value)}
+      onBlur={() => {
+        setEditing(false);
+        onChange(localValue);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          setEditing(false);
+          onChange(localValue);
+        }
+      }}
+    />
+    ) : (
+      <span onDoubleClick={() => setEditing(true)} className="cursor-pointer">
         {value}
       </span>
-
-      {/* EDIT MODE (overlay) */}
-      {editing && (
-        <input
-          ref={inputRef}
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onBlur={commit}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") commit();
-            if (e.key === "Escape") {
-              setDraft(String(value));
-              setEditing(false);
-            }
-          }}
-          className="absolute inset-0 h-full w-full text-sm px-2 border border-primary rounded focus:outline-none"
-        />
-      )}
-    </div>
-  );
-}
-
+    );
+  }
 
 export function DevicesDataTable({
   data,
@@ -140,8 +105,6 @@ export function DevicesDataTable({
     });
   };
 
-
-  
   const columns: ColumnDef<DiscoveredDevice>[] = [
     {
       id: "select",
@@ -202,7 +165,7 @@ export function DevicesDataTable({
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className="flex items-center gap-2 max-w-[180px] text-sm">
+          <div className="flex items-center gap-2 max-w-[180px]">
             <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-sm bg-gray-200">
                <Camera className="h-4 w-4 text-gray-600" />
             </div>
@@ -349,21 +312,20 @@ export function DevicesDataTable({
   ];
 
   const table = useReactTable({
-      data,
-      columns,
-      getRowId: (row) => row.id,
-      getCoreRowModel: getCoreRowModel(),
-      getPaginationRowModel: getPaginationRowModel(),
-      state: { rowSelection },
-      onRowSelectionChange: setRowSelection,
-      initialState: { pagination: { pageSize: 5 } },
+    data: tableData,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    onRowSelectionChange: setRowSelection,
+    state: {
+      rowSelection,
+    },
+    initialState: {
+      pagination: {
+        pageSize: 5,
+      },
+    },
   });
-
-  useEffect(() => {
-        const selectedRows = table.getSelectedRowModel().rows;
-        onSelectionChange(selectedRows.length);
-        onSelectedDevicesChange(selectedRows.map((r) => r.original));
-  }, [rowSelection]); 
 
   const totalRows = data.length;
   const pageSize = table.getState().pagination.pageSize;
@@ -373,7 +335,7 @@ export function DevicesDataTable({
   return (
     <div className="space-y-4">
       {/* table card */}
-       <div className="bg-card border border-border overflow-hidden ">
+       <div className="bg-card border border-border overflow-hidden rounded-b-md">
         <Table>
           <TableHeader>
             <TableRow className="border-b border-border hover:bg-transparent bg-[#F1F5F9]">
@@ -415,74 +377,74 @@ export function DevicesDataTable({
        </div>
 
        {/* Pagination */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs sm:text-sm px-4 pb-4">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <span>Showing {Math.min(pageSize, totalRows)} of {totalRows}</span>
-            <Select
-              value={String(pageSize)}
-              onValueChange={(value) => table.setPageSize(Number(value))}
-            >
-              <SelectTrigger className="w-14 sm:w-16 h-7 sm:h-8 border-border text-xs sm:text-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="5">5</SelectItem>
-                <SelectItem value="10">10</SelectItem>
-                <SelectItem value="20">20</SelectItem>
-                <SelectItem value="50">50</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-center gap-1">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs sm:text-sm px-2">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <span>Showing {Math.min(pageSize, totalRows)} of {totalRows}</span>
+          <Select
+            value={String(pageSize)}
+            onValueChange={(value) => table.setPageSize(Number(value))}
+          >
+            <SelectTrigger className="w-14 sm:w-16 h-7 sm:h-8 border-border text-xs sm:text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="5">5</SelectItem>
+              <SelectItem value="10">10</SelectItem>
+              <SelectItem value="20">20</SelectItem>
+              <SelectItem value="50">50</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-pagination-text hover:text-pagination-hover disabled:text-pagination-disabled text-xs sm:text-sm h-7 sm:h-8 px-2 sm:px-3"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Prev
+          </Button>
+          {Array.from({ length: Math.min(3, totalPages) }, (_, i) => i + 1).map((page) => (
             <Button
-              variant="ghost"
+              key={page}
+              variant={currentPage === page ? "outline" : "ghost"}
               size="sm"
-              className="text-pagination-text hover:text-pagination-hover disabled:text-pagination-disabled text-xs sm:text-sm h-7 sm:h-8 px-2 sm:px-3"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
+              className={`h-7 sm:h-8 w-7 sm:w-8 p-0 text-xs sm:text-sm ${currentPage === page ? "border-border bg-card" : ""}`}
+              onClick={() => table.setPageIndex(page - 1)}
             >
-              <ChevronLeft className="h-4 w-4" />
-              Prev
+              {page}
             </Button>
-            {Array.from({ length: Math.min(3, totalPages) }, (_, i) => i + 1).map((page) => (
-              <Button
-                key={page}
-                variant={currentPage === page ? "outline" : "ghost"}
-                size="sm"
-                className={`h-7 sm:h-8 w-7 sm:w-8 p-0 text-xs sm:text-sm ${currentPage === page ? "border-border bg-card" : ""}`}
-                onClick={() => table.setPageIndex(page - 1)}
-              >
-                {page}
-              </Button>
-            ))}
-            {totalPages > 5 && (
-              <>
-                <span className="px-1 sm:px-2 text-muted-foreground">...</span>
-                {[totalPages - 1, totalPages].map((page) => (
-                  <Button
-                    key={page}
-                    variant={currentPage === page ? "outline" : "ghost"}
-                    size="sm"
-                    className="h-7 sm:h-8 w-7 sm:w-8 p-0 text-xs sm:text-sm"
-                    onClick={() => table.setPageIndex(page - 1)}
-                  >
-                    {page}
-                  </Button>
-                ))}
-              </>
-            )}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-pagination-text hover:text-pagination-hover disabled:text-pagination-disabled h-7 sm:h-8 px-2 sm:px-3"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-            >
-              Next 
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div> 
+          ))}
+          {totalPages > 5 && (
+            <>
+              <span className="px-1 sm:px-2 text-muted-foreground">...</span>
+              {[totalPages - 1, totalPages].map((page) => (
+                <Button
+                  key={page}
+                  variant={currentPage === page ? "outline" : "ghost"}
+                  size="sm"
+                  className="h-7 sm:h-8 w-7 sm:w-8 p-0 text-xs sm:text-sm"
+                  onClick={() => table.setPageIndex(page - 1)}
+                >
+                  {page}
+                </Button>
+              ))}
+            </>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-pagination-text hover:text-pagination-hover disabled:text-pagination-disabled h-7 sm:h-8 px-2 sm:px-3"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            Next 
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div> 
     </div>
    
   );

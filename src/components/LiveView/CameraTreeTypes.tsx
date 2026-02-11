@@ -13,7 +13,7 @@ export interface Floor {
 export interface Building {
   name: string;
   floors?: Floor[];
-  cameras?: CameraStatus[]; // cameras directly under building
+  cameras?: CameraStatus[];
 }
 
 export interface CameraTreeData {

@@ -118,7 +118,7 @@ export function CreateRoleDialog({
                   New Role Name
                 </FormLabel>
                 <FormControl>
-                  <Input placeholder="Operator 1" {...field} />
+                    <Input placeholder="Operator 1" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

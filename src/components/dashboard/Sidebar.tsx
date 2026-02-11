@@ -21,7 +21,7 @@ import { SettingsSubNav } from "@/./components/layout/SettingsSubNav";
 
 
 const menuItems = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/" },
+  { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
   { icon: Video, label: "Live view", path: "/live" },
   { icon: PlayCircle, label: "Playback", path: "/playback" },
   { icon: Alerts, label: "Alerts", path: "/alerts" },

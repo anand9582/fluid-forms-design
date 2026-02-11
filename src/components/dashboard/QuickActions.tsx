@@ -46,7 +46,7 @@ export function QuickActions() {
 
               <span
                 className="
-                  text-fontSize14px font-medium font-roboto mt-1
+                  text-fontSize13px font-medium font-roboto mt-1
                   text-textgraylight
                 "
               >

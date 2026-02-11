@@ -60,7 +60,7 @@ export const Login = ({ goToView }: Props) => {
         duration: 2000,
       });
 
-      navigate("/");
+      navigate("/dashboard");
     } catch (err: any) {
       showToast({
         title: "Login Failed",

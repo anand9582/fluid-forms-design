@@ -6,7 +6,6 @@ import {
   Users,
   Trash2,
 } from "lucide-react"
-
 import { Button } from "../ui/button"
 import { Card, CardHeader, CardTitle } from "../ui/card"
 import { cn } from "../../lib/utils"
@@ -16,6 +15,7 @@ import { useRoleStore } from "@/Store/RoleStore";
 import { useSettingsStore } from "@/Store/SettingsStore";
 import { CreateRoleDialog } from "@/components/settings/roles/CreateRoleDialog";
 import { ConfirmDeleteRoleDialog } from "@/components/settings/roles/ConfirmDeleteRoleDialog";
+import { showAlert } from "@/components/SweetAlertpopup/SweetAlert";
 
 export function RolesPanel({
   roleGroups = [],
@@ -124,24 +124,28 @@ useEffect(() => {
                           setHoveredRole(null)
                         }
                       >
-                        <button
-                         onClick={() => {
-                            // if (hasUnsavedChanges) {
-                            //   alert("Save changes before switching role");
-                            //   return;
-                            // }
-                           setSelectedRole(Number(role.id), role.name)
-                          }}
-
-                          className={cn(
-                              "w-full px-4 py-2 text-left",
-                              selectedRoleId === Number(role.id)
-                                ? "bg-blue-50 border-l-4 border-blue-600"
-                                : "hover:bg-gray-50"
-                            )}
-                        >
+                      <button
+                               onClick={() => {
+                                  if (hasUnsavedChanges) {
+                                    showAlert(
+                                      "Unsaved changes",
+                                      "Save changes before switching role",
+                                      "warning",
+                                      "#ff9966" 
+                                    );
+                                    return;
+                                  }
+                                  setSelectedRole(Number(role.id), role.name);
+                                }}
+                              className={cn(
+                                "w-full px-4 py-2 text-left",
+                                selectedRoleId === Number(role.id)
+                                  ? "bg-blue-50 border-l-4 border-blue-600"
+                                  : "hover:bg-gray-50"
+                              )}
+                            >
                           <div className="font-roboto font-medium text-md  text-gray-900">
-                             {role.name}
+                              {role.name}
                           </div>
                           <div className="flex items-center gap-1 text-xs text-gray-500">
                             <Users size={12} />
@@ -176,12 +180,10 @@ useEffect(() => {
           role={roleToDelete}
         />
 
-
          <CreateRoleDialog
             open={createRoleOpen}
             onClose={() => setCreateRoleOpen(false)}
           />
-
     </div>
   )
 }

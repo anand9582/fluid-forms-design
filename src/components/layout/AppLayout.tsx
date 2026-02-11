@@ -19,7 +19,7 @@ const isNoPaddingPage = noPaddingRoutes.some((path) =>
         <Sidebar />
         <div className="ml-[80px] flex-1">
           <main className={isNoPaddingPage  ? "" : "p-2 sm:p-3 lg:p-4"}>
-            <Outlet />  
+             <Outlet />  
           </main>
         </div>
       </div>

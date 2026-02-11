@@ -14,13 +14,25 @@ export const usePermissionStore = create<PermissionStore>((set) => ({
   enabledMap: {},
   roleName: "",
 
-  togglePermission: (id) =>
-    set((state) => ({
+togglePermission: (id) =>
+  set((state) => {
+    console.log(
+      "🔁 Toggle permission:",
+      id,
+      "Old:",
+      state.enabledMap[id],
+      "New:",
+      !state.enabledMap[id]
+    );
+
+    return {
       enabledMap: {
         ...state.enabledMap,
         [id]: !state.enabledMap[id],
       },
-    })),
+    };
+  }),
+
 
   loadRolePermissions: async () => {
     const { selectedRoleId } = useRoleStore.getState();
@@ -32,6 +44,7 @@ export const usePermissionStore = create<PermissionStore>((set) => ({
     );
 
     const json = await res.json();
+
     if (!json.success) return;
 
     const roleData = Array.isArray(json.data)
@@ -51,10 +64,9 @@ export const usePermissionStore = create<PermissionStore>((set) => ({
 
     ALL_PERMISSION_GROUPS.forEach((group) => {
       group.permissions.forEach((p) => {
-        map[p.id] = apiPermissionSet.has(p.id);
+         map[p.id] = apiPermissionSet.has(p.id);
       });
     });
-
     set({
       enabledMap: map,
       roleName: roleData.roleName,

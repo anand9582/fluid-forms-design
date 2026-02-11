@@ -3,7 +3,7 @@ import { create } from "zustand";
 interface SettingsStore {
   activeItem: string;
   activeRoute: string;
-  previousRoute: string | null; // new
+  previousRoute: string | null;
   setActiveItem: (id: string) => void;
   setActiveRoute: (route: string) => void;
 }
@@ -11,7 +11,7 @@ interface SettingsStore {
 export const useSettingsStore = create<SettingsStore>((set, get) => ({
   activeItem: "manage-users",
   activeRoute: "/settings/users",
-  previousRoute: null, // initially null
+  previousRoute: null, 
 
   setActiveItem: (id) => set({ activeItem: id }),
   

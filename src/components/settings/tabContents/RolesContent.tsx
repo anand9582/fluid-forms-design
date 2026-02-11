@@ -2,10 +2,8 @@ import { useEffect, useState } from "react";
 import { RolesPanel } from "../RolesPanel";
 import { PermissionsContent } from "../PermissionsContent";
 import { API_BASE_URL, API_URLS, getAuthHeaders } from "@/components/Config/api";
-import { getRoleType } from "@/lib/utils";
 
 /* ===================== TYPES ===================== */
-
 interface Permission {
   permissionCode: string;
   permissionName: string;
@@ -34,22 +32,17 @@ interface RolesApiResponse {
 interface RoleGroup {
   id: string;
   name: string;
-  roles: { id: string; name: string; userCount: number }[];
+  roles: { id: number; name: string; userCount: number }[];
 }
 
 interface RolesContentProps {
-  selectedRole: string;
-  onRoleSelect: (id: string) => void;
-  getRoleName: (id: string) => string;
+  selectedRole: number;
+ onRoleSelect: (id: number, name: string) => void;
+  getRoleName?: (id: number) => string;
 }
 
-/* ===================== COMPONENT ===================== */
 
-const ALL_ROLE_GROUPS = [
-  { id: "ADMINISTRATOR", name: "ADMINISTRATOR", roles: [] },
-  { id: "OPERATOR", name: "OPERATOR", roles: [] },
-  { id: "VIEWER", name: "VIEWER", roles: [] },
-];
+/* ===================== COMPONENT ===================== */
 
 export default function RolesContent({
   selectedRole,
@@ -59,53 +52,61 @@ export default function RolesContent({
   const [loading, setLoading] = useState(true);
   const [roleGroups, setRoleGroups] = useState<RoleGroup[]>([]);
 
-useEffect(() => {
-  const fetchRoles = async () => {
-    try {
-      const roleType = getRoleType();
-      if (!roleType) return;
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        setLoading(true);
+        setErrorMessage(null);
 
-      setLoading(true);
-      setErrorMessage(null);
+        const res = await fetch(`${API_BASE_URL}${API_URLS.GetRolesByRoleType}`, {
+          headers: getAuthHeaders(),
+        });
 
-      const res = await fetch(
-        `${API_BASE_URL}${API_URLS.GetRolesByRoleType}?roleType=${roleType}`,
-         { headers: getAuthHeaders() }
-      );
+        const data: RolesApiResponse = await res.json();
 
-      const data: RolesApiResponse = await res.json();
-
-      if (!data.success && data.errorCode === "FORBIDDEN") {
-          setRoleGroups(ALL_ROLE_GROUPS);
-          setErrorMessage("You do not have permission to view roles");
+        if (!data.success && data.errorCode === "FORBIDDEN") {
+          setRoleGroups([]);
+            setErrorMessage("You do not have permission to view roles");
           return;
+        }
+
+        if (data.success && data.data && data.data.length > 0) {
+          const groupsMap: Record<string, RoleGroup> = {};
+
+          data.data.forEach((role) => {
+            if (!groupsMap[role.roleType]) {
+              groupsMap[role.roleType] = {
+                id: role.roleType,
+                name: role.roleType,
+                roles: [],
+              };
+            }
+            groupsMap[role.roleType].roles.push({
+              id: role.roleId,
+              name: role.roleName,
+              userCount: role.permissionGroups.length,
+            });
+          });
+
+          // Convert map to array
+          const updatedGroups = Object.values(groupsMap);
+          setRoleGroups(updatedGroups);
+        } else {
+          setRoleGroups([]); 
+        }
+      } catch (error) {
+        console.error(error);
+        setErrorMessage("Something went wrong while loading roles");
+        setRoleGroups([]);
+      } finally {
+        setLoading(false);
       }
+    };
 
-      if (data.success && data.data && data.data.length > 0) {
-        const updatedGroups = ALL_ROLE_GROUPS.map((group) =>
-          group.id === roleType
-            ? {
-                ...group,
-                roles: data.data.map((role) => ({
-                  id: role.roleId.toString(),
-                  name: role.roleName,
-                  userCount: role.permissionGroups.length,
-                })),
-              }
-            : group
-        );
+    fetchRoles();
+  }, []);
 
-        setRoleGroups(updatedGroups);
-      }
-    } catch (error) {
-      setErrorMessage("Something went wrong while loading roles");
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  fetchRoles();
-}, []);
 
   return (
     <div className="flex flex-1 overflow-hidden mt-4 bg-muted/30 gap-3">
@@ -116,7 +117,7 @@ useEffect(() => {
         onCreateRole={() => console.log("Create role clicked")}
       />
 
-      <PermissionsContent roleId={selectedRole} />
+      <PermissionsContent />
     </div>
   );
 }
