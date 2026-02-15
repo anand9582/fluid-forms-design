@@ -1,5 +1,6 @@
 export const API_BASE_URL = "http://192.168.11.61:9080/api/v1";
 export const API_BASE_URL2 = "http://192.168.10.107:8081/api/v1";
+export const APISERVERURL = "http://192.168.10.190:8090/";
 
 export const API_URLS = {
     Login: "/auth/login",
@@ -10,6 +11,8 @@ export const API_URLS = {
     DiscoverDevices: "/devices/discover",
     GetAllDevice: "/devices/get-all-devices",
     DeleteDeviceById: "/devices/delete-device-by-id",
+    Liveview: "api/liveview/",
+    get_all_devices: "device/get-all-devices",
 };
 
 export const getAuthHeaders = () => {

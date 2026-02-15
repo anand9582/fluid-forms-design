@@ -10,7 +10,7 @@ interface SettingsStore {
 
 export const useSettingsStore = create<SettingsStore>((set, get) => ({
   activeItem: "manage-users",
-  activeRoute: "/settings/users",
+  activeRoute: "",
   previousRoute: null, 
 
   setActiveItem: (id) => set({ activeItem: id }),

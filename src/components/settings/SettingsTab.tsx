@@ -8,17 +8,14 @@ export interface SettingsTab {
 }
 interface SettingsTabsProps {
   tabs?: SettingsTab[];          
-  activeTab?: string;            
   defaultValue?: string;       
   onTabChange?: (id: string) => void;
   children?: React.ReactNode;
   className?: string;  
 }
 
-
 export function SettingsTabs({
   tabs,
-  activeTab,
   onTabChange,
   defaultValue,
   children,
@@ -26,7 +23,6 @@ export function SettingsTabs({
 }: SettingsTabsProps) {
   return (
     <Tabs
-      value={activeTab}            
       defaultValue={defaultValue}  
       onValueChange={onTabChange}
      className={cn(

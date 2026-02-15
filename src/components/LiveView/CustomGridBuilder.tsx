@@ -3,40 +3,36 @@ import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import useGridStore from "@/Store/UseGridStore";
+import { useGridController } from "@/hooks/useGridController"; 
+
 interface CustomGridBuilderProps {
   open: boolean;
   onClose: () => void;
-  onConfirm: (layout: string) => void;
 }
 
-export function CustomGridBuilder({
-  open,
-  onClose,
-  onConfirm,
-}: CustomGridBuilderProps) {
+export function CustomGridBuilder({ open, onClose }: CustomGridBuilderProps) {
   const [hoveredCols, setHoveredCols] = useState(0);
   const [hoveredRows, setHoveredRows] = useState(0);
   const [selectedCols, setSelectedCols] = useState(0);
   const [selectedRows, setSelectedRows] = useState(0);
-  const { setLayout } = useGridStore();
 
-  const maxCols = 8;
-  const maxRows = 8;
+  const { handleGridLayoutChange } = useGridController(); 
+
+    const maxCols = 8;
+    const maxRows = 8;
 
   const reset = () => {
-    setHoveredCols(0);
-    setHoveredRows(0);
-    setSelectedCols(0);
-    setSelectedRows(0);
+      setHoveredCols(0);
+      setHoveredRows(0);
+      setSelectedCols(0);
+      setSelectedRows(0);
   };
 
-const handleConfirm = () => {
-  setLayout(selectedRows, selectedCols); 
-  reset();
-  onClose();
-};
-
+  const handleConfirm = () => {
+    handleGridLayoutChange(`${selectedRows}x${selectedCols}`);
+    reset();
+    onClose();
+  };
 
   const displayCols = selectedCols || hoveredCols;
   const displayRows = selectedRows || hoveredRows;
@@ -63,14 +59,9 @@ const handleConfirm = () => {
             initial={{ y: -120, opacity: 0 }}
             animate={{ y: 80, opacity: 1 }}
             exit={{ y: -120, opacity: 0 }}
-            transition={{
-              type: "spring",
-              stiffness: 320,
-              damping: 26,
-            }}
+            transition={{ type: "spring", stiffness: 320, damping: 26 }}
           >
             <div className="bg-white w-[420px] rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
-              
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b mb-3">
                 <div>
@@ -100,10 +91,7 @@ const handleConfirm = () => {
                 <div className="bg-[#f1f5f9] p-3 rounded border border-blue-100">
                   <div
                     className="grid"
-                    style={{
-                      gridTemplateColumns: `repeat(${maxCols}, 1fr)`,
-                      gap: "4px",
-                    }}
+                    style={{ gridTemplateColumns: `repeat(${maxCols}, 1fr)`, gap: "4px" }}
                     onMouseLeave={() => {
                       if (!selectedCols) {
                         setHoveredCols(0);
@@ -115,8 +103,7 @@ const handleConfirm = () => {
                       Array.from({ length: maxCols }).map((_, colIndex) => {
                         const col = colIndex + 1;
                         const row = rowIndex + 1;
-                        const active =
-                          col <= displayCols && row <= displayRows;
+                        const active = col <= displayCols && row <= displayRows;
 
                         return (
                           <div
@@ -144,9 +131,7 @@ const handleConfirm = () => {
 
                 {/* Dimension */}
                 <div className="mt-4 text-base font-semibold text-slate-900">
-                  {displayCols && displayRows
-                    ? `${displayCols} X ${displayRows}`
-                    : "Select grid size"}
+                  {displayCols && displayRows ? `${displayCols} X ${displayRows}` : "Select grid size"}
                 </div>
 
                 {/* Info */}
@@ -168,10 +153,7 @@ const handleConfirm = () => {
                 >
                   Cancel
                 </Button>
-                <Button
-                  disabled={!selectedCols || !selectedRows}
-                  onClick={handleConfirm}
-                >
+                <Button disabled={!selectedCols || !selectedRows} onClick={handleConfirm}>
                   Confirm selection
                 </Button>
               </div>

@@ -1,99 +1,101 @@
-// ======================================================================
-// CameraGrid.tsx
-// LiveView Video Grid with drag & drop, play, fullscreen, main/sub toggle
-// ======================================================================
-
-import { useState, useRef, useEffect, useMemo } from "react";
-import { useDrag, useDrop } from "react-dnd";
-import { Pin, PinOff, Camera, X } from "lucide-react";
-import useGridStore from "@/Store/UseGridStore";
+import { useState, useMemo, useRef, useEffect } from "react";
+import { Camera, X, Pin, PinOff } from "lucide-react";
 import { cn } from "@/lib/utils";
+import useGridStore from "@/Store/UseGridStore";
+import { useDrag, useDrop } from "react-dnd";
+import { Devices } from "@/components/Icons/Svg/liveViewIcons";
 
+// Camera slot type
 export interface CameraSlot {
-  id: string;
+  id: number;
   name: string;
   location: string;
-  hasCamera?: boolean;
+  hasCamera: boolean;
 }
 
+// Props for the grid
 interface CameraGridProps {
-  cameraSlots: (CameraSlot | null)[];
+  autoSequence: boolean;
   selectedSlotIndex: number | null;
   onSlotSelect: (index: number | null) => void;
-  play: (cameraId: string, videoEl: HTMLVideoElement) => void;
+  onCameraDrop?: (camera: CameraSlot, slotIndex: number) => void;
   pinnedSlots?: Set<number>;
-  clearSlot?: (slotIndex: number) => void;
   handleSnapshot?: (slotIndex: number) => void;
+  clearSlot?: (slotIndex: number) => void;
+  cameraSlots: (CameraSlot | null)[];
+  play: (cameraId: string, videoEl: HTMLVideoElement) => void;
 }
 
 export function CameraGrid({
-  cameraSlots,
+  autoSequence,
   selectedSlotIndex,
   onSlotSelect,
-  play,
+  onCameraDrop,
+  cameraSlots,
   pinnedSlots = new Set(),
-  clearSlot,
   handleSnapshot,
+  clearSlot,
+  play
 }: CameraGridProps) {
   const { layout } = useGridStore();
-  const rows = layout.rows || 2;
-  const cols = layout.cols || 2;
-  const totalSlots = rows * cols;
+  const totalSlots = layout.rows * layout.cols;
 
   const [fullscreenSlot, setFullscreenSlot] = useState<number | null>(null);
-  const [mainSubMap, setMainSubMap] = useState<Record<number, "main" | "sub">>({});
+  const [mainSubState, setMainSubState] = useState<Record<number, "main" | "sub">>({});
 
   const toggleMainSub = (index: number) => {
-    setMainSubMap(prev => ({
+    setMainSubState((prev) => ({
       ...prev,
       [index]: prev[index] === "main" ? "sub" : "main",
     }));
   };
 
-  // Ensure cameraSlots array has correct length
   const displaySlots = useMemo(() => {
     const slots: (CameraSlot | null)[] = [];
     for (let i = 0; i < totalSlots; i++) {
       slots.push(cameraSlots[i] || null);
     }
     return slots;
-  }, [cameraSlots, totalSlots]);
+  }, [totalSlots, cameraSlots]);
 
   return (
-    <div className="flex-1 h-full p-2">
-      <div
-        className="grid gap-2 h-full w-full"
-        style={{
-          gridTemplateColumns: `repeat(${cols}, 1fr)`,
-          gridTemplateRows: `repeat(${rows}, 1fr)`,
-        }}
-      >
-        {displaySlots.map((slot, index) => (
-          <CameraGridSlot
-            key={index}
-            index={index}
-            slot={slot}
-            isSelected={selectedSlotIndex === index}
-            isFullscreen={fullscreenSlot === index}
-            pinned={pinnedSlots.has(index)}
-            onSelect={onSlotSelect}
-            toggleMainSub={() => toggleMainSub(index)}
-            isMainView={mainSubMap[index] !== "sub"}
-            onDoubleClick={() =>
-              setFullscreenSlot(fullscreenSlot === index ? null : index)
-            }
-            play={play}
-            handleSnapshot={handleSnapshot}
-            clearSlot={clearSlot}
-          />
-        ))}
+    <div className="flex-1 flex flex-col bg-muted/20">
+      <div className="flex-1">
+        <div
+          className="grid h-full"
+          style={{
+            gridTemplateColumns: `repeat(${layout.cols}, 1fr)`,
+            gridTemplateRows: `repeat(${layout.rows}, 1fr)`,
+          }}
+        >
+          {displaySlots.map((slot, index) => (
+            <CameraGridSlot
+              key={index}
+              index={index}
+              slot={slot}
+              isSelected={selectedSlotIndex === index}
+              isFullscreen={fullscreenSlot === index}
+              pinned={pinnedSlots.has(index)}
+              onSelect={onSlotSelect}
+              toggleMainSub={() => toggleMainSub(index)}
+              isMainView={mainSubState[index] !== "sub"}
+              onDoubleClick={() =>
+                setFullscreenSlot(fullscreenSlot === index ? null : index)
+              }
+              play={play}
+              onCameraDrop={onCameraDrop}
+              handleSnapshot={handleSnapshot}
+              clearSlot={clearSlot}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
 }
 
 /* ===================================================================== */
-/* CameraGridSlot Component */
+/* SLOT COMPONENT */
 function CameraGridSlot({
   index,
   slot,
@@ -105,6 +107,7 @@ function CameraGridSlot({
   isMainView,
   onDoubleClick,
   play,
+  onCameraDrop,
   handleSnapshot,
   clearSlot,
 }: {
@@ -118,36 +121,31 @@ function CameraGridSlot({
   isMainView: boolean;
   onDoubleClick?: () => void;
   play: (cameraId: string, videoEl: HTMLVideoElement) => void;
+  onCameraDrop?: (camera: CameraSlot, slotIndex: number) => void;
   handleSnapshot?: (slotIndex: number) => void;
   clearSlot?: (slotIndex: number) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-
-  // Drag
+  
   const [{ isDragging }, dragRef] = useDrag({
     type: "SLOT",
     item: { from: index, cameraId: slot?.id },
     canDrag: !!slot && !pinned,
-    collect: monitor => ({ isDragging: monitor.isDragging() }),
+    collect: (monitor) => ({ isDragging: monitor.isDragging() }),
   });
 
-  // Drop
   const [{ isOver }, dropRef] = useDrop({
     accept: ["SLOT", "SIDEBAR_CAMERA"],
     drop: (item: any) => {
-      if (!slotRefValid(videoRef.current)) return;
-
       if (item.type === "SIDEBAR_CAMERA") {
-        // Drop from sidebar: directly assign
-        if (videoRef.current) play(item.camera.id, videoRef.current);
+        if (onCameraDrop) onCameraDrop(item.camera, index);
         return;
       }
-
-      // Swap cameras
       if (item.from === index) return;
+      console.log(`Swapped camera ${item.cameraId} with slot ${index}`);
     },
-    collect: monitor => ({ isOver: monitor.isOver() }),
+    collect: (monitor) => ({ isOver: monitor.isOver() }),
   });
 
   const setRefs = (el: HTMLDivElement | null) => {
@@ -156,25 +154,22 @@ function CameraGridSlot({
     ref.current = el;
   };
 
-  // Auto-play video when slot changes
-  useEffect(() => {
-    if (!slot || !videoRef.current) return;
 
-    const cameraId = slot.id;
-    const currentCamera = (videoRef.current as any).__cameraId;
+useEffect(() => {
+  if (!slot || !videoRef.current) return;
 
-    if (currentCamera !== cameraId) {
-      play(cameraId, videoRef.current);
-      (videoRef.current as any).__cameraId = cameraId;
-    }
-  }, [slot, play]);
+  const cameraId = String(slot.id);
+  const currentCamera = (videoRef.current as any).__cameraId;
 
-  // Fullscreen toggle
-  const handleFullscreen = () => {
-    if (!ref.current) return;
-    if (!document.fullscreenElement) ref.current.requestFullscreen();
-    else document.exitFullscreen();
-  };
+  if (currentCamera === cameraId) return;
+
+  play(cameraId, videoRef.current);
+  (videoRef.current as any).__cameraId = cameraId;
+}, [slot, play]);
+
+
+
+
 
   return (
     <div
@@ -183,10 +178,10 @@ function CameraGridSlot({
       onDoubleClick={onDoubleClick ?? handleFullscreen}
       className={cn(
         "relative w-full h-full cursor-pointer border group",
-        isSelected ? "ring-2 ring-blue-400" : "",
+        isSelected ? "ring-1 ring-primary" : "",
         isFullscreen ? "fixed inset-0 z-50 bg-black" : "",
         isDragging ? "opacity-50" : "",
-        isOver ? "ring-2 ring-green-400" : ""
+        isOver ? "ring-2 ring-blue-400" : ""
       )}
     >
       {slot ? (
@@ -199,34 +194,39 @@ function CameraGridSlot({
             muted
             playsInline
           />
-
-          {/* Pin */}
+          {/* Top left pin button */}
           <button
-            onClick={e => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              console.log(pinned ? "Unpin slot" : "Pin slot");
+            }}
             className="absolute top-2 left-2 z-10 p-1.5 bg-black rounded-full"
           >
             {pinned ? <Pin className="w-4 h-4 text-blue-300" /> : <PinOff className="w-4 h-4 text-white" />}
           </button>
 
-          {/* Main/Sub Toggle */}
+          {/* Top right Main/Sub toggle */}
           <button
-            onClick={e => { e.stopPropagation(); toggleMainSub(); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleMainSub();
+            }}
             className="absolute top-2 right-2 z-10 p-1.5 bg-black rounded-full"
           >
             <span className="text-xs text-white">{isMainView ? "Main" : "Sub"}</span>
           </button>
 
-          {/* Bottom Info + Actions */}
-          <div className="absolute bottom-2 left-2 right-2 flex justify-between px-2 py-1 bg-black/30 text-white text-xs rounded">
+          {/* Bottom info + controls */}
+          <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between px-2 py-1 bg-black/30 text-white text-xs rounded">
             <span>{slot.name}</span>
-            <div className="flex gap-1">
+            <div className="flex items-center gap-1">
               {handleSnapshot && (
-                <button onClick={e => { e.stopPropagation(); handleSnapshot(index); }}>
+                <button onClick={(e) => { e.stopPropagation(); handleSnapshot(index); }}>
                   <Camera className="w-4 h-4" />
                 </button>
               )}
               {clearSlot && (
-                <button onClick={e => { e.stopPropagation(); clearSlot(index); }}>
+                <button onClick={(e) => { e.stopPropagation(); clearSlot(index); }}>
                   <X className="w-4 h-4" />
                 </button>
               )}
@@ -235,14 +235,10 @@ function CameraGridSlot({
         </>
       ) : (
         <div className="flex items-center justify-center text-slate-500 hover:bg-slate-700/20 h-full w-full">
-          Drop Camera
+          <Devices className="h-6 w-6 mr-1" />
+          <span>Drop Camera</span>
         </div>
       )}
     </div>
   );
-}
-
-// Optional helper
-function slotRefValid(video: HTMLVideoElement | null) {
-  return !!video;
 }

@@ -154,8 +154,7 @@ const ConfigureDevicesPage = () => {
                   </div>
 
                     <SettingsTabs 
-                      activeTab={activeTab}      
-                      onTabChange={setActiveTab}
+                     onTabChange={setActiveTab}
                       defaultValue="network" tabs={configureDeviceTabs}  className="px-4">
                             <TabsContent value="network" >
                                 <Network />

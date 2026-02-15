@@ -2,24 +2,21 @@
     import { SettingsSidebar } from "./SettingsSidebar";
     import { SettingsTabs, TabsContent } from "./SettingsTab";
     import { manageUsersTabs } from "./tabConfigs/ManageUsers";
-    import { AddDeviceTabs } from "./tabConfigs/AddDevices"; 
     import { AddDevicesPage } from "./AddedDevices";
     import RolesContent from "./tabContents/RolesContent";
     import UsersContent from "./tabContents/UsersContent";
     import AuditContent from "./tabContents/AuditContent";
     import ConfigureDevicesPage from "./configure-devices/ConfigureDevicesPage";
+     import StorageIndex from "./StorageIndex";
     import { AddedDevicesPage } from "@/components/settings/Added-Devices/AddedDevicesPage";
     import { useSettingsStore } from "@/Store/SettingsStore"; 
     import { useRoleStore } from "@/Store/RoleStore";
 
     export default function SettingsOverview() {
       const { 
-        activeItem, 
         activeRoute, 
-        activeTab, 
         setActiveItem, 
         setActiveRoute, 
-        setActiveTab 
       } = useSettingsStore();
 
     const { selectedRoleId, setSelectedRole } = useRoleStore();
@@ -40,8 +37,7 @@
             {activeRoute === "/settings/users" && (
               <SettingsTabs
                 tabs={manageUsersTabs}
-                activeTab={activeTab}
-                onTabChange={setActiveTab}
+                defaultValue="roles"
               >
                 <TabsContent value="roles">
                     <RolesContent
@@ -52,7 +48,7 @@
                 </TabsContent>
 
                 <TabsContent value="users">
-                    <UsersContent />
+                     <UsersContent />
                 </TabsContent>
 
                 <TabsContent value="audit">
@@ -63,21 +59,13 @@
 
             {activeRoute === "/settings/devices/add" && <AddDevicesPage />}
             {activeRoute === "/settings/devices/adddevices" && <AddedDevicesPage />}
-            {activeRoute === "/settings/devices/configure" && (
-              <ConfigureDevicesPage />
-            )}
+              {activeRoute === "/settings/devices/configure" && (
+                  <ConfigureDevicesPage />
+              )}
 
-            {/* {activeRoute === "/settings/storage" && (
-              <SettingsTabs
-                tabs={AddDeviceTabs}
-                activeTab={activeTab}
-                onTabChange={setActiveTab}
-              >
-                <TabsContent value="volumes">Storage Volumes</TabsContent>
-                <TabsContent value="retention">Retention Policies</TabsContent>
-                <TabsContent value="failover">Failover</TabsContent>
-              </SettingsTabs>
-            )} */}
+            {activeRoute === "/settings/storage" && (
+              <StorageIndex />
+              )}
           </div>
         </div>
       );

@@ -6,12 +6,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { API_BASE_URL2, API_URLS, getAuthHeaders } from "@/components/Config/api";
 import { Button } from "@/components/ui/button";
 import { showToast } from "@/components/SweetAlertpopup/ToastService";
+import { useSettingsStore } from "@/Store/SettingsStore";
 
 export function AutoDiscoveryTab() {
   const [isScanning, setIsScanning] = useState(false);
   const [devices, setDevices] = useState<DiscoveredDevice[]>([]);
   const [selectedCount, setSelectedCount] = useState(0);
   const [selectedDevices, setSelectedDevices] = useState<DiscoveredDevice[]>([]);
+  const { setActiveRoute, setActiveItem } = useSettingsStore();
 
   /* ---------------- SCAN DEVICES ---------------- */
   const handleStartScan = async () => {
@@ -63,45 +65,49 @@ export function AutoDiscoveryTab() {
   };
 
   /* ---------------- ADD SELECTED ---------------- */
-  const handleAddSelected = async () => {
-     try {
+  
+ const handleAddSelected = async () => {
+  try {
     const payload = selectedDevices.map((d) => ({
-        name: d.name,
-        ipAddress: d.ip,
-        port: Number(d.port),
-        username: d.username,
-        password: d.password,
-        make: d.make,
-        model: d.model,
-        authType: "DIGEST",
+      name: d.name,
+      ipAddress: d.ip,
+      port: Number(d.port),
+      username: d.username,
+      password: d.password,
+      make: d.make,
+      model: d.model,
+      authType: "DIGEST",
     }));
-     console.log("Payload to send API:", payload);
 
-      const response = await axios.post(
-        "http://192.168.10.107:8081/api/v1/devices/add-devices",
-        payload
+    const response = await axios.post(
+      "http://192.168.10.107:8081/api/v1/devices/add-devices",
+      payload
+    );
+
+    const { totalAdded, totalFailed } = response.data.data;
+
+    if (totalAdded > 0) {
+      alert(
+        totalFailed === 0
+          ? `${totalAdded} device added successfully`
+          : `${totalAdded} added, ${totalFailed} failed`
       );
 
-    const { addedDevices, failedDevices, totalAdded, totalFailed } = response.data.data;
-
-      if (totalAdded > 0 && totalFailed === 0) {
-        alert(`${totalAdded} device added successfully`);
-      } else if (totalAdded > 0 && totalFailed > 0) {
-        alert(` ${totalAdded} added, ${totalFailed} failed`);
-      } else {
-        alert("All devices failed to add");
-      }
-
-      console.log("Added Devices:", addedDevices);
-      console.log("Failed Devices:", failedDevices);
-    } catch (error: any) {
-      if (axios.isAxiosError(error)) {
-        alert(error.response?.data?.message || "API error occurred");
-      } else {
-        alert("Unexpected error occurred");
-      }
+      setActiveItem("add-devices");     
+      setActiveRoute("/settings/devices/add");
+    } else {
+      alert("All devices failed to add");
     }
-  };
+
+  } catch (error: any) {
+    if (axios.isAxiosError(error)) {
+      alert(error.response?.data?.message || "API error occurred");
+    } else {
+      alert("Unexpected error occurred");
+    }
+  }
+};
+
 
 
   return (
