@@ -14,16 +14,16 @@ export function SettingsSidebar({ onNavigate }: { onNavigate: (route: string, id
   useEffect(() => {
     sidebarItems.forEach((item) => {
       if (item.subItems?.some((sub) => sub.id === activeItem)) {
-        setExpandedItems((prev) => (prev.includes(item.id) ? prev : [...prev, item.id]));
-      }
+          setExpandedItems((prev) => (prev.includes(item.id) ? prev : [...prev, item.id]));
+        }
     });
   }, [activeItem]);
 
   const toggleExpand = (id: string) => {
-    setExpandedItems((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-    );
-  };
+      setExpandedItems((prev) =>
+         prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+      );
+   };
 
   return (
     <aside className="w-56 shrink-0 border rounded-md bg-white">

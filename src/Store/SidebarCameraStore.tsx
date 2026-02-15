@@ -11,7 +11,7 @@ interface CameraStore {
   reset: () => void;
 }
 
-export const useCameraStore = create<CameraStore>((set) => ({
+export const SidebarCameraStore = create<CameraStore>((set) => ({
   cameras: [],
   loading: false,
 

@@ -2,10 +2,8 @@ import { useEffect, useState, useCallback, ChangeEvent, useMemo } from "react";
 import { Search, ChevronDown, ChevronRight, Camera } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { APISERVERURL, API_URLS } from "@/components/Config/api";
-import { Device } from "@/components/LiveView/DeviceTypes";
 import { CameraTree } from "@/components/ui/CameraTree";
-import { useCameraStore } from "@/store/SidebarCameraStore";
+import { SidebarCameraStore } from "@/Store/SidebarCameraStore";
 
 interface Props {
   isVisible: boolean;
@@ -16,34 +14,20 @@ export function CameraTreeSidebar({
   isVisible,
   onCameraClick = () => {},
 }: Props) {
-  const [devices, setDevices] = useState<Device[]>([]);
+  const { cameras, fetchCameras } = SidebarCameraStore();
   const [search, setSearch] = useState("");
   const [openProperty, setOpenProperty] = useState(true);
 
-  const fetchDevices = useCallback(async () => {
-    const res = await fetch(`${APISERVERURL}${API_URLS.get_all_devices}`);
-    const json = await res.json();
 
-    const mapped: Device[] =
-      json?.data?.map((d: any) => ({
-        cameraId: String(d.cameraId),
-        name: d.cameraName,
-        groupName: d.groupName,
-        streams: d.streams,
-      })) || [];
-
-    setDevices(mapped);
-  }, []);
-
-  useEffect(() => {
-    fetchDevices();
-  }, [fetchDevices]);
+useEffect(() => {
+    fetchCameras();
+  }, [fetchCameras]);
 
   const filtered = useMemo(() => {
-    return devices.filter((d) =>
+    return cameras.filter((d) =>
       d.name.toLowerCase().includes(search.toLowerCase())
     );
-  }, [devices, search]);
+  }, [cameras, search]);
 
   const offlineCount = filtered.filter(
     (d) => !d.streams?.some((s) => s.status === "ONLINE")
