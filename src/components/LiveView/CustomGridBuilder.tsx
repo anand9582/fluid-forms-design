@@ -3,7 +3,7 @@ import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import { useGridController } from "@/hooks/useGridController"; 
+import useGridStore from "@/Store/UseGridStore";
 
 interface CustomGridBuilderProps {
   open: boolean;
@@ -15,8 +15,8 @@ export function CustomGridBuilder({ open, onClose }: CustomGridBuilderProps) {
   const [hoveredRows, setHoveredRows] = useState(0);
   const [selectedCols, setSelectedCols] = useState(0);
   const [selectedRows, setSelectedRows] = useState(0);
+  const { setLayout } = useGridStore();
 
-  const { handleGridLayoutChange } = useGridController(); 
 
     const maxCols = 8;
     const maxRows = 8;
@@ -28,11 +28,14 @@ export function CustomGridBuilder({ open, onClose }: CustomGridBuilderProps) {
       setSelectedRows(0);
   };
 
-  const handleConfirm = () => {
-    handleGridLayoutChange(`${selectedRows}x${selectedCols}`);
+ const handleConfirm = () => {
+  if (selectedCols && selectedRows) {
+    setLayout(selectedRows, selectedCols); 
     reset();
     onClose();
-  };
+  }
+};
+
 
   const displayCols = selectedCols || hoveredCols;
   const displayRows = selectedRows || hoveredRows;

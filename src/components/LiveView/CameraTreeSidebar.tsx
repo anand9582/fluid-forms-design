@@ -4,7 +4,9 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { CameraTree } from "@/components/ui/CameraTree";
 import { SidebarCameraStore } from "@/Store/SidebarCameraStore";
-
+import {
+  Devices,
+} from "@/components/Icons/Svg/liveViewIcons";
 interface Props {
   isVisible: boolean;
   onCameraClick?: (cameraId: string) => void;
@@ -42,7 +44,7 @@ useEffect(() => {
     >
       {/* Header */}
       <div className="flex items-center gap-2 font-semibold text-lg mb-3">
-        <Camera size={18} />
+        <Devices size={18} />
         Cameras
       </div>
 
@@ -71,7 +73,7 @@ useEffect(() => {
             ) : (
               <ChevronRight size={16} />
             )}
-            <span className="text-muted-foreground uppercase text-xs">
+            <span className="text-xs font-medium uppercase tracking-wide text-slate-400 font-roboto">
               Property
             </span>
             <span>Grand Hotel</span>

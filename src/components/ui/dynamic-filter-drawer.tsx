@@ -33,7 +33,7 @@ const WIDTH_MAP: Record<string, string> = {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     title?: string;
-
+     description?: string; 
     onApply?: () => void;
     onReset?: () => void;
 
@@ -52,6 +52,7 @@ const WIDTH_MAP: Record<string, string> = {
     open,
     onOpenChange,
     title = "Advanced Filters",
+    description,
     onApply,
     onReset,
     applyLabel = "Apply Filters",
@@ -79,8 +80,13 @@ const WIDTH_MAP: Record<string, string> = {
             <div className="flex items-center gap-4">
               <DrawerTitle className="font-roboto text-lg font-medium">
                 {title}
+                 {description && (
+                    <p className="text-sm text-slate-500">
+                      {description}
+                    </p>
+                  )}
               </DrawerTitle>
-
+               
               {onReset && (
                 <Button
                   variant="outline"

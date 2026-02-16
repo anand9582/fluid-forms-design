@@ -3,7 +3,7 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { RetentionPoliciesTable } from "@/components/settings/storage/RetentionPoliciesTable";
 import { AddStorageUnitPanel } from "@/components/settings/Storage/AddStorageUnitPanel";
-import { ManageStorageView } from "@/components/settings/storage/ManageStorageView";
+import { ManageStorageView } from "@/components/settings/Storage/DialogStorage/AddNewStorage";
 import { NewRetentionPolicyPanel } from "@/components/settings/storage/NewRetentionPolicyPanel";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";

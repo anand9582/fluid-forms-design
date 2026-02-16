@@ -483,7 +483,7 @@ function PasswordCell({ password }: { password: string }) {
 
       {/* Advanced Filters Drawer */}
       <DynamicFilterDrawer open={filterOpen} onOpenChange={setFilterOpen} title="Advanced Filters" onApply={applyFilters} onReset={resetFilters} width="w-[460px]">
-        <DeviceFilterContent />
+          <DeviceFilterContent />
       </DynamicFilterDrawer>
     </>
   );

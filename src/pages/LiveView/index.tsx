@@ -8,6 +8,8 @@ import {
   LiveAlertsBar,
 } from "@/components/LiveView/PagesInclude";
 import { useGridController } from "@/hooks/useGridController";
+import { SidebarCameraStore } from "@/Store/SidebarCameraStore";
+import useGridStore from "@/Store/UseGridStore";
 
 export interface CameraStatus {
   id: string;
@@ -18,71 +20,68 @@ export interface CameraStatus {
 }
 
 export default function LiveView() {
-  const [showCameraList, setShowCameraList] = useState(true);
-  const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(0);
-  const [mainSubMap, setMainSubMap] = useState<Record<number, "main" | "sub">>({});
+    const [showCameraList, setShowCameraList] = useState(true);
+    const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(0);
+    const [mainSubMap, setMainSubMap] = useState<Record<number, "main" | "sub">>(
+    {}
+  );
+
+  const cameras = SidebarCameraStore((state) => state.cameras);
 
   const {
     layout,
     slotAssignments,
-    setSlotAssignments,
-    play,
-    setPlayingCameraIds,
-  } = useGridController();
+    assignCameraToSlot,
+    clearSlot,
+    resizeSlots,
+  } = useGridStore();
 
-  // initialize grid
+  const { play,handleSnapshot,handleRefresh} = useGridController();
+
+//  Grid resize hone par slots auto adjust
   useEffect(() => {
-    if (slotAssignments.length === 0) {
-      setSlotAssignments(Array(layout.rows * layout.cols).fill(null));
-    }
-  }, [slotAssignments, layout, setSlotAssignments]);
+    resizeSlots();
+  }, [layout.rows, layout.cols, resizeSlots]);
 
-  // ✅ Grid slots only know cameraId
+//  lot  CameraStatus mapping
   const cameraSlots: (CameraStatus | null)[] = useMemo(() => {
-    return slotAssignments.map((cameraId) =>
-      cameraId
-        ? {
-            id: cameraId,
-            name: `Camera ${cameraId}`, 
-            location: "—",
-            bitrate: "0 kbps",
-            hasCamera: true,
-          }
-        : null
-    );
-  }, [slotAssignments]);
+    return slotAssignments.map((cameraId) => {
+      if (!cameraId) return null;
 
-  // ✅ MAIN REQUIREMENT: menu se aaya cameraId
+      const camera = cameras.find((c) => c.cameraId === cameraId);
+
+      return {
+        id: cameraId,
+        name: camera?.name || `Camera ${cameraId}`,
+        location: camera?.groupName || "—",
+        bitrate: "0 kbps",
+        hasCamera: !!camera,
+      };
+    });
+  }, [slotAssignments, cameras]);
+
+  /* Sidebar se camera click */
   const handleCameraClick = (cameraId: string) => {
     const freeIndex = slotAssignments.findIndex((s) => s === null);
     if (freeIndex === -1) return;
 
-    setSlotAssignments((prev) => {
-      const copy = [...prev];
-      copy[freeIndex] = cameraId;
-      return copy;
-    });
+    assignCameraToSlot(freeIndex, cameraId);
 
-    setMainSubMap((prev) => ({ ...prev, [freeIndex]: "sub" }));
-    setPlayingCameraIds((prev) => new Set([...prev, cameraId]));
-    setSelectedSlotIndex(freeIndex);
-  };
-
-  const toggleMainSub = (slotIndex: number) => {
     setMainSubMap((prev) => ({
       ...prev,
-      [slotIndex]: prev[slotIndex] === "main" ? "sub" : "main",
+      [freeIndex]: "sub",
     }));
   };
 
-  const clearSlot = (slotIndex: number) => {
-    setSlotAssignments((prev) => {
-      const copy = [...prev];
-      copy[slotIndex] = null;
-      return copy;
-    });
-  };
+  /* Main / Sub toggle */
+    const toggleMainSub = (slotIndex: number) => {
+      setMainSubMap((prev) => ({
+        ...prev,
+        [slotIndex]: prev[slotIndex] === "main" ? "sub" : "main",
+      }));
+    };
 
+  /*  Selected camera for AI sidebar */
   const getSelectedCamera = useCallback(() => {
     if (selectedSlotIndex === null) return null;
     return cameraSlots[selectedSlotIndex];
@@ -93,11 +92,10 @@ export default function LiveView() {
       <LiveViewToolbar
         showCameraList={showCameraList}
         onToggleCameraList={() => setShowCameraList(!showCameraList)}
-        selectedLayout={`${layout.rows}x${layout.cols}`}
       />
 
       <div className="flex flex-1 overflow-hidden gap-3">
-        <div className="flex gap-3 p-3 flex-1">
+        <div className="flex gap-3 py-3 pl-3 flex-1">
           <CameraTreeSidebar
             isVisible={showCameraList}
             onCameraClick={handleCameraClick}
@@ -107,11 +105,12 @@ export default function LiveView() {
             cameraSlots={cameraSlots}
             selectedSlotIndex={selectedSlotIndex}
             onSlotSelect={setSelectedSlotIndex}
-            autoSequence
             play={play}
             toggleMainSub={toggleMainSub}
             mainSubMap={mainSubMap}
-            clearSlot={clearSlot}
+            clearSlot={clearSlot} 
+            handleSnapshot={handleSnapshot}
+            handleRefresh={handleRefresh}
           />
         </div>
 

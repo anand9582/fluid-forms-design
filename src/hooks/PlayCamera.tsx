@@ -1,6 +1,6 @@
 import { useCallback, useRef } from "react";
 import { v4 as uuidv4 } from "uuid";
-import { API_BASE_URL, API_URLS } from "@/components/Config/api";
+import { APISERVERURL, API_URLS } from "@/components/Config/api";
 import { useStreamStore , CameraStream } from "@/Store/UseStreamStore";
 
 export const usePlayCamera = (addDebugLog: (msg: string) => void) => {
@@ -106,7 +106,7 @@ export const usePlayCamera = (addDebugLog: (msg: string) => void) => {
         .then((offer) => pc.setLocalDescription(offer))
         .then(() =>
           fetch(
-            `${API_BASE_URL}${API_URLS.Liveview}${cameraId}?type=${type}`,
+            `${APISERVERURL}${API_URLS.Liveview}${cameraId}?type=${type}`,
             {
               method: "POST",
               headers: { "Content-Type": "application/sdp" },

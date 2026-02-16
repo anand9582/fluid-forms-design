@@ -1,43 +1,56 @@
-import { useState, useMemo } from "react";
-import { Camera, X } from "lucide-react";
-import { cn } from "@/lib/utils";
-import useGridStore from "@/Store/UseGridStore";
+// ======================================================================
+// CameraGrid.tsx
+// LiveView Video Grid with drag & drop, play, fullscreen, main/sub toggle
+// ======================================================================
 
-import {
-  Devices,
-  RefershIcons,
-  Minimize,
-  VioceIcons,
-} from "@/components/Icons/Svg/liveViewIcons";
+import { useState, useRef, useEffect, useMemo } from "react";
+import { useDrop } from "react-dnd";
+import { Pin, PinOff, Camera, X } from "lucide-react";
+import useGridStore from "@/Store/UseGridStore";
+import { cn } from "@/lib/utils";
 
 export interface CameraSlot {
-  id: number;
+  id: string;
   name: string;
   location: string;
-  hasCamera: boolean;
+  hasCamera?: boolean;
 }
 
 interface CameraGridProps {
-  autoSequence: boolean;
+  cameraSlots: (CameraSlot | null)[];
   selectedSlotIndex: number | null;
   onSlotSelect: (index: number | null) => void;
+  play: (cameraId: string, videoEl: HTMLVideoElement) => void;
+  pinnedSlots?: Set<number>;
+  clearSlot?: (slotIndex: number) => void;
+  handleSnapshot?: (slotIndex: number) => void;
 }
 
 export function CameraGrid({
-  autoSequence,
+  cameraSlots,
   selectedSlotIndex,
   onSlotSelect,
+  play,
+  pinnedSlots = new Set(),
+  clearSlot,
+  handleSnapshot,
 }: CameraGridProps) {
   const { layout } = useGridStore();
+  const rows = layout.rows || 2;
+  const cols = layout.cols || 2;
+  const totalSlots = rows * cols;
 
-  const [cameraSlots] = useState<(CameraSlot | null)[]>([
-    { id: 1, name: "Lobby", location: "A-1", hasCamera: true },
-    { id: 2, name: "Hall", location: "A-2", hasCamera: true },
-    { id: 3, name: "Gym", location: "B-1", hasCamera: true },
-    { id: 4, name: "Floor 5", location: "A-5", hasCamera: true },
-  ]);
+  const [fullscreenSlot, setFullscreenSlot] = useState<number | null>(null);
+  const [mainSubMap, setMainSubMap] = useState<Record<number, "main" | "sub">>(
+    {}
+  );
 
-  const totalSlots = layout.rows * layout.cols;
+  const toggleMainSub = (index: number) => {
+    setMainSubMap(prev => ({
+      ...prev,
+      [index]: prev[index] === "main" ? "sub" : "main",
+    }));
+  };
 
   const displaySlots = useMemo(() => {
     const slots: (CameraSlot | null)[] = [];
@@ -45,84 +58,180 @@ export function CameraGrid({
       slots.push(cameraSlots[i] || null);
     }
     return slots;
-  }, [totalSlots, cameraSlots]);
+  }, [cameraSlots, totalSlots]);
 
   return (
-    <div className="flex-1 flex flex-col bg-muted/20">
-      {/* GRID */}
-      <div className="flex-1">
-        <div
-          className="grid h-full "
-          style={{
-            gridTemplateColumns: `repeat(${layout.cols}, 1fr)`,
-            gridTemplateRows: `repeat(${layout.rows}, 1fr)`,
-          }}
-        >
-          {displaySlots.map((slot, index) => {
-            const isSelected = selectedSlotIndex === index;
-
-            return (
-           <div
+    <div className="flex-1 h-full p-2">
+      <div
+        className="grid gap-2 h-full w-full"
+        style={{
+          gridTemplateColumns: `repeat(${cols}, 1fr)`,
+          gridTemplateRows: `repeat(${rows}, 1fr)`,
+        }}
+      >
+        {displaySlots.map((slot, index) => (
+          <CameraGridSlot
             key={index}
-            onClick={() => onSlotSelect(isSelected ? null : index)}
-            className={cn(
-              "relative w-full h-full cursor-pointer",
-              isSelected && "p-[2px]"
-            )}
-          >
-          <div
-            className={cn(
-              "group relative flex items-center justify-center w-full h-full transition-all",
-              isSelected
-                ? "bg-slate-900 ring-1 ring-primary"
-                : "bg-card border border-border hover:border-primary/60"
-            )}
-          >
-          {isSelected ? (
-            <>
-              <div className="absolute inset-0 bg-white border" />
-
-              <div
-                className={cn(
-                  "absolute bottom-1 left-1/2 -translate-x-1/2 z-10",
-                  "px-2 py-1 flex gap-1",
-                  "opacity-0 translate-y-4",
-                  "group-hover:opacity-100 group-hover:translate-y-0",
-                  "transition-all duration-300 ease-out",
-                  "pointer-events-none group-hover:pointer-events-auto"
-                )}
-              >
-                <button className="p-2 bg-black rounded text-white/90">
-                  <RefershIcons size={16} />
-                </button>
-                <button className="p-2 bg-black rounded text-white/90">
-                  <VioceIcons size={16} />
-                </button>
-                <button className="p-2 bg-black rounded text-white/90">
-                  <Camera size={16} />
-                </button>
-                <button className="p-2 bg-black rounded text-white/90">
-                  <Minimize size={16} />
-                </button>
-                <button className="p-2 bg-black rounded text-white/90">
-                  <X size={16} />
-                </button>
-              </div>
-            </>
-          ) : (
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Devices className="h-4 w-4" />
-              <span className="text-sm font-medium">Drop Camera</span>
-            </div>
-          )}
-        </div>
-</div>
-
-            );
-          })}
-        </div>
+            index={index}
+            slot={slot}
+            isSelected={selectedSlotIndex === index}
+            isFullscreen={fullscreenSlot === index}
+            pinned={pinnedSlots.has(index)}
+            onSelect={onSlotSelect}
+            toggleMainSub={() => toggleMainSub(index)}
+            isMainView={mainSubMap[index] !== "sub"}
+            onDoubleClick={() =>
+              setFullscreenSlot(fullscreenSlot === index ? null : index)
+            }
+            play={play}
+            handleSnapshot={handleSnapshot}
+            clearSlot={clearSlot}
+          />
+        ))}
       </div>
+    </div>
+  );
+}
+
+/* ===================================================================== */
+/* CameraGridSlot */
+function CameraGridSlot({
+  index,
+  slot,
+  isSelected,
+  isFullscreen,
+  pinned,
+  onSelect,
+  toggleMainSub,
+  isMainView,
+  onDoubleClick,
+  play,
+  handleSnapshot,
+  clearSlot,
+}: {
+  index: number;
+  slot: CameraSlot | null;
+  isSelected: boolean;
+  isFullscreen: boolean;
+  pinned: boolean;
+  onSelect: (i: number | null) => void;
+  toggleMainSub: () => void;
+  isMainView: boolean;
+  onDoubleClick?: () => void;
+  play: (cameraId: string, videoEl: HTMLVideoElement) => void;
+  handleSnapshot?: (slotIndex: number) => void;
+  clearSlot?: (slotIndex: number) => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const assignCameraToSlot = useGridStore(
     
+    (state) => state.assignCameraToSlot
+  );
+
+  // ✅ DROP FROM SIDEBAR (EMPTY SLOT INCLUDED)
+  const [{ isOver }, dropRef] = useDrop({
+    accept: "SIDEBAR_CAMERA",
+    drop: (item: { cameraId: string }) => {
+      assignCameraToSlot(index, item.cameraId);
+    },
+    collect: (monitor) => ({
+      isOver: monitor.isOver(),
+    }),
+  });
+
+  useEffect(() => {
+    if (!slot || !videoRef.current) return;
+
+    const cameraId = slot.id;
+    const currentCamera = (videoRef.current as any).__cameraId;
+
+    if (currentCamera !== cameraId) {
+      play(cameraId, videoRef.current);
+      (videoRef.current as any).__cameraId = cameraId;
+    }
+  }, [slot, play]);
+
+  return (
+    <div
+      ref={dropRef}
+      onClick={() => onSelect(index)}
+      onDoubleClick={onDoubleClick}
+      className={cn(
+        "relative w-full h-full cursor-pointer border group",
+        isSelected && "ring-2 ring-blue-400",
+        isFullscreen && "fixed inset-0 z-50 bg-black",
+        isOver && "ring-2 ring-green-400"
+      )}
+    >
+      {slot ? (
+        <>
+          <video
+            ref={videoRef}
+            id={`video-slot-${index}`}
+            className="w-full h-full object-cover"
+            autoPlay
+            muted
+            playsInline
+          />
+
+          {/* Pin */}
+          <button
+            onClick={e => e.stopPropagation()}
+            className="absolute top-2 left-2 z-10 p-1.5 bg-black rounded-full"
+          >
+            {pinned ? (
+              <Pin className="w-4 h-4 text-blue-300" />
+            ) : (
+              <PinOff className="w-4 h-4 text-white" />
+            )}
+          </button>
+
+          {/* Main / Sub */}
+          {/* <button
+            onClick={e => {
+              e.stopPropagation();
+              toggleMainSub();
+            }}
+            className="absolute top-2 right-2 z-10 p-1.5 bg-black rounded-full"
+          >
+            <span className="text-xs text-white">
+              {isMainView ? "Main" : "Sub"}
+            </span>
+          </button> */}
+
+          {/* Bottom Bar */}
+          <div className="absolute bottom-2 left-2 right-2 flex justify-between px-2 py-1 bg-black/40 text-white text-xs rounded">
+            <span>{slot.name}</span>
+            <div className="flex gap-1">
+              {handleSnapshot && (
+                <button
+                  onClick={e => {
+                    e.stopPropagation();
+                    handleSnapshot(index);
+                  }}
+                >
+                  <Camera className="w-4 h-4" />
+                </button>
+              )}
+              {clearSlot && (
+                <button
+                  onClick={e => {
+                    e.stopPropagation();
+                    clearSlot(index);
+                  }}
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
+        </>
+      ) : (
+        <div className="flex items-center justify-center text-slate-500 h-full w-full">
+          Drop Camera
+        </div>
+      )}
     </div>
   );
 }

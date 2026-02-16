@@ -3,7 +3,7 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { DynamicFilterDrawer } from "@/components/ui/dynamic-filter-drawer";
-import { AddStorageUnitContent } from "@/components/settings/Storage/ManageStorageView";
+import { AddNewStorage } from "@/components/settings/Storage/DialogStorage/AddNewStorage";
 import { getStorageUnits } from "@/components/settings/Storage/StorageVolume/StorageService";
 import { StorageUnit } from "@/components/settings/Storage/StorageVolume/StorageUnits";
 import { StorageOverviewCards } from "@/components/settings/Storage/StorageVolume/StorageOverviewCards";
@@ -18,7 +18,7 @@ export function StorageListView({
 }) {
   const [units, setUnits] = useState<StorageUnit[]>([]);
   const [filter, setFilter] = useState<"primary" | "secondary">("primary");
-const [newStorageOpen, setNewStorageOpen] = useState(false);
+ const [newStorageOpen, setNewStorageOpen] = useState(false);
 
   useEffect(() => {
     getStorageUnits().then(setUnits);
@@ -92,19 +92,19 @@ const [newStorageOpen, setNewStorageOpen] = useState(false);
           />
         ))}
       </div>
-      <DynamicFilterDrawer
-        open={newStorageOpen}
-        onOpenChange={setNewStorageOpen}
-        title="Add New Storage"
-        applyLabel="Save Storage"
-         width="xl"
-        onApply={() => {
-          // yaha save logic aayega
-          console.log("Save Storage clicked");
-          setNewStorageOpen(false);
-        }}
-      >
-        <AddStorageUnitContent />
+        <DynamicFilterDrawer
+            open={newStorageOpen}
+            onOpenChange={setNewStorageOpen}
+            title="Add New Storage"
+            description="Configure storage endpoints for video retention."
+            applyLabel="Save Storage"
+            width="xl"
+            onApply={() => {
+              console.log("Save Storage clicked");
+              setNewStorageOpen(false);
+            }}
+          >
+          <AddNewStorage />
       </DynamicFilterDrawer>
 
      

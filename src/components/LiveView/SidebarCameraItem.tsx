@@ -6,12 +6,11 @@ interface Camera {
   name: string;
   building: string;
   floor: string;
-  // Add any other fields your API provides
 }
 
 interface SidebarCameraItemProps {
   camera: Camera;
-  onSelect?: (camera: Camera) => void; // Optional callback if you want selection
+  onSelect?: (camera: Camera) => void; 
 }
 
 const SidebarCameraItem: React.FC<SidebarCameraItemProps> = ({ camera, onSelect }) => {
