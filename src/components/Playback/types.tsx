@@ -1,5 +1,4 @@
-// Types for Playback components
-
+// types.ts
 export interface TimelineTrack {
   name: string;
   selected: boolean;

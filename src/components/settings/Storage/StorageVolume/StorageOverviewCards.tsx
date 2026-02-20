@@ -29,13 +29,12 @@ const cards = [
   {
     icon: Activity,
     label: "Storage Health",
-    value: "94%",
+    value: "44%",
     sub: "Score",
-    bar: 94,
+    bar: 44,
     color: "bg-yellow-50 text-yellow-600",
   },
 ];
-
 
 export function StorageOverviewCards() {
   return (
@@ -45,59 +44,61 @@ export function StorageOverviewCards() {
           key={c.label}
           className="rounded-xl shadow-sm bg-card px-4 py-3"
         >
-          {/* Header */}
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="flex gap-3 items-center">
+            {/* ICON */}
             <div
-                className={cn(
-                  "h-9 w-9 rounded-sm flex items-center justify-center",
-                  c.color
-                )}
-              >
+              className={cn(
+                "h-9 w-9 rounded-sm flex items-center justify-center shrink-0",
+                c.color
+              )}
+            >
               <c.icon className="h-4 w-4" strokeWidth={1.9} />
             </div>
-            <div>
-                <h2 className="text-lg font-roboto font-semibold text-neutral-700">{c.label}</h2>
-                  <div className="flex items-end gap-1">
-                      <span className="text-xl font-bold font-roboto  text-neutral-800">
-                          {c.value}
-                      </span>
-                      {c.sub && (
-                        <span className="text-xs font-roboto font-medium text-neutral-500">
-                           {c.sub}
-                        </span>
-                      )}
-                  </div>
 
-                 {/* Hint */}
-                  {c.hint && (
-                    <p className="text-xs mt-0.5">
-                      <span className="text-primary font-medium">
-                        {c.hint.value}
-                      </span>{" "}
-                      <span className="text-muted-foreground">
-                        {c.hint.label}
-                      </span>
-                    </p>
-                  )}
-                  {c.hintText && (
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {c.hintText}
-                  </p>
+            {/* RIGHT CONTENT */}
+            <div className="flex-1">
+              <h2 className="text-[14px] font-roboto font-semibold text-neutral-700">
+                {c.label}
+              </h2>
+
+              <div className="flex items-end gap-1 mt-1">
+                <span className="text-xl font-bold font-roboto text-neutral-800">
+                  {c.value}
+                </span>
+                {c.sub && (
+                  <span className="text-xs font-roboto font-medium text-neutral-500">
+                    {c.sub}
+                  </span>
+                )}
+              </div>
+
+              {/* Hint */}
+              {c.hint && (
+                <p className="text-sm mt-0.5">
+                  <span className="text-primary font-medium">
+                    {c.hint.value}
+                  </span>{" "}
+                  <span className="font-roboto text-neutral-400">
+                    {c.hint.label}
+                  </span>
+                </p>
+              )}
+
+              {c.hintText && (
+                <p className="text-sm font-roboto text-neutral-400 mt-0.5">
+                  {c.hintText}
+                </p>
+              )}
+
+                {c.bar !== undefined && (
+                    <Progress
+                      value={c.bar}
+                      className="h-1.5 mt-3 bg-muted"
+                      indicatorClassName="bg-yellow-400"
+                    />
                 )}
             </div>
-         
-          
           </div>
-
-         
-
-          {/* Progress */}
-          {c.bar && (
-            <Progress
-              value={c.bar}
-              className="h-1.5 mt-3 bg-muted"
-            />
-          )}
         </div>
       ))}
     </div>

@@ -1,5 +1,5 @@
-export const API_BASE_URL = "http://192.168.11.61:9080/api/v1";
-export const API_BASE_URL2 = "http://192.168.10.107:8081/api/v1";
+export const API_BASE_URL = "http://192.168.10.190:9080/api/v1";
+export const API_BASE_URL2 = "http://192.168.10.190:9081/api/v1";
 export const APISERVERURL = "http://192.168.10.190:8090/";
 
 export const API_URLS = {

@@ -1,5 +1,3 @@
-// Playback Alerts Bar Component
-// Bottom bar with expandable alerts table - NOT fixed, flows in layout
 
 import { useState } from "react";
 import { Filter, ChevronDown, ChevronUp } from "lucide-react";

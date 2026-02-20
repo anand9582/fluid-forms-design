@@ -50,7 +50,7 @@ export function CameraGrid({
      <div className="flex-1 flex flex-col bg-muted/20">
       <div className="flex-1">
         <div
-            className="grid h-full "
+            className="grid h-full"
             style={{
               gridTemplateColumns: `repeat(${layout.cols}, 1fr)`,
               gridTemplateRows: `repeat(${layout.rows}, 1fr)`,

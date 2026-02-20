@@ -12,6 +12,7 @@ import { SettingsLayout } from "@/components/layout/SettingsLayout";
 // import { AddedDevicesPage } from "@/components/settings/Added-Devices/AddedDevicesPage";
 import NotFound from "./pages/NotFound";
 import LiveView from "@/pages/LiveView";
+import PlayBack from "@/pages/PlayBack";
 import { ProtectedRoute } from "@/components/Routes/ProtectedRoute";
 
 const queryClient = new QueryClient();
@@ -38,6 +39,7 @@ const App = () => (
                   <Route path="/dashboard" element={<Index />} />
                   {/* <Route path="/" element={<AddedDevicesPage />} /> */}
                   <Route path="/live" element={<LiveView />} />
+                   <Route path="/playback" element={<PlayBack />} />
                   <Route path="/settings" element={<SettingsLayout />}>
                     <Route index element={<SettingsOverview />} />
                   </Route>

@@ -1,70 +1,99 @@
 // Playback Page
-// Main page component that composes all Playback components together
-// Layout: Toolbar > [Sidebar | Grid] > TimelineBar > Timeline (expandable) > AlertsBar
+// Fully functional playback with sidebar, toolbar, grid, timeline
+// NO vertical scroll – fits exactly in viewport
 
 import { useState } from "react";
-import { CameraTreeSidebar, LiveViewToolbar } from "@/components/LiveView";
+import {
+  CameraTreeSidebar,
+  LiveViewToolbar,
+} from "@/components/LiveView/PagesInclude";
+import { Sidebar } from "@/components/dashboard/Sidebar";
 import {
   PlaybackCameraGrid,
   PlaybackTimelineBar,
   PlaybackTimeline,
   PlaybackAlertsBar,
-} from "@/components/playback";
+} from "@/components/Playback/PagesInclude";
+
+import { usePlayback } from "@/hooks/use-playback";
 
 export default function Playback() {
   const [showCameraList, setShowCameraList] = useState(true);
   const [selectedLayout, setSelectedLayout] = useState("2x2");
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isSynced, setIsSynced] = useState(true);
-  const [playheadPosition] = useState(52);
-  const [isTimelineExpanded, setIsTimelineExpanded] = useState(true);
+  const [isTimelineExpanded, setIsTimelineExpanded] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
 
-  return (
-    <div className="flex flex-col h-screen animate-fade-in">
-      {/* Top Toolbar */}
-      <LiveViewToolbar
-        showCameraList={showCameraList}
-        onToggleCameraList={() => setShowCameraList(!showCameraList)}
-        selectedLayout={selectedLayout}
-        onLayoutChange={setSelectedLayout}
-      />
+  const playback = usePlayback();
 
-      {/* Main Content Area */}
-      <div className="flex flex-1 overflow-hidden min-h-0">
-        {/* Left Sidebar - Camera Tree */}
+    const handleCameraClick = (cameraId: string) => {
+           console.log(cameraId);
+      };
+
+  return (
+    /* ROOT – takes full available height from AppLayout */
+    <div className="flex flex-col h-full min-h-0 bg-background overflow-hidden">
+       {/* Sidebar (left fixed) */}
+      <Sidebar />
+      {/* TOP TOOLBAR (fixed height) */}
+
+     
+      <div className="shrink-0  ml-[80px]">
+        <LiveViewToolbar
+          showCameraList={showCameraList}
+          onToggleCameraList={() => setShowCameraList(!showCameraList)}
+          selectedLayout={selectedLayout}
+          onLayoutChange={setSelectedLayout}
+        />
+      </div>
+
+      {/* MAIN CONTENT */}
+      <div className="flex flex-1 min-h-0 overflow-hidden gap-3  ml-[80px] py-3 px-3">
+        {/* CAMERA TREE */}
         <CameraTreeSidebar
           isVisible={showCameraList}
+           onCameraClick={handleCameraClick}
           onClose={() => setShowCameraList(false)}
         />
 
-        {/* Center - Camera Grid */}
-        <div className="flex-1 flex flex-col overflow-hidden bg-muted/30">
+        {/* CAMERA GRID */}
           <PlaybackCameraGrid
             selectedLayout={selectedLayout}
-            playheadPosition={playheadPosition}
+            playheadPosition={playback.playheadPosition}
+            currentTimestamp={playback.currentTimestamp}
+            isPlaying={playback.isPlaying}
             selectedSlot={selectedSlot}
             onSlotSelect={setSelectedSlot}
           />
-        </div>
       </div>
 
-      {/* Bottom stack: TimelineBar > Timeline Tracks > Alerts */}
-      <PlaybackTimelineBar
-        isPlaying={isPlaying}
-        onTogglePlay={() => setIsPlaying(!isPlaying)}
-        isSynced={isSynced}
-        onToggleSync={setIsSynced}
-        isTimelineExpanded={isTimelineExpanded}
-        onToggleTimeline={() => setIsTimelineExpanded(!isTimelineExpanded)}
-      />
+      {/* TIMELINE (fixed height – always visible) */}
+      <div className="shrink-0 z-50">
+        <PlaybackTimelineBar
+          isPlaying={playback.isPlaying}
+          onTogglePlay={playback.togglePlay}
+          onStop={playback.stop}
+          onRewind={playback.rewind}
+          onFastForward={playback.fastForward}
+          onSkipBack={playback.skipBack}
+          onSkipForward={playback.skipForward}
+          speed={playback.speed}
+          currentTimestamp={playback.currentTimestamp}
+          isSynced={playback.isSynced}
+          onToggleSync={playback.setIsSynced}
+          isTimelineExpanded={isTimelineExpanded}
+          onToggleTimeline={() =>
+            setIsTimelineExpanded(!isTimelineExpanded)
+          }
+        />
 
-      <PlaybackTimeline
-        playheadPosition={playheadPosition}
-        isExpanded={isTimelineExpanded}
-      />
+        <PlaybackTimeline
+          playheadPosition={playback.playheadPosition}
+          isExpanded={isTimelineExpanded}
+          onSeek={playback.seekTo}
+        />
 
-      <PlaybackAlertsBar />
-    </div>
+        <PlaybackAlertsBar />
+      </div>
+       </div>
   );
 }

@@ -1,4 +1,3 @@
-// LiveView.tsx
 import { useState, useMemo, useCallback, useEffect } from "react";
 import {
   CameraTreeSidebar,
@@ -7,6 +6,7 @@ import {
   AISurveillanceSidebar,
   LiveAlertsBar,
 } from "@/components/LiveView/PagesInclude";
+
 import { useGridController } from "@/hooks/useGridController";
 import { SidebarCameraStore } from "@/Store/SidebarCameraStore";
 import useGridStore from "@/Store/UseGridStore";
@@ -81,7 +81,7 @@ export default function LiveView() {
       }));
     };
 
-  /*  Selected camera for AI sidebar */
+//  Selected camera for sidebar
   const getSelectedCamera = useCallback(() => {
     if (selectedSlotIndex === null) return null;
     return cameraSlots[selectedSlotIndex];
@@ -94,7 +94,7 @@ export default function LiveView() {
         onToggleCameraList={() => setShowCameraList(!showCameraList)}
       />
 
-      <div className="flex flex-1 overflow-hidden gap-3">
+      <div className="flex flex-1  gap-3 min-h-0 overflow-hidden">
         <div className="flex gap-3 py-3 pl-3 flex-1">
           <CameraTreeSidebar
             isVisible={showCameraList}
@@ -118,7 +118,7 @@ export default function LiveView() {
       </div>
 
       <div className="h-[53px] shrink-0">
-        <LiveAlertsBar />
+         <LiveAlertsBar />
       </div>
     </div>
   );

@@ -11,10 +11,8 @@ import { StorageUnitCard } from "@/components/settings/Storage/StorageVolume/Sto
 
 export function StorageListView({
   onManage,
-  onAddStorage,
 }: {
   onManage: (u: StorageUnit) => void;
-  onAddStorage: () => void;
 }) {
   const [units, setUnits] = useState<StorageUnit[]>([]);
   const [filter, setFilter] = useState<"primary" | "secondary">("primary");
@@ -34,40 +32,42 @@ export function StorageListView({
       {/* ===== Header + Filters + Add Button ===== */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <h3 className="text-base sm:text-lg font-semibold text-foreground">
-            Connected Storage Units
-          </h3>
-          <span className="text-xs bg-muted text-muted-foreground px-3 py-1 rounded-full">
-            {filteredUnits.length} Devices
-          </span>
+            <h3 className="text-base sm:text-lg font-semibold text-black">
+              Connected Storage Units
+            </h3>
+            <span className="text-xs bg-gray-200 font-roboto font-medium text-neutral-700 px-3 py-1 rounded-full">
+                {filteredUnits.length}
+                 Devices Total
+            </span>
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Primary / Secondary Toggle */}
-          <div className="flex border border-border rounded-lg overflow-hidden">
-            <button
-              onClick={() => setFilter("primary")}
-              className={cn(
-                "px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium transition-colors",
-                filter === "primary"
-                  ? "bg-foreground text-background"
-                  : "bg-card text-muted-foreground hover:text-foreground"
-              )}
-            >
+          <div className="flex rounded-lg overflow-hidden bg-gray-100 p-1">
+              <button
+                onClick={() => setFilter("primary")}
+                className={cn(
+                  "px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-roboto font-medium rounded-md transition-all",
+                  filter === "primary"
+                    ? "bg-white text-primary shadow-md"
+                    : "bg-transparent  text-gray-500 hover:text-gray-700"
+                )}
+              >
               Primary
             </button>
+
             <button
-              onClick={() => setFilter("secondary")}
-              className={cn(
-                "px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium transition-colors",
-                filter === "secondary"
-                  ? "bg-foreground text-background"
-                  : "bg-card text-muted-foreground hover:text-foreground"
-              )}
-            >
+                onClick={() => setFilter("secondary")}
+                className={cn(
+                  "px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-roboto font-medium rounded-md transition-all",
+                  filter === "secondary"
+                    ? "bg-white text-primary shadow-md"
+                    : "bg-transparent text-black hover:text-gray-700"
+                )}
+              >
               Secondary
             </button>
           </div>
+
 
           {/* Add Storage Button */}
           <Button
@@ -84,13 +84,14 @@ export function StorageListView({
 
       {/* ===== Storage Cards ===== */}
       <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {filteredUnits.map((unit) => (
-          <StorageUnitCard
-            key={unit.id}
-            unit={unit}
-            onManage={onManage}
-          />
-        ))}
+         {filteredUnits.map((unit, index) => (
+            <StorageUnitCard
+              key={unit.id}
+              unit={unit}
+              index={index}  
+              onManage={onManage}
+            />
+          ))}
       </div>
         <DynamicFilterDrawer
             open={newStorageOpen}
@@ -104,7 +105,7 @@ export function StorageListView({
               setNewStorageOpen(false);
             }}
           >
-          <AddNewStorage />
+           <AddNewStorage />
       </DynamicFilterDrawer>
 
      

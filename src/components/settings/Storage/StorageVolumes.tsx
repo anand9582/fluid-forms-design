@@ -7,11 +7,10 @@ export function StorageVolume() {
   const [selectedUnit, setSelectedUnit] = useState<StorageUnit | null>(null);
 
   return (
-    <div className="max-w-[1200px] mx-auto p-4">
+    <div className="max-w-[1200px] mx-auto pt-4">
       {selectedUnit ? (
         <ManageStorageView
           unit={selectedUnit}
-          onBack={() => setSelectedUnit(null)}
           />
         ) : (
           <StorageListView onManage={setSelectedUnit} />

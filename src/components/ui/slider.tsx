@@ -4,8 +4,8 @@ import { cn } from "@/lib/utils";
 
 interface SliderProps
   extends React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root> {
-  trackHeight?: number; // line thickness
-  thumbSize?: number;   // knob size
+  trackHeight?: number;
+  thumbSize?: number; 
 }
 
 const Slider = React.forwardRef<

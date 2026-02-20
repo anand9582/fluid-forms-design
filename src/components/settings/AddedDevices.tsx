@@ -464,7 +464,7 @@ function PasswordCell({ password }: { password: string }) {
 
         {/* Bulk Action Bar */}
         {Object.keys(rowSelection).length > 0 && (
-          <div className=" bottom-0 left-0 right-0 bg-bgprimarylight rounded-md mt-4 text-white px-6 py-3 flex items-center justify-between z-50">
+          <div className="bottom-0 left-0 right-0 bg-bgprimarylight rounded-md mt-4 text-white px-6 py-3 flex items-center justify-between z-50">
             <div className="flex items-center gap-2">
               <span className="bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center text-sm font-medium">
                 {Object.keys(rowSelection).length}

@@ -197,7 +197,7 @@ export function DevicesDataTable({
   accessorKey: "name",
   header: "Device Name",
   cell: ({ row }) => {
-    const deviceName = row.original.name;
+    const deviceName = row.getValue("name") as string;
 
     return (
       <Tooltip>
@@ -349,7 +349,7 @@ export function DevicesDataTable({
   ];
 
   const table = useReactTable({
-      data,
+      data: tableData, 
       columns,
       getRowId: (row) => row.id,
       getCoreRowModel: getCoreRowModel(),

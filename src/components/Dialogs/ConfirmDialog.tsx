@@ -31,12 +31,12 @@ interface SelectOption {
 interface ConfirmDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  title: string;
+  title?: string;
   description?: string | ReactNode;
    icon?: IconType | React.ComponentType<any>; 
   size?: SizeVariant;
   headerCentered?: boolean; 
-
+ fullWidthActions?: boolean;
   // Primary action
   confirmLabel?: string;
   confirmVariant?: "default" | "destructive" | "outline";
@@ -94,7 +94,7 @@ export function ConfirmDialog({
   onOpenChange,
   title,
   description,
-  icon, // optional
+  icon, 
   size = "md",
   confirmLabel = "Confirm",
   confirmVariant = "default",
@@ -107,6 +107,7 @@ export function ConfirmDialog({
   selectLabel,
   selectPlaceholder = "Select an option",
   selectRequired = false,
+  fullWidthActions = false,
   headerCentered = false, 
   children,
 }: ConfirmDialogProps) {
@@ -208,26 +209,42 @@ export function ConfirmDialog({
         {/* Custom content slot */}
         {children && <div className="py-2">{children}</div>}
 
-        <DialogFooter className="footerbottom flex flex-col-reverse gap-2 sm:flex-row sm:justify-end mt-2">
-                  {showCancel && (
-                    <Button
-                      variant="outline"
-                      onClick={handleCancel}
-                      className="px-8"
-                      size={size === "sm" ? "sm" : "default"}
-                    >
-                      {cancelLabel}
-                    </Button>
-                  )}
-                  <Button
-                    variant={confirmVariant}
-                    onClick={handleConfirm}
-                    className="bg-primary"
-                    size={size === "sm" ? "sm" : "default"}
-                  >
-                    {confirmLabel}
-                  </Button>
-                </DialogFooter>
+  <DialogFooter
+  className={cn(
+    "footerbottom mt-2 gap-2 flex",
+    fullWidthActions
+      ? "flex-col sm:flex-row"
+      : "flex-col-reverse sm:flex-row sm:justify-end"
+  )}
+>
+  {showCancel && (
+    <Button
+      variant="outline"
+      onClick={handleCancel}
+      className={cn(
+        "px-8",
+        fullWidthActions && "w-full  flex-1"
+      )}
+      size={size === "sm" ? "sm" : "default"}
+    >
+      {cancelLabel}
+    </Button>
+  )}
+
+  <Button
+    variant={confirmVariant}
+    onClick={handleConfirm}
+    className={cn(
+      "bg-primary",
+      fullWidthActions && "w-full flex-1 bg-red-600"
+    )}
+    size={size === "sm" ? "sm" : "default"}
+  >
+    {confirmLabel}
+  </Button>
+</DialogFooter>
+
+
 
                 </DialogContent>
               </Dialog>
@@ -237,7 +254,6 @@ export function ConfirmDialog({
 // Hook for easy dialog management
   export function useConfirmDialog() {
     const [isOpen, setIsOpen] = useState(false);
-
     const openDialog = () => setIsOpen(true);
     const closeDialog = () => setIsOpen(false);
 

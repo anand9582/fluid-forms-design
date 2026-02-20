@@ -40,7 +40,6 @@ export function CameraTree({ devices, onCameraClick = () => {} }: Props) {
 
         return (
           <div key={building}>
-            {/* Building */}
             <button
               onClick={() =>
                 setOpenBuildings((p) => ({

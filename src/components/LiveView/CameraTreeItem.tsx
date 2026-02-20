@@ -27,7 +27,7 @@ export function CameraTreeItem({ camera, onCameraClick }: Props) {
   return (
     <div
       ref={dragRef}
-      onClick={handleClick}
+      onDoubleClick={handleClick}
       className={`flex items-center justify-between px-2 py-1 rounded-md cursor-pointer
         hover:bg-muted ${isDragging ? "opacity-50" : ""}`}
     >

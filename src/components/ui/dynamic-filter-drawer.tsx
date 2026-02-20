@@ -7,8 +7,6 @@
     DrawerTitle,
   } from "@/components/ui/drawer";
   import { Button } from "@/components/ui/button";
-  import { Input } from "@/components/ui/input";
-  import { Checkbox } from "@/components/ui/checkbox";
   import { cn } from "@/lib/utils";
 
   type DrawerWidth =

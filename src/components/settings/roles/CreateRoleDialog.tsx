@@ -14,7 +14,7 @@ interface FormValues {
 interface CreateRoleDialogProps {
   open: boolean;
   onClose: () => void;
-  onCreate?: () => void; // optional callback to refresh roles
+  onCreate?: () => void; 
 }
 
 export function CreateRoleDialog({
@@ -58,7 +58,7 @@ export function CreateRoleDialog({
       toast.success("Role created successfully!");
       reset();
       onClose();
-      onCreate?.(); // refresh roles list
+      onCreate?.(); 
     } catch (err: any) {
       console.error(err);
       toast.error(err.message || "Something went wrong");
