@@ -36,7 +36,7 @@ export function PlaybackTimelineBar({
   isSynced, onToggleSync, isTimelineExpanded, onToggleTimeline,
   zoomLevel, onZoomChange,
 }: PlaybackTimelineBarProps) {
-  const zoomPercent = ((zoomLevel - 1) / 9) * 100; // 1-10 mapped to 0-100%
+  const zoomPercent = ((zoomLevel - 1) / 9) * 100; 
   return (
     <div className="flex items-center gap-1.5 px-3 py-1 border-t border-border bg-background flex-shrink-0">
       {/* TIMELINES label */}
