@@ -1,870 +1,96 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Dynamic VMS Multi Camera Sync Playback + Bookmarks</title>
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #111;
-            color: #eee;
-            margin: 0;
-            padding: 20px;
-        }
-
-        h2 {
-            text-align: center;
-            margin-bottom: 15px;
-        }
-
-        .controls {
-            background: #222;
-            padding: 15px;
-            border-radius: 10px;
-            max-width: 1200px;
-            margin: auto;
-            margin-bottom: 20px;
-        }
-
-        .row {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-top: 10px;
-        }
-
-        input, select {
-            flex: 1;
-            padding: 10px;
-            border-radius: 6px;
-            border: none;
-            font-size: 14px;
-        }
-
-        button {
-            padding: 10px;
-            border-radius: 6px;
-            border: none;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: bold;
-        }
-
-        .btnPlay {
-            background: #28a745;
-            color: white;
-        }
-        .btnPlay:hover {
-            background: #218838;
-        }
-
-        .btnStop {
-            background: #dc3545;
-            color: white;
-        }
-        .btnStop:hover {
-            background: #b52a37;
-        }
-
-        .btnSync {
-            background: #007bff;
-            color: white;
-        }
-        .btnSync:hover {
-            background: #0056b3;
-        }
-
-        .btnPause {
-            background: #ffc107;
-            color: black;
-        }
-        .btnPause:hover {
-            background: #d9a406;
-        }
-
-        .btnAdd {
-            background: #17a2b8;
-            color: white;
-        }
-        .btnAdd:hover {
-            background: #117a8b;
-        }
-
-        .btnRemove {
-            background: #6c757d;
-            color: white;
-        }
-        .btnRemove:hover {
-            background: #555;
-        }
-
-        .btnBookmark {
-            background: #ff9800;
-            color: black;
-        }
-        .btnBookmark:hover {
-            background: #e68900;
-        }
-
-        .btnShowBookmark {
-            background: #9c27b0;
-            color: white;
-        }
-        .btnShowBookmark:hover {
-            background: #7b1fa2;
-        }
-
-        .btnDeleteBookmark {
-            background: #444;
-            color: white;
-            padding: 6px 8px;
-            font-size: 12px;
-        }
-        .btnDeleteBookmark:hover {
-            background: #666;
-        }
-
-        .syncStatus {
-            text-align: center;
-            margin-top: 10px;
-            font-size: 14px;
-            font-weight: bold;
-        }
-
-        .syncOn {
-            color: #00ff99;
-        }
-
-        .syncOff {
-            color: #ff6666;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
-            gap: 15px;
-            max-width: 1200px;
-            margin: auto;
-        }
-
-        .camBox {
-            background: #222;
-            padding: 10px;
-            border-radius: 10px;
-        }
-
-        .camHeader {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-bottom: 10px;
-            font-size: 14px;
-            color: #ddd;
-        }
-
-        video {
-            width: 100%;
-            height: 260px;
-            background: black;
-            border-radius: 8px;
-        }
-
-        .sessionText {
-            font-size: 11px;
-            color: #aaa;
-            margin-top: 6px;
-            word-break: break-all;
-        }
-
-        .camFooter {
-            display: flex;
-            gap: 8px;
-            margin-top: 10px;
-            flex-wrap: wrap;
-        }
-
-        .camFooter button {
-            flex: 1;
-            min-width: 100px;
-        }
-
-        .bookmarkBox {
-            margin-top: 10px;
-            padding: 10px;
-            background: #111;
-            border-radius: 8px;
-            max-height: 180px;
-            overflow-y: auto;
-        }
-
-        .bookmarkItem {
-            background: #222;
-            padding: 8px;
-            border-radius: 6px;
-            margin-bottom: 8px;
-            font-size: 13px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .bookmarkItem span {
-            cursor: pointer;
-            color: #00c3ff;
-            flex: 1;
-        }
-
-        .bookmarkItem span:hover {
-            text-decoration: underline;
-        }
-    </style>
+<meta charset="UTF-8">
+<title>Single Camera Playback + Bookmarks</title>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<style>
+    body { font-family: Arial; background:#111; color:#eee; padding:20px; }
+    h2 { text-align:center; margin-bottom:15px; }
+    .controls { background:#222; padding:15px; border-radius:10px; max-width:600px; margin:auto; margin-bottom:20px; }
+    input, select { padding:10px; border-radius:6px; border:none; font-size:14px; width:100%; margin-bottom:10px; }
+    button { padding:10px; border-radius:6px; border:none; cursor:pointer; font-weight:bold; margin-right:5px; }
+    .btnPlay { background:#28a745; color:white; }
+    .btnStop { background:#dc3545; color:white; }
+    .btnBookmark { background:#ff9800; color:black; }
+    .btnShowBookmark { background:#9c27b0; color:white; }
+    video { width:100%; height:300px; background:black; border-radius:8px; margin-top:10px; }
+    .bookmarkBox { margin-top:10px; background:#111; padding:10px; border-radius:8px; max-height:180px; overflow-y:auto; }
+    .bookmarkItem { background:#222; padding:8px; border-radius:6px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; }
+    .bookmarkItem span { cursor:pointer; color:#00c3ff; flex:1; }
+    .bookmarkItem span:hover { text-decoration:underline; }
+</style>
 </head>
-
 <body>
 
-<h2>🎥 Dynamic Multi Camera Sync Playback (VMS) + Bookmarks</h2>
+<h2>🎥 Single Camera Playback + Bookmarks</h2>
 
 <div class="controls">
-    <div class="row">
-        <input id="cameraIdInput" type="number" placeholder="Enter Camera ID (Example: 3)">
-        <button class="btnAdd" onclick="addCamera()">➕ Add Camera</button>
-    </div>
+    <input id="cameraIdInput" type="number" placeholder="Enter Camera ID (Example: 3)">
+    <input id="startDt" type="datetime-local" value="2026-02-05T00:00:00">
+    <input id="endDt" type="datetime-local" value="2026-02-05T23:59:59">
 
-    <div class="row">
-        <input id="startDt" type="datetime-local" value="2026-02-05T00:00:00">
-        <input id="endDt" type="datetime-local" value="2026-02-05T23:59:59">
-        <select id="masterSelect"></select>
-    </div>
-
-    <div class="row">
-        <button class="btnPlay" onclick="playAll()">▶ Play All</button>
-        <button class="btnPause" onclick="pauseAll()">⏸ Pause All</button>
-        <button class="btnSync" onclick="toggleSync()">🔄 Sync ON/OFF</button>
-        <button class="btnStop" onclick="stopAll()">🛑 Stop All</button>
-    </div>
-
-    <div class="syncStatus">
-        Sync Status: <span id="syncStatusText" class="syncOff">OFF</span>
+    <div style="margin-top:10px;">
+        <button class="btnPlay" onclick="startCamera()">▶ Play</button>
+        <button class="btnStop" onclick="stopCamera()">🛑 Stop</button>
+        <button class="btnBookmark" onclick="addBookmark()">⭐ Add Bookmark</button>
+        <button class="btnShowBookmark" onclick="loadBookmarks()">📌 Show Bookmarks</button>
     </div>
 </div>
 
-<div class="grid" id="grid"></div>
-
+<video id="video" controls></video>
+<div id="bookmarkBox" class="bookmarkBox"><i>No bookmarks loaded...</i></div>
 
 <script>
-    const BASE_URL = "http://192.168.11.131:8081";
+const BASE_URL = "http://192.168.11.131:8081";
+let player = { video: document.getElementById("video"), hls: null, blobUrl: null, sessionId: null };
 
-    let syncEnabled = false;
-    let syncInterval = null;
-
-    const players = [];
-
-
-    function formatTime(seconds) {
-        if (!seconds || seconds < 0) seconds = 0;
-        const h = Math.floor(seconds / 3600);
-        const m = Math.floor((seconds % 3600) / 60);
-        const s = Math.floor(seconds % 60);
-
-        if (h > 0) {
-            return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-        }
-        return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-    }
-
-
-    function updateMasterDropdown() {
-        const masterSelect = document.getElementById("masterSelect");
-        masterSelect.innerHTML = "";
-
-        players.forEach((p, index) => {
-            const opt = document.createElement("option");
-            opt.value = index;
-            opt.innerText = `Master: Camera ${p.cameraId}`;
-            masterSelect.appendChild(opt);
-        });
-
-        if (players.length === 0) {
-            const opt = document.createElement("option");
-            opt.value = "";
-            opt.innerText = "No Camera Added";
-            masterSelect.appendChild(opt);
-        }
-    }
-
-
-    function attachDoubleClickSeek(video) {
-        video.addEventListener("dblclick", (e) => {
-            const rect = video.getBoundingClientRect();
-            const clickX = e.clientX - rect.left;
-
-            if (clickX < rect.width / 2) {
-                video.currentTime = Math.max(0, video.currentTime - 10);
-            } else {
-                video.currentTime = video.currentTime + 10;
-            }
-
-            if (syncEnabled) {
-                syncAllNow();
-            }
-        });
-    }
-
-
-    async function addCamera() {
-        const cameraId = document.getElementById("cameraIdInput").value;
-
-        if (!cameraId) {
-            alert("Please enter cameraId");
-            return;
-        }
-
-        if (players.some(p => p.cameraId == cameraId)) {
-            alert("This camera is already added!");
-            return;
-        }
-
-        const grid = document.getElementById("grid");
-
-        const camBox = document.createElement("div");
-        camBox.className = "camBox";
-
-        camBox.innerHTML = `
-            <div class="camHeader">
-                <span>Camera ID: ${cameraId}</span>
-                <span id="time-${cameraId}">00:00</span>
-            </div>
-
-            <video id="video-${cameraId}" controls></video>
-
-            <div class="sessionText">
-                Session: <span id="sess-${cameraId}">-</span>
-            </div>
-
-            <div class="camFooter">
-                <button class="btnPlay" onclick="startCamera('${cameraId}')">▶ Play</button>
-                <button class="btnStop" onclick="stopCameraById('${cameraId}')">🛑 Stop</button>
-                <button class="btnBookmark" onclick="addBookmark('${cameraId}')">⭐ Add Bookmark</button>
-                <button class="btnShowBookmark" onclick="loadBookmarks('${cameraId}')">📌 Show Bookmarks</button>
-                <button class="btnRemove" onclick="removeCamera('${cameraId}')">❌ Remove</button>
-            </div>
-
-            <div class="bookmarkBox" id="bookmarkBox-${cameraId}">
-                <i style="color:#888;">No bookmarks loaded...</i>
-            </div>
-        `;
-
-        grid.appendChild(camBox);
-
-        const video = document.getElementById(`video-${cameraId}`);
-        attachDoubleClickSeek(video);
-
-        const playerObj = {
-            cameraId: cameraId,
-            video: video,
-            hls: null,
-            sessionId: null,
-            blobUrl: null,
-            sessLabel: document.getElementById(`sess-${cameraId}`),
-            timeLabel: document.getElementById(`time-${cameraId}`),
-            bookmarkBox: document.getElementById(`bookmarkBox-${cameraId}`),
-            element: camBox
-        };
-
-        players.push(playerObj);
-        updateMasterDropdown();
-
-        document.getElementById("cameraIdInput").value = "";
-    }
-
-
-    async function startCamera(cameraId) {
-        const player = players.find(p => p.cameraId == cameraId);
-        if (!player) return;
-
-        const start = document.getElementById("startDt").value;
-        const end = document.getElementById("endDt").value;
-
-        if (!start || !end) {
-            alert("Start and End datetime required");
-            return;
-        }
-
-        const apiUrl = `${BASE_URL}/api/playback/hls/playlist/${cameraId}?start=${start}&end=${end}`;
-
-        await stopCameraInternal(player, false);
-
-        console.log("▶ Playlist API:", apiUrl);
-
-        const res = await fetch(apiUrl);
-        const json = await res.json();
-
-        if (!json || !json.data) {
-            alert("Invalid playlist API response");
-            return;
-        }
-
-        const sessionId = json.data.sessionId;
-        const playlistText = json.data.playlist;
-
-        player.sessionId = sessionId;
-        player.sessLabel.innerText = sessionId;
-
-        const blob = new Blob([playlistText], { type: "application/vnd.apple.mpegurl" });
-        const blobUrl = URL.createObjectURL(blob);
-
-        player.blobUrl = blobUrl;
-
-        playHlsInternal(player, blobUrl);
-
-        if (syncEnabled) {
-            setTimeout(syncAllNow, 1200);
-        }
-    }
-
-
-    function playHlsInternal(player, blobUrl) {
-
-        if (player.hls) {
-            player.hls.destroy();
-            player.hls = null;
-        }
-
-        if (Hls.isSupported()) {
-
-            player.hls = new Hls({
-                maxBufferLength: 30,
-                maxMaxBufferLength: 60,
-                enableWorker: true,
-                lowLatencyMode: true
-            });
-
-            player.hls.loadSource(blobUrl);
-            player.hls.attachMedia(player.video);
-
-            player.hls.on(Hls.Events.MANIFEST_PARSED, function () {
-                player.video.play();
-            });
-
-            player.hls.on(Hls.Events.ERROR, function (event, data) {
-                console.error(`⚠ Camera ${player.cameraId} HLS error:`, data);
-                if (data.fatal) {
-                    try {
-                        player.hls.recoverMediaError();
-                    } catch (e) {
-                        console.error("Recovery failed:", e);
-                    }
-                }
-            });
-
-        } else if (player.video.canPlayType('application/vnd.apple.mpegurl')) {
-            player.video.src = blobUrl;
-            player.video.addEventListener('loadedmetadata', function () {
-                player.video.play();
-            });
-        } else {
-            alert("HLS not supported in this browser.");
-        }
-    }
-
-
-    function syncAllNow() {
-        if (players.length <= 1) return;
-
-        const masterIndex = parseInt(document.getElementById("masterSelect").value);
-
-        if (isNaN(masterIndex) || !players[masterIndex]) return;
-
-        const masterVideo = players[masterIndex].video;
-        const masterTime = masterVideo.currentTime;
-
-        players.forEach((p, idx) => {
-            if (idx !== masterIndex) {
-                try {
-                    p.video.currentTime = masterTime;
-                } catch (e) {
-                    console.warn("Seek failed:", e);
-                }
-            }
-        });
-    }
-
-
-    function toggleSync() {
-        syncEnabled = !syncEnabled;
-
-        const syncText = document.getElementById("syncStatusText");
-
-        if (syncEnabled) {
-            syncText.innerText = "ON";
-            syncText.classList.remove("syncOff");
-            syncText.classList.add("syncOn");
-
-            syncAllNow();
-
-            syncInterval = setInterval(() => {
-                if (players.length <= 1) return;
-
-                const masterIndex = parseInt(document.getElementById("masterSelect").value);
-                if (isNaN(masterIndex) || !players[masterIndex]) return;
-
-                const masterTime = players[masterIndex].video.currentTime;
-
-                players.forEach((p, idx) => {
-                    if (idx !== masterIndex) {
-                        const diff = Math.abs(p.video.currentTime - masterTime);
-                        if (diff > 1) {
-                            p.video.currentTime = masterTime;
-                        }
-                    }
-                });
-
-            }, 500);
-
-        } else {
-            syncText.innerText = "OFF";
-            syncText.classList.remove("syncOn");
-            syncText.classList.add("syncOff");
-
-            if (syncInterval) {
-                clearInterval(syncInterval);
-                syncInterval = null;
-            }
-        }
-    }
-
-
-    function pauseAll() {
-        players.forEach(p => p.video.pause());
-    }
-
-    function playAll() {
-        players.forEach(p => p.video.play());
-    }
-
-
-    async function stopCameraInternal(player, callApi) {
-
-        if (player.hls) {
-            player.hls.stopLoad();
-            player.hls.detachMedia();
-            player.hls.destroy();
-            player.hls = null;
-        }
-
-        player.video.pause();
-        player.video.removeAttribute("src");
-        player.video.load();
-
-        if (player.blobUrl) {
-            URL.revokeObjectURL(player.blobUrl);
-            player.blobUrl = null;
-        }
-
-        if (callApi && player.sessionId) {
-            try {
-                await fetch(`${BASE_URL}/api/playback/hls/stop/${player.sessionId}`, {
-                    method: "POST"
-                });
-            } catch (e) {
-                console.error("Stop API failed:", e);
-            }
-        }
-
-        player.sessionId = null;
-        player.sessLabel.innerText = "-";
-    }
-
-
-    async function stopCameraById(cameraId) {
-        const player = players.find(p => p.cameraId == cameraId);
-        if (!player) return;
-
-        await stopCameraInternal(player, true);
-    }
-
-
-    async function stopAll() {
-
-        if (syncInterval) {
-            clearInterval(syncInterval);
-            syncInterval = null;
-        }
-
-        syncEnabled = false;
-        document.getElementById("syncStatusText").innerText = "OFF";
-        document.getElementById("syncStatusText").classList.remove("syncOn");
-        document.getElementById("syncStatusText").classList.add("syncOff");
-
-        for (let p of players) {
-            await stopCameraInternal(p, true);
-        }
-
-        console.log("🛑 All cameras stopped");
-    }
-
-
-    async function removeCamera(cameraId) {
-        const index = players.findIndex(p => p.cameraId == cameraId);
-        if (index === -1) return;
-
-        const player = players[index];
-
-        await stopCameraInternal(player, true);
-
-        player.element.remove();
-        players.splice(index, 1);
-
-        updateMasterDropdown();
-    }
-
-
-    // ------------------- BOOKMARK FEATURE -------------------
-
-<!--    async function addBookmark(cameraId) {-->
-
-<!--        const player = players.find(p => p.cameraId == cameraId);-->
-<!--        if (!player) return;-->
-
-<!--        const startDt = document.getElementById("startDt").value;-->
-
-<!--        if (!startDt) {-->
-<!--            alert("Start datetime missing");-->
-<!--            return;-->
-<!--        }-->
-
-<!--        const startTime = new Date(startDt);-->
-<!--        const currentSeconds = player.video.currentTime;-->
-
-<!--        const bookmarkTime = new Date(startTime.getTime() + (currentSeconds * 1000));-->
-
-<!--        const title = prompt("Enter Bookmark Title:", "Bookmark");-->
-<!--        if (title === null) return;-->
-
-<!--        const note = prompt("Enter Note (Optional):", "Test note");-->
-<!--        if (note === null) return;-->
-
-<!--        const createdBy = prompt("Enter Created By:", "101");-->
-<!--        if (createdBy === null) return;-->
-
-<!--        const payload = {-->
-<!--            cameraId: parseInt(cameraId),-->
-<!--            bookmarkTime: bookmarkTime.toISOString().substring(0, 19),-->
-<!--            title: title,-->
-<!--            note: note,-->
-<!--            createdBy: createdBy-->
-<!--        };-->
-
-<!--        try {-->
-<!--            const res = await fetch(`${BASE_URL}/api/bookmarks/addBookmark`, {-->
-<!--                method: "POST",-->
-<!--                headers: { "Content-Type": "application/json" },-->
-<!--                body: JSON.stringify(payload)-->
-<!--            });-->
-
-<!--            const json = await res.json();-->
-
-<!--            if (json.status === 200) {-->
-<!--                alert("✅ Bookmark Saved Successfully!");-->
-<!--                await loadBookmarks(cameraId);-->
-<!--            } else {-->
-<!--                alert("❌ Failed: " + json.message);-->
-<!--            }-->
-
-<!--        } catch (err) {-->
-<!--            console.error("Bookmark save error:", err);-->
-<!--            alert("❌ Error saving bookmark");-->
-<!--        }-->
-<!--    }-->
-
-        async function addBookmark(cameraId) {
-
-    const player = players.find(p => p.cameraId == cameraId);
-    if (!player) return;
-
-    const startDt = document.getElementById("startDt").value;
-
-    if (!startDt) {
-        alert("Start datetime missing");
-        return;
-    }
-
-    const startTime = new Date(startDt);
-    const currentSeconds = player.video.currentTime;
-
-    const bookmarkTime = new Date(startTime.getTime() + (currentSeconds * 1000));
-
-    const title = prompt("Enter Bookmark Title:", "Bookmark");
-    if (title === null) return;
-
-    const note = prompt("Enter Note (Optional):", "Test note");
-    if (note === null) return;
-
-    const createdBy = prompt("Enter Created By:", "101");
-    if (createdBy === null) return;
-
-    const payload = {
-        cameraId: parseInt(cameraId),
-        bookmarkTime: formatLocalDateTime(bookmarkTime), // ✅ FIXED
-        title: title,
-        note: note,
-        createdBy: createdBy
-    };
-
-    try {
-        const res = await fetch(`${BASE_URL}/api/bookmarks/addBookmark`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        });
-
-        const json = await res.json();
-
-        if (json.status === 200) {
-            alert("✅ Bookmark Saved Successfully!");
-            await loadBookmarks(cameraId);
-        } else {
-            alert("❌ Failed: " + json.message);
-        }
-
-    } catch (err) {
-        console.error("Bookmark save error:", err);
-        alert("❌ Error saving bookmark");
-    }
-}
-
-
-
-    async function loadBookmarks(cameraId) {
-
-        const player = players.find(p => p.cameraId == cameraId);
-        if (!player) return;
-
-        const fromDate = document.getElementById("startDt").value;
-        const toDate = document.getElementById("endDt").value;
-
-        if (!fromDate || !toDate) {
-            alert("Start and End datetime required");
-            return;
-        }
-
-        const url = `${BASE_URL}/api/bookmarks/bookmarkList?cameraId=${cameraId}&fromDate=${fromDate}&toDate=${toDate}`;
-
-        player.bookmarkBox.innerHTML = "<i style='color:#888;'>Loading bookmarks...</i>";
-
-        try {
-            const res = await fetch(url);
-            const json = await res.json();
-
-            if (!json.data || json.data.length === 0) {
-                player.bookmarkBox.innerHTML = "<i style='color:#888;'>No bookmarks found.</i>";
-                return;
-            }
-
-            player.bookmarkBox.innerHTML = "";
-
-            json.data.forEach(b => {
-
-                const div = document.createElement("div");
-                div.className = "bookmarkItem";
-
-                const span = document.createElement("span");
-                span.innerText = `⭐ ${b.bookmarkTime} (${b.title || "Bookmark"})`;
-                span.onclick = () => seekToBookmark(cameraId, b.bookmarkTime);
-
-                const delBtn = document.createElement("button");
-                delBtn.className = "btnDeleteBookmark";
-                delBtn.innerText = "Delete";
-                delBtn.onclick = () => deleteBookmark(cameraId, b.id);
-
-                div.appendChild(span);
-                div.appendChild(delBtn);
-
-                player.bookmarkBox.appendChild(div);
-            });
-
-        } catch (err) {
-            console.error("Load bookmark error:", err);
-            player.bookmarkBox.innerHTML = "<i style='color:red;'>Error loading bookmarks</i>";
-        }
-    }
-
-
-    function seekToBookmark(cameraId, bookmarkTime) {
-
-        const player = players.find(p => p.cameraId == cameraId);
-        if (!player) return;
-
-        const startDt = document.getElementById("startDt").value;
-        if (!startDt) return;
-
-        const startTime = new Date(startDt);
-        const bmTime = new Date(bookmarkTime);
-
-        const offsetSeconds = (bmTime - startTime) / 1000;
-
-        if (offsetSeconds < 0) {
-            alert("Bookmark is before playback start time!");
-            return;
-        }
-
-        player.video.currentTime = offsetSeconds;
-        player.video.play();
-
-        if (syncEnabled) {
-            syncAllNow();
-        }
-    }
-
-
-    async function deleteBookmark(cameraId, bookmarkId) {
-
-        if (!confirm("Are you sure you want to delete this bookmark?")) return;
-
-        try {
-            const res = await fetch(`${BASE_URL}/api/bookmarks/deleteBookmark/${bookmarkId}`, {
-                method: "DELETE"
-            });
-
-            const json = await res.json();
-
-            if (json.status === 200) {
-                alert("✅ Bookmark deleted");
-                await loadBookmarks(cameraId);
-            } else {
-                alert("❌ Failed: " + json.message);
-            }
-
-        } catch (err) {
-            console.error("Delete bookmark error:", err);
-            alert("❌ Error deleting bookmark");
-        }
-    }
-
-
-    function formatLocalDateTime(dateObj) {
+function formatLocalDateTime(dateObj) {
     const yyyy = dateObj.getFullYear();
-    const mm = String(dateObj.getMonth() + 1).padStart(2, "0");
-    const dd = String(dateObj.getDate()).padStart(2, "0");
-
-    const hh = String(dateObj.getHours()).padStart(2, "0");
-    const min = String(dateObj.getMinutes()).padStart(2, "0");
-    const ss = String(dateObj.getSeconds()).padStart(2, "0");
-
+    const mm = String(dateObj.getMonth()+1).padStart(2,'0');
+    const dd = String(dateObj.getDate()).padStart(2,'0');
+    const hh = String(dateObj.getHours()).padStart(2,'0');
+    const min = String(dateObj.getMinutes()).padStart(2,'0');
+    const ss = String(dateObj.getSeconds()).padStart(2,'0');
     return `${yyyy}-${mm}-${dd}T${hh}:${min}:${ss}`;
 }
 
+async function startCamera() {
+    const cameraId = document.getElementById("cameraIdInput").value;
+    const start = document.getElementById("startDt").value;
+    const end = document.getElementById("endDt").value;
+    if(!cameraId || !start || !end) return alert("Camera ID, Start and End required!");
 
 
-    // Update time labels
-    setInterval(() => {
-        players.forEach(p => {
-            p.timeLabel.innerText = formatTime(p.video.currentTime);
-        });
-    }, 500);
+    const apiUrl = `${BASE_URL}/api/playback/hls/playlist/${cameraId}?start=${start}&end=${end}`;
+    const res = await fetch(apiUrl);
+    const json = await res.json();
+    if(!json?.data) return alert("Invalid playlist response");
+
+    const sessionId = json.data.sessionId;
+    const playlistText = json.data.playlist;
+    player.sessionId = sessionId;
+
+    const blob = new Blob([playlistText], {type:"application/vnd.apple.mpegurl"});
+    const blobUrl = URL.createObjectURL(blob);
+    player.blobUrl = blobUrl;
+
+    if(player.hls) { player.hls.destroy(); player.hls=null; }
+
+    if(Hls.isSupported()) {
+        player.hls = new Hls({ maxBufferLength:30, maxMaxBufferLength:60, enableWorker:true, lowLatencyMode:true });
+        player.hls.loadSource(blobUrl);
+        player.hls.attachMedia(player.video);
+        player.hls.on(Hls.Events.MANIFEST_PARSED, ()=>player.video.play());
+    } else if(player.video.canPlayType('application/vnd.apple.mpegurl')) {
+        player.video.src = blobUrl;
+        player.video.addEventListener('loadedmetadata', ()=>player.video.play());
+    } else { alert("HLS not supported"); }
+}
+
+
+
+
 
 </script>
 

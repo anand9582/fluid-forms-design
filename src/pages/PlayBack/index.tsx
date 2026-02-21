@@ -1,74 +1,153 @@
-// Playback Page
-// Fully functional playback with sidebar, toolbar, grid, timeline
-// NO vertical scroll – fits exactly in viewport
-
-import { useState } from "react";
-import {
-  CameraTreeSidebar,
-  LiveViewToolbar,
-} from "@/components/LiveView/PagesInclude";
+// Playback.tsx
+import React, { useState } from "react";
 import { Sidebar } from "@/components/dashboard/Sidebar";
-import {
-  PlaybackCameraGrid,
-  PlaybackTimelineBar,
-  PlaybackTimeline,
-  PlaybackAlertsBar,
-} from "@/components/Playback/PagesInclude";
-
+import { CameraTreeSidebar, LiveViewToolbar } from "@/components/LiveView/PagesInclude";
+import { PlaybackCameraGrid, PlaybackTimelineBar, PlaybackTimeline, PlaybackAlertsBar } from "@/components/Playback/PagesInclude";
 import { usePlayback } from "@/hooks/use-playback";
+import usePlaybackGridStore from "@/Store/UsePlaybackGridStore";
+
+const BASE_URL = "http://192.168.11.131:8081";
+
+interface Player {
+  cameraId: string;
+  blobUrl: string;
+  sessionId: string;
+  date: Date;
+}
 
 export default function Playback() {
-  const [showCameraList, setShowCameraList] = useState(true);
-  const [selectedLayout, setSelectedLayout] = useState("2x2");
-  const [isTimelineExpanded, setIsTimelineExpanded] = useState(false);
-  const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
-
   const playback = usePlayback();
+  const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
+  const [isTimelineExpanded, setIsTimelineExpanded] = useState(false);
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [loadingCameraIds, setLoadingCameraIds] = useState<Set<string>>(() => new Set());
+  const [cameraErrors, setCameraErrors] = useState<Record<string, string>>({});
 
-    const handleCameraClick = (cameraId: string) => {
-           console.log(cameraId);
-      };
+  const { assignCameraToSlot } = usePlaybackGridStore();
+
+  /** ---------------- START CAMERA (returns blobUrl for preloading) ---------------- */
+  const startCamera = async (cameraId: string, date?: Date): Promise<string | null> => {
+    const targetDate = date || new Date();
+
+    const start = new Date(targetDate);
+    start.setHours(0, 0, 0, 0);
+
+    const end = new Date(targetDate);
+    end.setHours(23, 59, 59, 999);
+
+    const startISO = start.toISOString();
+    const endISO = end.toISOString();
+
+      const apiUrl = `${BASE_URL}/api/playback/hls/playlist/${cameraId}?start=${"2026-02-20T00:00:00"}&end=${"2026-02-20T23:59:59"}`;
+    console.log("API CALL URL:", apiUrl);
+
+    setLoadingCameraIds((prev) => new Set(prev).add(cameraId));
+
+    try {
+      const res = await fetch(apiUrl);
+      const contentType = res.headers.get("content-type") || "";
+      let json: any = null;
+
+      if (contentType.includes("application/json")) {
+        json = await res.json();
+      } else {
+        const text = await res.text();
+        throw new Error(`API did not return JSON: ${text}`);
+      }
+
+      if (!res.ok || !json?.data?.playlist) {
+        throw new Error(json?.message || "No recordings found for selected time");
+      }
+
+      const blob = new Blob([json.data.playlist], { type: "application/vnd.apple.mpegurl" });
+      const blobUrl = URL.createObjectURL(blob);
+
+      setPlayers((prev) => [
+        ...prev.filter((p) => !(p.cameraId === cameraId && p.date.toDateString() === targetDate.toDateString())),
+        { cameraId, blobUrl, sessionId: json.data.sessionId, date: targetDate },
+      ]);
+
+      return blobUrl;
+    } catch (err: any) {
+      console.error(err);
+      setCameraErrors((prev) => ({ ...prev, [cameraId]: err.message }));
+      return null;
+    } finally {
+      setLoadingCameraIds((prev) => {
+        const next = new Set(prev);
+        next.delete(cameraId);
+        return next;
+      });
+    }
+  };
+
+  /** ---------------- GET VIDEO SRC ---------------- */
+  const getVideoSrc = (cameraId: string) =>
+    players.find((p) => p.cameraId === cameraId && p.date.toDateString() === selectedDate.toDateString())?.blobUrl ?? "";
+
+  /** ---------------- HANDLE DROP ---------------- */
+const handleCameraDrop = async (cameraId: string, slotIndex: number) => {
+  assignCameraToSlot(slotIndex, cameraId);
+  setSelectedSlot(slotIndex);
+
+  // Start camera immediately for this slot
+  if (!getVideoSrc(cameraId)) {
+    await startCamera(cameraId, selectedDate);
+  }
+};
+
+  /** ---------------- HANDLE PRELOAD ON CAMERA CLICK ---------------- */
+  const handleCameraClick = (cameraId: string) => {
+    startCamera(cameraId, selectedDate); 
+  };
 
   return (
-    /* ROOT – takes full available height from AppLayout */
-    <div className="flex flex-col h-full min-h-0 bg-background overflow-hidden">
-       {/* Sidebar (left fixed) */}
+    <div className="flex flex-col h-full bg-background overflow-hidden">
       <Sidebar />
-      {/* TOP TOOLBAR (fixed height) */}
 
-     
-      <div className="shrink-0  ml-[80px]">
+      <div className="ml-[80px] shrink-0">
         <LiveViewToolbar
-          showCameraList={showCameraList}
-          onToggleCameraList={() => setShowCameraList(!showCameraList)}
-          selectedLayout={selectedLayout}
-          onLayoutChange={setSelectedLayout}
+          showCameraList
+          selectedLayout="2x2"
+          onLayoutChange={() => {}}
+          onToggleCameraList={() => {}}
+          gridStore={usePlaybackGridStore()}
+          showCustomGridBuilder={false}
         />
       </div>
 
-      {/* MAIN CONTENT */}
-      <div className="flex flex-1 min-h-0 overflow-hidden gap-3  ml-[80px] py-3 px-3">
-        {/* CAMERA TREE */}
-        <CameraTreeSidebar
-          isVisible={showCameraList}
-           onCameraClick={handleCameraClick}
-          onClose={() => setShowCameraList(false)}
-        />
+      <div className="flex flex-1 ml-[80px] gap-3 p-3 overflow-hidden">
+        <CameraTreeSidebar isVisible onCameraClick={handleCameraClick} />
 
-        {/* CAMERA GRID */}
-          <PlaybackCameraGrid
-            selectedLayout={selectedLayout}
-            playheadPosition={playback.playheadPosition}
-            currentTimestamp={playback.currentTimestamp}
-            isPlaying={playback.isPlaying}
-            selectedSlot={selectedSlot}
-            onSlotSelect={setSelectedSlot}
-          />
+        <PlaybackCameraGrid
+          selectedSlot={selectedSlot}
+          onSlotSelect={(slotIndex) => {
+            setSelectedSlot(slotIndex);
+            setIsTimelineExpanded(true);
+          }}
+          getVideoSrc={getVideoSrc}
+          onCameraDrop={handleCameraDrop}
+          isCameraLoading={(id: string) => loadingCameraIds.has(id)}
+          cameraErrors={cameraErrors}
+          onVideoPlaying={(id: string) =>
+            setLoadingCameraIds((prev) => {
+              const next = new Set(prev);
+              next.delete(id);
+              return next;
+            })
+          }
+          onVideoWaiting={(id: string) =>
+            setLoadingCameraIds((prev) => new Set(prev).add(id))
+          }
+          playback={playback}
+        />
       </div>
 
-      {/* TIMELINE (fixed height – always visible) */}
       <div className="shrink-0 z-50">
         <PlaybackTimelineBar
+          selectedDate={selectedDate}
+          // onDateChange={handleDateChange}
           isPlaying={playback.isPlaying}
           onTogglePlay={playback.togglePlay}
           onStop={playback.stop}
@@ -77,13 +156,10 @@ export default function Playback() {
           onSkipBack={playback.skipBack}
           onSkipForward={playback.skipForward}
           speed={playback.speed}
-          currentTimestamp={playback.currentTimestamp}
           isSynced={playback.isSynced}
           onToggleSync={playback.setIsSynced}
           isTimelineExpanded={isTimelineExpanded}
-          onToggleTimeline={() =>
-            setIsTimelineExpanded(!isTimelineExpanded)
-          }
+          onToggleTimeline={() => setIsTimelineExpanded((v) => !v)}
         />
 
         <PlaybackTimeline
@@ -94,6 +170,6 @@ export default function Playback() {
 
         <PlaybackAlertsBar />
       </div>
-       </div>
+    </div>
   );
 }

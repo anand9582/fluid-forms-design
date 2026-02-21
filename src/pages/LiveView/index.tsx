@@ -92,6 +92,7 @@ export default function LiveView() {
       <LiveViewToolbar
         showCameraList={showCameraList}
         onToggleCameraList={() => setShowCameraList(!showCameraList)}
+        gridStore={useGridStore()}
       />
 
       <div className="flex flex-1  gap-3 min-h-0 overflow-hidden">

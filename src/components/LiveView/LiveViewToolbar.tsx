@@ -23,22 +23,33 @@ import { cn } from "@/lib/utils";
 import {savedViewsData } from "./Data";
 import useGridStore from "@/Store/UseGridStore";
 import {Devices,Squaredot,Tablecells} from "@/components/Icons/Svg/liveViewIcons";
+
+interface GridStore {
+  layout: { rows: number; cols: number };
+  setLayout: (rows: number, cols: number) => void;
+}
+
 interface LiveViewToolbarProps {
+  gridStore: GridStore;  
   showCameraList: boolean;
   onToggleCameraList: () => void;
   selectedLayout: string;
   onLayoutChange: (layout: string) => void;
+  showCustomGridBuilder?: boolean; 
 }
 
 export function LiveViewToolbar({ 
+  gridStore,
   showCameraList, 
   onToggleCameraList, 
+  showCustomGridBuilder = true,
 }: LiveViewToolbarProps) {
   const [savedViews, setSavedViews] = useState(savedViewsData);
   const [selectedView, setSelectedView] = useState("Main entrance surveillance");
   const [viewsDropdownOpen, setViewsDropdownOpen] = useState(false);
   const [showGridBuilder, setShowGridBuilder] = useState(false);
-  const { layout, setLayout } = useGridStore();
+  // const { layout, setLayout } = useGridStore();
+ const { layout, setLayout } = gridStore;
 
  const handleCustomGridConfirm = (layoutStr: string) => {
     const [rows, cols] = layoutStr.split("x").map(Number);
@@ -183,7 +194,7 @@ export function LiveViewToolbar({
           <Squaredot className="h-6 w-6 text-gray-600" />
         </Button>
       </div>
-
+     {showCustomGridBuilder && (
       <Button
         variant="ghost"
         size="icon"
@@ -192,6 +203,7 @@ export function LiveViewToolbar({
       >
         <Plus className="h-4 w-4 text-black" />
       </Button>
+       )}
     </div>
 
 
@@ -203,12 +215,15 @@ export function LiveViewToolbar({
           </Button>
       </div>
 
-        <CustomGridBuilder
-          open={showGridBuilder}
-          onClose={() => setShowGridBuilder(false)}
-          onConfirm={handleCustomGridConfirm}
-          
-        />
+      {/* Custom Grid Builder modal */}
+      {showCustomGridBuilder && (
+            <CustomGridBuilder
+              open={showGridBuilder}
+              onClose={() => setShowGridBuilder(false)}
+              onConfirm={handleCustomGridConfirm}
+              
+            />
+          )}
     </div>
   );
 }

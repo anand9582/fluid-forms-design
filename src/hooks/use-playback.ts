@@ -26,8 +26,8 @@ export interface PlaybackState {
 }
 
 export function usePlayback() {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [playheadPosition, setPlayheadPosition] = useState(52); // start at ~10:07 AM
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [playheadPosition, setPlayheadPosition] = useState(52); 
   const [speed, setSpeed] = useState("1x");
   const [isSynced, setIsSynced] = useState(true);
   const rafRef = useRef<number | null>(null);
@@ -89,11 +89,21 @@ export function usePlayback() {
   }, [speed]);
 
   const pause = useCallback(() => setIsPlaying(false), []);
+const togglePlay = useCallback(() => {
+  console.log("Toggle play clicked. isPlaying BEFORE:", isPlaying); 
+  if (isPlaying) {
+    pause();
+    console.log("Pausing playback...");
+  } else {
+    play();
+    console.log("Starting playback...");
+  }
+}, [isPlaying, play, pause]);
 
-  const togglePlay = useCallback(() => {
-    if (isPlaying) pause();
-    else play();
-  }, [isPlaying, play, pause]);
+// Optional: track isPlaying changes globally
+useEffect(() => {
+  console.log("isPlaying changed:", isPlaying);
+}, [isPlaying]);
 
   const stop = useCallback(() => {
     setIsPlaying(false);

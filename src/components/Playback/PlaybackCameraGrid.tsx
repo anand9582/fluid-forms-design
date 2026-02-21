@@ -1,68 +1,73 @@
-import { useMemo } from "react";
-import { cn } from "@/lib/utils";
-import { Devices } from "@/components/Icons/Svg/liveViewIcons";
-import { useDrop } from "react-dnd";
-import { HlsVidio } from "./HlsVidio";
+import React, { useMemo } from "react";
 import usePlaybackGridStore from "@/Store/UsePlaybackGridStore";
+import { PlaybackCameraSlot } from "./PlaybackCameraSlot";
+import { PlaybackState } from "@/hooks/use-playback"; // ✅ import PlaybackState
 
-interface PlaybackCameraGridProps {
+interface Props {
   selectedSlot: number | null;
-  onSlotSelect: (index: number | null) => void;
+  onSlotSelect: (i: number | null) => void;
   getVideoSrc: (cameraId: string) => string;
+  onCameraDrop: (cameraId: string, slotIndex: number) => void;
+  isCameraLoading: (cameraId: string) => boolean;
+  cameraErrors: Record<string, string>;
+  onVideoError: (cameraId: string, message: string) => void;
+  onVideoPlaying: (cameraId: string) => void;
+  onVideoWaiting: (cameraId: string) => void;
+  playback: PlaybackState; // ✅ add playback here
 }
 
-export function PlaybackCameraGrid({ selectedSlot, onSlotSelect, getVideoSrc }: PlaybackCameraGridProps) {
-  const { layout, slotAssignments, assignCameraToSlot } = usePlaybackGridStore();
+export function PlaybackCameraGrid({
+  selectedSlot,
+  onSlotSelect,
+  getVideoSrc,
+  onCameraDrop,
+  isCameraLoading,
+  cameraErrors,
+  onVideoError,
+  onVideoPlaying,
+  onVideoWaiting,
+  playback, // ✅ receive playback
+}: Props) {
+  const { layout, slotAssignments } = usePlaybackGridStore();
   const totalSlots = layout.rows * layout.cols;
 
   const displaySlots = useMemo(
-    () => Array.from({ length: totalSlots }, (_, i) => slotAssignments[i] || null),
+    () =>
+      Array.from(
+        { length: totalSlots },
+        (_, i) => slotAssignments[i] || null
+      ),
     [slotAssignments, totalSlots]
   );
 
   return (
     <div className="flex-1 min-h-0 overflow-hidden">
       <div
-        className="grid h-full gap-2"
+        className="grid h-full"
         style={{
           gridTemplateColumns: `repeat(${layout.cols}, 1fr)`,
           gridTemplateRows: `repeat(${layout.rows}, minmax(0, 1fr))`,
         }}
       >
-        {displaySlots.map((cameraId, index) => {
-          const [{ isOver }, dropRef] = useDrop({
-            accept: "CAMERA",
-            collect: (monitor) => ({ isOver: monitor.isOver() }),
-            drop: (item: { cameraId: string }) => assignCameraToSlot(index, item.cameraId),
-          });
-
-          return (
-            <div
-              key={index}
-              ref={dropRef}
-              onClick={() => onSlotSelect(selectedSlot === index ? null : index)}
-              className={cn(
-                "group relative w-full h-full rounded-lg border transition-all overflow-hidden",
-                cameraId
-                  ? ["bg-slate-900 cursor-pointer", selectedSlot === index && "ring-2 ring-primary"]
-                  : [
-                      "bg-muted/40 border-dashed hover:bg-muted/60 hover:border-primary/40",
-                      isOver && "bg-primary/20 border-primary/50",
-                    ]
-              )}
-            >
-              {!cameraId && (
-                <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-muted-foreground">
-                  <Devices className="h-5 w-5 opacity-70" />
-                  <span className="text-sm font-medium opacity-70">Drop Camera</span>
-                  {isOver && <span className="text-xs text-primary">Release to place</span>}
-                </div>
-              )}
-
-              {cameraId && <HlsVidio src={getVideoSrc(cameraId)} />}
-            </div>
-          );
-        })}
+        {displaySlots.map((cameraId, index) => (
+          <PlaybackCameraSlot
+            key={index}
+            index={index}
+            cameraId={cameraId}
+            selected={selectedSlot === index}
+            onSelect={() =>
+              onSlotSelect(selectedSlot === index ? null : index)
+            }
+            onCameraDrop={onCameraDrop}
+            getVideoSrc={getVideoSrc}
+            isCameraLoading={isCameraLoading}
+            errorMessage={cameraId ? cameraErrors[cameraId] : ""}
+            onVideoError={onVideoError}
+            onVideoPlaying={onVideoPlaying}
+            onVideoWaiting={onVideoWaiting}
+            playback={playback}
+          />
+        ))}
       </div>
     </div>
   );
