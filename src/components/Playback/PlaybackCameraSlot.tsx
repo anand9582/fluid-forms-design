@@ -3,7 +3,7 @@ import { useDrop } from "react-dnd";
 import { Devices } from "@/components/Icons/Svg/liveViewIcons";
 import { cn } from "@/lib/utils";
 import { useHls } from "@/components/Playback/HlsVideo";
-import { PlaybackState } from "@/hooks/use-playback";
+import type { PlaybackState } from "@/hooks/use-playback";
 
 interface Props {
   index: number;
@@ -14,8 +14,10 @@ interface Props {
   getVideoSrc: (cameraId: string) => string;
   isCameraLoading: (cameraId: string) => boolean;
   errorMessage?: string;
+  onVideoError?: (cameraId: string, message: string) => void;
+  onVideoPlaying?: (cameraId: string) => void;
+  onVideoWaiting?: (cameraId: string) => void;
   playback: PlaybackState;
-  onToggleTimeline: () => void;
 }
 
 export function PlaybackCameraSlot({
@@ -27,8 +29,10 @@ export function PlaybackCameraSlot({
   getVideoSrc,
   isCameraLoading,
   errorMessage,
+  onVideoError,
+  onVideoPlaying,
+  onVideoWaiting,
   playback,
-  onToggleTimeline,
 }: Props) {
   const [{ isOver }, dropRef] = useDrop({
     accept: "SIDEBAR_CAMERA",
@@ -42,29 +46,37 @@ export function PlaybackCameraSlot({
   });
 
   const src = cameraId ? getVideoSrc(cameraId) : "";
-  const videoRef = useHls(src);
+  const videoRef = useHls(src, true, playback.isPlaying);
 
- // Sync video with playback state (instant play/pause)
-useEffect(() => {
-  const video = videoRef.current;
-  if (!video || !cameraId) return;
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !cameraId) return;
 
-  if (playback.isPlaying) {
-    video.play().catch(err => {
-      console.warn("Video play failed:", err);
-    });
-  } else {
-    video.pause();
-  }
-}, [playback.isPlaying, cameraId]);
+    const handleError = () => {
+      onVideoError?.(cameraId, "Stream error");
+    };
+    const handlePlaying = () => {
+      onVideoPlaying?.(cameraId);
+    };
+    const handleWaiting = () => {
+      onVideoWaiting?.(cameraId);
+    };
+
+    video.addEventListener("error", handleError);
+    video.addEventListener("playing", handlePlaying);
+    video.addEventListener("waiting", handleWaiting);
+
+    return () => {
+      video.removeEventListener("error", handleError);
+      video.removeEventListener("playing", handlePlaying);
+      video.removeEventListener("waiting", handleWaiting);
+    };
+  }, [cameraId, onVideoError, onVideoPlaying, onVideoWaiting, videoRef]);
 
   return (
     <div
-      ref={dropRef}
-      onClick={() => {
-        onSelect();
-        onToggleTimeline();
-      }}
+      ref={dropRef as unknown as React.Ref<HTMLDivElement>}
+      onClick={onSelect}
       className={cn(
         "relative w-full h-full overflow-hidden border cursor-pointer",
         selected && "ring-2 ring-primary",
@@ -74,29 +86,30 @@ useEffect(() => {
       {cameraId && (
         <video
           ref={videoRef}
+          className="absolute inset-0 w-full h-full object-cover bg-black"
           muted
-          loop
-          className="w-full h-full object-cover"
+          playsInline
+          preload="auto"
         />
       )}
 
       {!cameraId && !errorMessage && (
-        <div className="absolute inset-0 flex items-center justify-center gap-3 text-gray-400">
-          <Devices className="h-4 w-4" />
-          <span className="text-sm font-medium">Drop Camera</span>
+        <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2">
+          <Devices className="h-8 w-8 opacity-50" />
+          <span className="text-xs opacity-70">Drop Camera</span>
         </div>
       )}
 
       {errorMessage && (
-        <div className="absolute inset-0 flex items-center justify-center text-red-400 text-sm px-3 text-center">
+        <div className="flex items-center justify-center h-full text-destructive text-xs p-2 text-center">
           {errorMessage}
         </div>
       )}
 
       {cameraId && !errorMessage && isCameraLoading(cameraId) && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/60 text-white">
-          <div className="flex flex-col items-center gap-2">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent" />
+        <div className="absolute inset-0 flex items-center justify-center bg-black/60">
+          <div className="flex flex-col items-center gap-2 text-muted-foreground">
+            <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             <span className="text-xs">Loading stream…</span>
           </div>
         </div>

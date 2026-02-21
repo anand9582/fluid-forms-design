@@ -16,14 +16,14 @@ interface Player {
 }
 
 export default function Playback() {
-  const playback = usePlayback();
   const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
   const [isTimelineExpanded, setIsTimelineExpanded] = useState(false);
   const [players, setPlayers] = useState<Player[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [loadingCameraIds, setLoadingCameraIds] = useState<Set<string>>(() => new Set());
   const [cameraErrors, setCameraErrors] = useState<Record<string, string>>({});
-
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const playback = usePlayback();
   const { assignCameraToSlot } = usePlaybackGridStore();
 
   /** ---------------- START CAMERA (returns blobUrl for preloading) ---------------- */
@@ -146,26 +146,28 @@ const handleCameraDrop = async (cameraId: string, slotIndex: number) => {
 
       <div className="shrink-0 z-50">
         <PlaybackTimelineBar
-          selectedDate={selectedDate}
-          // onDateChange={handleDateChange}
-          isPlaying={playback.isPlaying}
-          onTogglePlay={playback.togglePlay}
-          onStop={playback.stop}
-          onRewind={playback.rewind}
-          onFastForward={playback.fastForward}
-          onSkipBack={playback.skipBack}
-          onSkipForward={playback.skipForward}
-          speed={playback.speed}
-          isSynced={playback.isSynced}
-          onToggleSync={playback.setIsSynced}
-          isTimelineExpanded={isTimelineExpanded}
-          onToggleTimeline={() => setIsTimelineExpanded((v) => !v)}
-        />
+            isPlaying={playback.isPlaying}
+            onTogglePlay={playback.togglePlay}
+            onStop={playback.stop}
+            onRewind={playback.rewind}
+            onFastForward={playback.fastForward}
+            onSkipBack={playback.skipBack}
+            onSkipForward={playback.skipForward}
+            speed={playback.speed}
+            currentTimestamp={playback.currentTimestamp}
+            isSynced={playback.isSynced}
+            onToggleSync={playback.setIsSynced}
+            isTimelineExpanded={isTimelineExpanded}
+            onToggleTimeline={() => setIsTimelineExpanded(!isTimelineExpanded)}
+            zoomLevel={zoomLevel}
+            onZoomChange={setZoomLevel}
+          />
 
-        <PlaybackTimeline
+       <PlaybackTimeline
           playheadPosition={playback.playheadPosition}
           isExpanded={isTimelineExpanded}
           onSeek={playback.seekTo}
+          zoomLevel={zoomLevel}
         />
 
         <PlaybackAlertsBar />

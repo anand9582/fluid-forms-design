@@ -26,13 +26,17 @@ interface PlaybackTimelineBarProps {
   onToggleSync: (synced: boolean) => void;
   isTimelineExpanded: boolean;
   onToggleTimeline: () => void;
+  zoomLevel: number;
+  onZoomChange: (level: number) => void;
 }
 
 export function PlaybackTimelineBar({
   isPlaying, onTogglePlay, onStop, onRewind, onFastForward,
   onSkipBack, onSkipForward, speed, currentTimestamp,
   isSynced, onToggleSync, isTimelineExpanded, onToggleTimeline,
+  zoomLevel, onZoomChange,
 }: PlaybackTimelineBarProps) {
+  const zoomPercent = ((zoomLevel - 1) / 9) * 100; // 1-10 mapped to 0-100%
   return (
     <div className="flex items-center gap-1.5 px-3 py-1 border-t border-border bg-background flex-shrink-0">
       {/* TIMELINES label */}
@@ -44,9 +48,9 @@ export function PlaybackTimelineBar({
       {/* Live Date/Time */}
       <div className="flex items-center gap-1.5 px-2 py-0.5 bg-muted/60 rounded ml-1">
         <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-        {/* <span className="text-[11px] text-foreground whitespace-nowrap font-mono font-medium tabular-nums">
-          {formatPlaybackTimestamp(currentTimestamp)}
-        </span> */}
+        <span className="text-[11px] text-foreground whitespace-nowrap font-mono font-medium tabular-nums">
+          {/* {formatPlaybackTimestamp(currentTimestamp)} */}
+        </span>
       </div>
 
       {/* Lock */}
@@ -71,14 +75,37 @@ export function PlaybackTimelineBar({
 
       {/* Zoom controls */}
       <div className="flex items-center gap-0.5">
-        <Button variant="ghost" size="icon" className="h-6 w-6">
+        <Button
+          variant="ghost" size="icon" className="h-6 w-6"
+          onClick={() => onZoomChange(Math.max(1, zoomLevel - 1))}
+          disabled={zoomLevel <= 1}
+          title="Zoom Out"
+        >
           <Mountain className="h-3 w-3 text-muted-foreground" />
         </Button>
-        <div className="w-12 h-[3px] bg-muted rounded-full mx-0.5 relative">
-          <div className="absolute left-0 top-0 w-1/2 h-full bg-foreground/30 rounded-full" />
-          <div className="absolute top-1/2 -translate-y-1/2 w-2 h-2 bg-foreground/60 rounded-full border border-background" style={{ left: 'calc(50% - 4px)' }} />
+        <div
+          className="w-12 h-[3px] bg-muted rounded-full mx-0.5 relative cursor-pointer"
+          onClick={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+            onZoomChange(Math.round(1 + pct * 9));
+          }}
+        >
+          <div
+            className="absolute left-0 top-0 h-full bg-foreground/30 rounded-full"
+            style={{ width: `${zoomPercent}%` }}
+          />
+          <div
+            className="absolute top-1/2 -translate-y-1/2 w-2 h-2 bg-foreground/60 rounded-full border border-background"
+            style={{ left: `calc(${zoomPercent}% - 4px)` }}
+          />
         </div>
-        <Button variant="ghost" size="icon" className="h-6 w-6">
+        <Button
+          variant="ghost" size="icon" className="h-6 w-6"
+          onClick={() => onZoomChange(Math.min(10, zoomLevel + 1))}
+          disabled={zoomLevel >= 10}
+          title="Zoom In"
+        >
           <Mountain className="h-3.5 w-3.5 text-muted-foreground" />
         </Button>
       </div>

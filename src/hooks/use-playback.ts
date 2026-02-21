@@ -3,9 +3,9 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 
-// Timeline represents 6 hours: 6:00 AM to 12:00 PM
-const TIMELINE_START_HOUR = 6; // 6:00 AM
-const TIMELINE_DURATION_HOURS = 6;
+// Timeline represents 24 hours: 12:00 AM to 11:59 PM
+const TIMELINE_START_HOUR = 0; // 12:00 AM
+const TIMELINE_DURATION_HOURS = 24;
 const TIMELINE_DURATION_MS = TIMELINE_DURATION_HOURS * 60 * 60 * 1000;
 
 // Playback speeds: how many real-ms of footage per 1ms of wall-clock
@@ -26,8 +26,8 @@ export interface PlaybackState {
 }
 
 export function usePlayback() {
-  const [isPlaying, setIsPlaying] = useState(true);
-  const [playheadPosition, setPlayheadPosition] = useState(52); 
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [playheadPosition, setPlayheadPosition] = useState(42); 
   const [speed, setSpeed] = useState("1x");
   const [isSynced, setIsSynced] = useState(true);
   const rafRef = useRef<number | null>(null);
@@ -89,21 +89,11 @@ export function usePlayback() {
   }, [speed]);
 
   const pause = useCallback(() => setIsPlaying(false), []);
-const togglePlay = useCallback(() => {
-  console.log("Toggle play clicked. isPlaying BEFORE:", isPlaying); 
-  if (isPlaying) {
-    pause();
-    console.log("Pausing playback...");
-  } else {
-    play();
-    console.log("Starting playback...");
-  }
-}, [isPlaying, play, pause]);
 
-// Optional: track isPlaying changes globally
-useEffect(() => {
-  console.log("isPlaying changed:", isPlaying);
-}, [isPlaying]);
+  const togglePlay = useCallback(() => {
+    if (isPlaying) pause();
+    else play();
+  }, [isPlaying, play, pause]);
 
   const stop = useCallback(() => {
     setIsPlaying(false);
@@ -154,26 +144,4 @@ useEffect(() => {
   };
 }
 
-export function formatPlaybackTimestamp(date: Date): string {
-  const day = date.getDate();
-  const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
-  const month = months[date.getMonth()];
-  const year = date.getFullYear();
-  const h = date.getHours();
-  const m = String(date.getMinutes()).padStart(2, "0");
-  const s = String(date.getSeconds()).padStart(2, "0");
-  const ampm = h >= 12 ? "PM" : "AM";
-  const h12 = h % 12 || 12;
-  return `${day} ${month} ${year}  ${h12}:${m}:${s} ${ampm}`;
-}
-
-export function formatShortTimestamp(date?: Date | null): string {
-  if (!date) return "--:--";
-  const h = date.getHours();
-  const m = String(date.getMinutes()).padStart(2, "0");
-  const s = String(date.getSeconds()).padStart(2, "0");
-  const ampm = h >= 12 ? "PM" : "AM";
-  const h12 = h % 12 || 12;
-  return `DEC ${date.getDate()} ${h12}:${m}:${s}`;
-}
 

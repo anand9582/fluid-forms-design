@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import usePlaybackGridStore from "@/Store/UsePlaybackGridStore";
 import { PlaybackCameraSlot } from "./PlaybackCameraSlot";
-import { PlaybackState } from "@/hooks/use-playback"; // ✅ import PlaybackState
+import { PlaybackState } from "@/hooks/use-playback"; 
 
 interface Props {
   selectedSlot: number | null;
@@ -13,7 +13,7 @@ interface Props {
   onVideoError: (cameraId: string, message: string) => void;
   onVideoPlaying: (cameraId: string) => void;
   onVideoWaiting: (cameraId: string) => void;
-  playback: PlaybackState; // ✅ add playback here
+  playback: PlaybackState; 
 }
 
 export function PlaybackCameraGrid({
@@ -26,7 +26,7 @@ export function PlaybackCameraGrid({
   onVideoError,
   onVideoPlaying,
   onVideoWaiting,
-  playback, // ✅ receive playback
+  playback, 
 }: Props) {
   const { layout, slotAssignments } = usePlaybackGridStore();
   const totalSlots = layout.rows * layout.cols;
