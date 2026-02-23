@@ -31,6 +31,7 @@ export default function PlaybackDummy() {
   const [isTimelineExpanded, setIsTimelineExpanded] = useState(false);
   const playback = usePlaybackStore();
   const { layout, slotAssignments, assignCameraToSlot, clearAllSlots, resizeSlots } = usePlaybackGridStore();
+const [segments, setSegments] = useState<any[]>([]);
 
   const BASE_URL = "http://192.168.11.59:8085";
 
@@ -45,8 +46,6 @@ export default function PlaybackDummy() {
         return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
   };
 
-
-
   /* ---------------- TIMELINE DATA ---------------- */
   const DAY_START = new Date(selectedDate);
   DAY_START.setHours(0, 0, 0, 0);
@@ -59,43 +58,68 @@ export default function PlaybackDummy() {
   const pctToDate = (pct: number) =>
     new Date(DAY_START.getTime() + (pct / 100) * (DAY_END.getTime() - DAY_START.getTime()));
 
-  const [segments, setSegments] = useState<any[]>([]);
 
   /* ---------------- FETCH TIMELINE ---------------- */
   useEffect(() => {
-    const fetchTimeline = async () => {
-      try {
-        const res = await fetch(
-          `${BASE_URL}/api/playback/hls/timeline?cameraId=2&fromDate=${toISTString(DAY_START)}&toDate=${toISTString(DAY_END)}`
-        );
-        const json = await res.json();
+  const fetchTimeline = async () => {
+    try {
+      const res = await fetch(
+        `${BASE_URL}/api/playback/hls/timeline?cameraId=2&fromDate=${toISTString(
+          DAY_START
+        )}&toDate=${toISTString(DAY_END)}`
+      );
+      const json = await res.json();
 
-        const segs: any[] = [];
-        let cursor = DAY_START;
+      /* ---------- UI segments ---------- */
+      const uiSegs: any[] = [];
+      let cursor = DAY_START;
 
-        json.data.forEach((s: any) => {
-          const st = new Date(s.startTime);
-          const et = new Date(s.endTime);
+      /* ---------- STORE segments ---------- */
+      const storeSegs = json.data.map((s: any) => ({
+        startTime: new Date(s.startTime),
+        endTime: new Date(s.endTime),
+        duration:
+          (new Date(s.endTime).getTime() -
+            new Date(s.startTime).getTime()) /
+          1000,
+      }));
 
-          if (st > cursor) {
-            segs.push({ start: dateToPct(cursor), end: dateToPct(st), type: "gap" });
-          }
-          segs.push({ start: dateToPct(st), end: dateToPct(et), type: "recording" });
-          cursor = et;
-        });
+      json.data.forEach((s: any) => {
+        const st = new Date(s.startTime);
+        const et = new Date(s.endTime);
 
-        if (cursor < DAY_END) {
-          segs.push({ start: dateToPct(cursor), end: 100, type: "gap" });
+        if (st > cursor) {
+          uiSegs.push({
+            start: dateToPct(cursor),
+            end: dateToPct(st),
+            type: "gap",
+          });
         }
 
-        setSegments(segs);
-      } catch (err) {
-        console.error("Timeline fetch error:", err);
-      }
-    };
+        uiSegs.push({
+          start: dateToPct(st),
+          end: dateToPct(et),
+          type: "recording",
+        });
 
-    fetchTimeline();
-  }, [selectedDate]);
+        cursor = et;
+      });
+
+      if (cursor < DAY_END) {
+        uiSegs.push({ start: dateToPct(cursor), end: 100, type: "gap" });
+      }
+
+      setSegments(uiSegs); 
+      usePlaybackStore.getState().setSegments(storeSegs);
+
+      console.log("📦 store segments", storeSegs.length);
+    } catch (err) {
+      console.error("Timeline fetch error:", err);
+    }
+  };
+
+  fetchTimeline();
+}, [selectedDate]);
 
   /* ---------------- CAMERA START (DYNAMIC TIME RANGE) ---------------- */
   const startCamera = async (
@@ -178,7 +202,6 @@ export default function PlaybackDummy() {
 
   /* ---------------- STOP ---------------- */
   const handleStop = () => {
-    playback.pause();
     playback.seekToDate(DAY_START);
     clearAllSlots();
     setPlayers([]);
@@ -204,6 +227,7 @@ export default function PlaybackDummy() {
     });
   }, [slotAssignments, players]);
 
+  
   /* ---------------- UI ---------------- */
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
@@ -248,19 +272,21 @@ export default function PlaybackDummy() {
         />
 
         <PlaybackTimeline
-          playheadPosition={playback.playheadPosition}
+         playheadPosition={playback.playheadPosition} 
           isExpanded={isTimelineExpanded}
-         onSeek={(pct) => {
-  const date = pctToDate(pct);
+        onSeek={(pct) => {
+            // Convert pct back to Date
+            const DAY_START = new Date(selectedDate);
+            DAY_START.setHours(0, 0, 0, 0);
+            const DAY_END = new Date(selectedDate);
+            DAY_END.setHours(23, 59, 59, 999);
 
-  console.log("🧭 Timeline click", {
-    pct,
-    iso: date.toISOString(),
-    local: date.toString(),
-  });
+            const date = new Date(DAY_START.getTime() + (pct / 100) * (DAY_END.getTime() - DAY_START.getTime()));
 
-  handleSeekToDate(date);
-}}
+            console.log("🧭 Timeline click", { pct, iso: date.toISOString(), local: date.toString() });
+
+            handleSeekToDate(date); 
+          }}
           zoomLevel={zoomLevel}
           segments={segments}
         />

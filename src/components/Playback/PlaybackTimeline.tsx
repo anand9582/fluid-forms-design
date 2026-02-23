@@ -3,15 +3,15 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 interface Segment {
-  start: number; 
-  end: number;  
+  start: number; // 0-100
+  end: number;   // 0-100
   type: "recording" | "gap";
 }
 
 interface PlaybackTimelineProps {
-  playheadPosition: number;
+  playheadPosition: number; // 0-100
   isExpanded: boolean;
-  onSeek: (position: number) => void;
+  onSeek: (pct: number) => void;
   zoomLevel: number;
   segments: Segment[];
 }
@@ -44,7 +44,6 @@ function generateTimeLabels(zoomLevel: number, playheadPosition: number) {
   return { labels, viewStart, visibleHours };
 }
 
-/* ---------- COMPONENT ---------- */
 export function PlaybackTimeline({
   playheadPosition,
   isExpanded,
@@ -65,30 +64,55 @@ export function PlaybackTimeline({
   const viewStartPct = (viewStart / totalHours) * 100;
   const viewWidthPct = (visibleHours / totalHours) * 100;
 
-  const toViewport = (abs: number) =>
-    ((abs - viewStartPct) / viewWidthPct) * 100;
+  const toViewport = useCallback(
+    (abs: number) => ((abs - viewStartPct) / viewWidthPct) * 100,
+    [viewStartPct, viewWidthPct]
+  );
 
-  const viewportToAbs = (vp: number) =>
-    viewStartPct + (vp / 100) * viewWidthPct;
+  const viewportToAbs = useCallback(
+    (vp: number) => viewStartPct + (vp / 100) * viewWidthPct,
+    [viewStartPct, viewWidthPct]
+  );
 
-  const getPosFromX = (x: number) => {
-    if (!trackRef.current) return null;
-    const r = trackRef.current.getBoundingClientRect();
-    const vp = ((x - r.left) / r.width) * 100;
-    return viewportToAbs(Math.max(0, Math.min(100, vp)));
-  };
+  /* ---------- SAFE SEEK ---------- */
+  const onSeekSafe = useCallback(
+    (pos: number) => {
+      const absTime = viewportToAbs(pos);
+      // nearest recording segment
+      const recSegment =
+        segments.find((s) => absTime >= s.start && absTime <= s.end) ||
+        segments.find((s) => absTime < s.start);
+
+      if (!recSegment) return;
+
+      const safePos = absTime < recSegment.start ? recSegment.start : absTime;
+      onSeek(safePos);
+    },
+    [segments, onSeek, viewportToAbs]
+  );
+
+  /* ---------- MOUSE / DRAG ---------- */
+  const getPosFromX = useCallback(
+    (x: number) => {
+      if (!trackRef.current) return null;
+      const r = trackRef.current.getBoundingClientRect();
+      const vp = ((x - r.left) / r.width) * 100;
+      return Math.max(0, Math.min(100, vp));
+    },
+    []
+  );
 
   const onMouseDown = (e: React.MouseEvent) => {
     isDragging.current = true;
     setDragging(true);
 
-    const p = getPosFromX(e.clientX);
-    if (p !== null) onSeek(p);
+    const pos = getPosFromX(e.clientX);
+    if (pos !== null) onSeekSafe(pos);
 
     const move = (me: MouseEvent) => {
       if (!isDragging.current) return;
-      const pos = getPosFromX(me.clientX);
-      if (pos !== null) onSeek(pos);
+      const p = getPosFromX(me.clientX);
+      if (p !== null) onSeekSafe(p); // ✅ real-time drag
     };
 
     const up = () => {
@@ -105,10 +129,13 @@ export function PlaybackTimeline({
   const playheadVp = toViewport(playheadPosition);
 
   return (
-    <div className={cn(
-      "border-t bg-background transition-all",
-      isExpanded ? "max-h-[220px]" : "max-h-0 overflow-hidden"
-    )}>
+    <div
+      className={cn(
+        "border-t bg-background transition-all",
+        isExpanded ? "max-h-[220px]" : "max-h-0 overflow-hidden"
+      )}
+    >
+      {/* Timeline track */}
       <div className="flex h-[24px] border-b">
         <div className="w-[160px] px-3 text-xs font-semibold">Timeline</div>
 
@@ -117,36 +144,41 @@ export function PlaybackTimeline({
           onMouseDown={onMouseDown}
           className={cn(
             "flex-1 relative bg-muted/20",
-            dragging ? "cursor-grabbing" : "cursor-col-resize"
+            dragging ? "cursor-grabbing" : "cursor-pointer"
           )}
         >
+          {/* Segments */}
           {segments.map((s, i) => {
-            const l = toViewport(s.start);
-            const r = toViewport(s.end);
-            if (r < 0 || l > 100) return null;
+            const l = Math.max(0, toViewport(s.start));
+            const r = Math.min(100, toViewport(s.end));
+            if (r - l <= 0) return null;
 
             return (
               <div
                 key={i}
                 className={cn(
-                  "absolute top-[4px] bottom-[4px] ",
-                  s.type === "recording"
-                    ? "bg-blue-300"
-                    : "bg-slate-400"
+                  "absolute top-[4px] bottom-[4px]",
+                  s.type === "recording" ? "bg-green-300" : "bg-slate-400"
                 )}
-                style={{
-                  left: `${Math.max(0, l)}%`,
-                  width: `${Math.min(100, r) - Math.max(0, l)}%`,
-                }}
+                style={{ left: `${l}%`, width: `${r - l}%` }}
               />
             );
           })}
 
+          {/* Playhead */}
           {playheadVp >= 0 && playheadVp <= 100 && (
-            <div
-              className="absolute top-0 bottom-0 w-[2px] bg-primary"
-              style={{ left: `${playheadVp}%` }}
-            />
+            <>
+              <div
+                className="absolute top-0 bottom-0 w-[2px] bg-primary"
+                style={{ left: `${playheadVp}%` }}
+              />
+              <div
+                className="absolute -top-4 text-[10px] text-primary font-semibold"
+                style={{ left: `${playheadVp}%`, transform: 'translateX(-50%)' }}
+              >
+                {new Date((playheadPosition / 100) * 24 * 60 * 60 * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              </div>
+            </>
           )}
         </div>
       </div>
@@ -156,13 +188,13 @@ export function PlaybackTimeline({
         <div className="w-[160px] px-2 text-[10px] flex items-center gap-2">
           Interval
           <Badge variant="secondary">
-            {visibleHours >= 1
-              ? `${Math.round(visibleHours)}H`
-              : `${Math.round(visibleHours * 60)}M`}
+            {visibleHours >= 1 ? `${Math.round(visibleHours)}H` : `${Math.round(visibleHours * 60)}M`}
           </Badge>
         </div>
         <div className="flex-1 flex justify-between px-2 text-[9px]">
-          {labels.map((l, i) => <span key={i}>{l}</span>)}
+          {labels.map((l, i) => (
+            <span key={i}>{l}</span>
+          ))}
         </div>
       </div>
     </div>

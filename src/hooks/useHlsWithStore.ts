@@ -1,30 +1,52 @@
+// hooks/useHlsWithStore.ts
 import { useEffect, useRef } from "react";
 import Hls from "hls.js";
 import { Segment, usePlaybackStore } from "@/Store/playbackStore";
 
 interface Props {
   src: string;
-  cameraId: string;
+  cameraId: string | null;
   segments: Segment[];
   onReady?: () => void;
 }
 
-export function useHlsWithStore({ src, cameraId, segments, onReady }: Props) {
+export function useHlsWithStore({
+  src,
+  cameraId,
+  segments,
+  onReady,
+}: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
-  const playRetryRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const retryRef = useRef<number | null>(null);
 
   const isPlaying = usePlaybackStore((s) => s.isPlaying);
   const currentTimestamp = usePlaybackStore((s) => s.currentTimestamp);
   const speed = usePlaybackStore((s) => s.speed);
 
-  /* ---------------- HLS setup ---------------- */
+  useEffect(() => {
+    console.log("🎯 useHlsWithStore render", {
+      cameraId,
+      src,
+      segmentsCount: segments.length,
+    });
+  }, [cameraId, src, segments]);
+
+  /* ---------- HLS SETUP ---------- */
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || !src) return;
 
-    if (!hlsRef.current && Hls.isSupported()) {
-      const hls = new Hls({ lowLatencyMode: true, maxBufferLength: 10, backBufferLength: 0 });
+    if (!video || !src || !cameraId) return;
+
+    console.log("🔥 HLS init", cameraId);
+
+    if (Hls.isSupported()) {
+      const hls = new Hls({
+        lowLatencyMode: true,
+        maxBufferLength: 10,
+        backBufferLength: 0,
+      });
+
       hlsRef.current = hls;
       hls.attachMedia(video);
 
@@ -33,13 +55,17 @@ export function useHlsWithStore({ src, cameraId, segments, onReady }: Props) {
         hls.startLoad(0);
       });
 
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+      hls.on(Hls.Events.MANIFEST_PARSED, async () => {
         onReady?.();
-        if (isPlaying) video.play().catch(() => {});
-      });
 
-      hls.on(Hls.Events.ERROR, (_event, data) => console.error("HLS error:", data));
-    } else if (!Hls.isSupported()) {
+        try {
+          await video.play();
+          console.log("▶️ Autoplay success", cameraId);
+        } catch (e) {
+          console.warn("⛔ Autoplay blocked", e);
+        }
+      });
+    } else {
       video.src = src;
     }
 
@@ -48,41 +74,67 @@ export function useHlsWithStore({ src, cameraId, segments, onReady }: Props) {
     video.preload = "auto";
 
     return () => {
-      if (playRetryRef.current) clearTimeout(playRetryRef.current);
+      hlsRef.current?.destroy();
+      hlsRef.current = null;
     };
-  }, [src, cameraId, onReady]);
+  }, [src, cameraId]);
 
-  /* ---------------- Play/Pause ---------------- */
+  /* ---------- PLAY / SEEK ---------- */
   useEffect(() => {
     const video = videoRef.current;
-    if (!video) return;
+    if (!video || !cameraId) return;
 
-    if (playRetryRef.current) clearTimeout(playRetryRef.current);
+    const sync = () => {
+      if (video.readyState < 3) {
+        retryRef.current = window.setTimeout(sync, 50);
+        return;
+      }
 
-    const tryPlay = () => {
-      if (!video) return;
-      if (video.readyState >= 3) {
-        video.playbackRate = parseFloat(speed.replace("x", "")) || 1;
-        if (isPlaying) video.play().catch(() => (playRetryRef.current = setTimeout(tryPlay, 50)));
-        else video.pause();
+      video.playbackRate = parseFloat(speed.replace("x", "")) || 1;
 
-        // Timeline seek
-        const segment =
-          segments.find((s) => currentTimestamp >= s.startTime && currentTimestamp <= s.endTime) ||
-          segments.find((s) => currentTimestamp < s.startTime);
+      if (isPlaying) video.play().catch(() => {});
+      else video.pause();
 
-        if (segment) {
-          const relativeTime = (currentTimestamp.getTime() - segment.startTime.getTime()) / 1000;
-          if (Math.abs(video.currentTime - relativeTime) > 0.5) video.currentTime = relativeTime;
+      // -------- Safe segment selection --------
+      const segment = segments.find(
+        (s) =>
+          currentTimestamp >= s.startTime &&
+          currentTimestamp <= s.endTime
+      );
+
+      if (!segment) {
+        // Optionally: jump to next available segment if in a gap
+        const nextSegment = segments.find((s) => currentTimestamp < s.startTime);
+        if (nextSegment) {
+          console.log("⏭ Jumping to next segment", nextSegment.startTime);
+          usePlaybackStore.getState().setCurrentTimestamp(nextSegment.startTime);
         }
-      } else playRetryRef.current = setTimeout(tryPlay, 50);
+        return; // No valid segment for seeking
+      }
+
+      const relativeTime = (currentTimestamp.getTime() - segment.startTime.getTime()) / 1000;
+
+      if (relativeTime < 0) {
+        console.warn("⛔ Negative seek blocked", {
+          relativeTime,
+          current: currentTimestamp,
+          segmentStart: segment.startTime,
+        });
+        return;
+      }
+
+      if (Math.abs(video.currentTime - relativeTime) > 0.3) {
+        console.log("⏩ SEEK", relativeTime);
+        video.currentTime = relativeTime;
+      }
     };
-    tryPlay();
+
+    sync();
 
     return () => {
-      if (playRetryRef.current) clearTimeout(playRetryRef.current);
+      if (retryRef.current) clearTimeout(retryRef.current);
     };
-  }, [isPlaying, currentTimestamp, segments, speed, src]);
+  }, [isPlaying, currentTimestamp, speed, segments, cameraId]);
 
   return videoRef;
 }
