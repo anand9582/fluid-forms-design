@@ -1,7 +1,13 @@
+// useHls.ts
 import { useEffect, useRef } from "react";
 import Hls from "hls.js";
 
-export function useHls(src: string, isMuted = true, isPlaying = true) {
+export function useHls(
+  src: string,
+  isMuted = true,
+  isPlaying = true,
+  onReady?: () => void
+) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const playRetryRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -26,6 +32,7 @@ export function useHls(src: string, isMuted = true, isPlaying = true) {
         });
 
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          onReady?.(); 
           video.play().catch(() => {});
         });
 
@@ -51,9 +58,8 @@ export function useHls(src: string, isMuted = true, isPlaying = true) {
     return () => {
       if (playRetryRef.current) clearTimeout(playRetryRef.current);
     };
-  }, [src, isMuted]);
+  }, [src, isMuted, onReady]);
 
-  // Sync play/pause state separately
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !src) return;

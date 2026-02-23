@@ -1,9 +1,10 @@
-import React, { useEffect } from "react";
+// components/PlaybackCameraSlot.tsx
+import React from "react";
 import { useDrop } from "react-dnd";
 import { Devices } from "@/components/Icons/Svg/liveViewIcons";
 import { cn } from "@/lib/utils";
-import { useHls } from "@/components/Playback/HlsVideo";
-import type { PlaybackState } from "@/hooks/use-playback";
+import { usePlaybackStore } from "@/Store/playbackStore";
+import { useHlsWithStore } from "@/hooks/useHlsWithStore";
 
 interface Props {
   index: number;
@@ -14,17 +15,6 @@ interface Props {
   getVideoSrc: (cameraId: string) => string;
   isCameraLoading: (cameraId: string) => boolean;
   errorMessage?: string;
-  onVideoError?: (cameraId: string, message: string) => void;
-  onVideoPlaying?: (cameraId: string) => void;
-  onVideoWaiting?: (cameraId: string) => void;
-  playback: PlaybackState;
-
-  /**
-   * 🔴 IMPORTANT
-   * cameraStartTime = is camera ki recording ka actual start time
-   * example: "2026-02-05T02:10:00"
-   */
-  cameraStartTime?: string;
 }
 
 export function PlaybackCameraSlot({
@@ -36,100 +26,26 @@ export function PlaybackCameraSlot({
   getVideoSrc,
   isCameraLoading,
   errorMessage,
-  onVideoError,
-  onVideoPlaying,
-  onVideoWaiting,
-  playback,
-  cameraStartTime,
 }: Props) {
-  /* ---------------- Drag & Drop ---------------- */
+  // React DnD drop
   const [{ isOver }, dropRef] = useDrop({
     accept: "SIDEBAR_CAMERA",
     drop: (item: { cameraId: string }, monitor) => {
       if (monitor.didDrop()) return;
       onCameraDrop(item.cameraId, index);
     },
-    collect: (monitor) => ({
-      isOver: monitor.isOver({ shallow: true }),
-    }),
+    collect: (monitor) => ({ isOver: monitor.isOver({ shallow: true }) }),
   });
 
-  /* ---------------- Video / HLS ---------------- */
+  // Playback segments from store
+  const segments = usePlaybackStore((s) => s.segments);
+
+  // Video source
   const src = cameraId ? getVideoSrc(cameraId) : "";
-  const videoRef = useHls(src, true, playback.isPlaying);
 
-  /* ---------------- Video events ---------------- */
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video || !cameraId) return;
+  // Hook for HLS + timeline + speed + play/pause
+  const videoRef = useHlsWithStore({ src, cameraId: cameraId!, segments });
 
-    const handleError = () => {
-      onVideoError?.(cameraId, "Stream error");
-    };
-    const handlePlaying = () => {
-      onVideoPlaying?.(cameraId);
-    };
-    const handleWaiting = () => {
-      onVideoWaiting?.(cameraId);
-    };
-
-    video.addEventListener("error", handleError);
-    video.addEventListener("playing", handlePlaying);
-    video.addEventListener("waiting", handleWaiting);
-
-    return () => {
-      video.removeEventListener("error", handleError);
-      video.removeEventListener("playing", handlePlaying);
-      video.removeEventListener("waiting", handleWaiting);
-    };
-  }, [cameraId, onVideoError, onVideoPlaying, onVideoWaiting, videoRef]);
-
-  /* =========================================================
-     🔥 CORE PLAYBACK SYNC LOGIC (TIMELINE → VIDEO)
-     ========================================================= */
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video || !cameraId || !cameraStartTime) return;
-
-    // 🟢 Global timeline time (Date)
-    const globalTimeMs = playback.currentTimestamp.getTime();
-
-    // 🟢 Camera recording start time
-    const recordingStartMs = new Date(cameraStartTime).getTime();
-
-    // 🧮 How many seconds into the recording we should be
-    const diffSeconds = (globalTimeMs - recordingStartMs) / 1000;
-
-    // ❌ Timeline camera recording se pehle hai
-    if (diffSeconds < 0) {
-      video.pause();
-      return;
-    }
-
-    // ✅ Seek only if big jump (avoid jitter)
-    if (Math.abs(video.currentTime - diffSeconds) > 0.3) {
-      try {
-        video.currentTime = diffSeconds;
-      } catch {
-        // ignore seek errors
-      }
-    }
-
-    // ▶️ Play / Pause sync
-    if (playback.isPlaying) {
-      video.play().catch(() => {});
-    } else {
-      video.pause();
-    }
-  }, [
-    playback.currentTimestamp,
-    playback.isPlaying,
-    cameraId,
-    cameraStartTime,
-    videoRef,
-  ]);
-
-  /* ---------------- UI ---------------- */
   return (
     <div
       ref={dropRef as unknown as React.Ref<HTMLDivElement>}
@@ -141,14 +57,14 @@ export function PlaybackCameraSlot({
       )}
     >
       {/* Video */}
-      {cameraId && (
+      {cameraId && !errorMessage && (
         <video
           ref={videoRef}
           className="absolute inset-0 w-full h-full object-cover"
           muted
           playsInline
-          controls
           preload="auto"
+          controls
         />
       )}
 
@@ -167,7 +83,7 @@ export function PlaybackCameraSlot({
         </div>
       )}
 
-      {/* Loading */}
+      {/* Loading overlay */}
       {cameraId && !errorMessage && isCameraLoading(cameraId) && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/60">
           <div className="flex flex-col items-center gap-2 text-muted-foreground">

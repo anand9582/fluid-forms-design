@@ -3,35 +3,46 @@ import { create } from "zustand";
 interface PlaybackGridStore {
   layout: { rows: number; cols: number };
   slotAssignments: (string | null)[];
-
-  setLayout: (rows: number, cols: number) => void;
   assignCameraToSlot: (slotIndex: number, cameraId: string) => void;
   clearSlot: (slotIndex: number) => void;
+  clearAllSlots: () => void;
+  setLayout: (rows: number, cols: number) => void;
+  resizeSlots: () => void;
 }
 
-const usePlaybackGridStore = create<PlaybackGridStore>((set) => ({
+const usePlaybackGridStore = create<PlaybackGridStore>((set, get) => ({
   layout: { rows: 2, cols: 2 },
-  slotAssignments: Array(4).fill(null),
+  slotAssignments: [],
 
-  setLayout: (rows, cols) =>
-    set({
-      layout: { rows, cols },
-      slotAssignments: Array(rows * cols).fill(null),
-    }),
+  setLayout: (rows, cols) => set({ layout: { rows, cols } }),
+
+  resizeSlots: () => {
+    const { layout, slotAssignments } = get();
+    const total = layout.rows * layout.cols;
+    const updated = [...slotAssignments];
+    if (updated.length > total) updated.length = total;
+    while (updated.length < total) updated.push(null);
+    set({ slotAssignments: updated });
+  },
 
   assignCameraToSlot: (slotIndex, cameraId) =>
     set((state) => {
-      const next = [...state.slotAssignments];
-      next[slotIndex] = cameraId;   // ✅ ONLY THIS SLOT
-      return { slotAssignments: next };
+      const copy = [...state.slotAssignments];
+      copy[slotIndex] = cameraId;
+      return { slotAssignments: copy };
     }),
 
   clearSlot: (slotIndex) =>
     set((state) => {
-      const next = [...state.slotAssignments];
-      next[slotIndex] = null;
-      return { slotAssignments: next };
+      const copy = [...state.slotAssignments];
+      copy[slotIndex] = null;
+      return { slotAssignments: copy };
     }),
+
+    clearAllSlots: () => set((state) => ({
+      slotAssignments: Array(state.layout.rows * state.layout.cols).fill(null),
+      playingCameraIds: new Set(),
+    })),
 }));
 
 export default usePlaybackGridStore;

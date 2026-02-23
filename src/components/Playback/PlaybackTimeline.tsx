@@ -131,8 +131,8 @@ export function PlaybackTimeline({
                 className={cn(
                   "absolute top-[4px] bottom-[4px] ",
                   s.type === "recording"
-                    ? "bg-primary/60"
-                    : "bg-destructive/60"
+                    ? "bg-blue-300"
+                    : "bg-slate-400"
                 )}
                 style={{
                   left: `${Math.max(0, l)}%`,

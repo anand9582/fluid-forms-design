@@ -1,109 +1,203 @@
 // Playback.tsx
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Sidebar } from "@/components/dashboard/Sidebar";
-import { CameraTreeSidebar, LiveViewToolbar } from "@/components/LiveView/PagesInclude";
-import { PlaybackCameraGrid, PlaybackTimelineBar, PlaybackTimeline, PlaybackAlertsBar } from "@/components/Playback/PagesInclude";
+import {
+  CameraTreeSidebar,
+  LiveViewToolbar,
+} from "@/components/LiveView/PagesInclude";
+import {
+  PlaybackCameraGrid,
+  PlaybackTimelineBar,
+  PlaybackTimeline,
+  PlaybackAlertsBar,
+} from "@/components/Playback/PagesInclude";
 import { usePlayback } from "@/hooks/use-playback";
 import usePlaybackGridStore from "@/Store/UsePlaybackGridStore";
 
-const BASE_URL = "http://192.168.11.131:8081"; // change if needed
+const BASE_URL = "http://192.168.11.131:8081";
 
 interface Player {
   cameraId: string;
   blobUrl: string;
   sessionId: string;
-  date: Date; // store which date this player is for
+  date: Date;
 }
 
 export default function Playback() {
-  const playback = usePlayback();
+  /* ---------------- STATE ---------------- */
   const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
   const [isTimelineExpanded, setIsTimelineExpanded] = useState(false);
   const [players, setPlayers] = useState<Player[]>([]);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [loadingCameraIds, setLoadingCameraIds] = useState<Set<string>>(() => new Set());
+  const [selectedDate] = useState<Date>(new Date("2026-02-05"));
+  const [loadingCameraIds, setLoadingCameraIds] = useState<Set<string>>(
+    () => new Set()
+  );
   const [cameraErrors, setCameraErrors] = useState<Record<string, string>>({});
+  const [zoomLevel, setZoomLevel] = useState(1);
 
-  const { assignCameraToSlot } = usePlaybackGridStore();
+  const playback = usePlayback();
 
-  /** ---------------- START CAMERA ---------------- */
-const startCamera = async (cameraId: string, date?: Date) => {
-  // Default = today
-  const now = new Date();
-  const targetDate = date || now;
+  /* ---------------- GRID STORE ---------------- */
+  const { assignCameraToSlot, slotAssignments } = usePlaybackGridStore();
 
-  // Start = 12:00 AM of targetDate
-  const start = new Date(targetDate);
-  start.setHours(0, 0, 0, 0); // 00:00:00
+  const activeCameraId = useMemo(() => {
+    if (selectedSlot === null) return null;
+    return slotAssignments[selectedSlot] ?? null;
+  }, [selectedSlot, slotAssignments]);
 
-  // End = 11:59:59 PM of targetDate (full day)
-  const end = new Date(targetDate);
-  end.setHours(23, 59, 59, 999); // 23:59:59
+  /* ---------------- TIMELINE DATA ---------------- */
+  const DAY_START = new Date("2026-02-05T00:00:00");
+  const DAY_END = new Date("2026-02-05T23:59:59");
 
-  const startISO = start.toISOString(); // "2026-02-19T00:00:00.000Z"
-  const endISO = end.toISOString();     // "2026-02-19T23:59:59.999Z"
+  const dateToPct = (d: Date) =>
+    ((d.getTime() - DAY_START.getTime()) /
+      (DAY_END.getTime() - DAY_START.getTime())) *
+    100;
 
-  const apiUrl = `${BASE_URL}/api/playback/hls/playlist/${cameraId}?start=${startISO}&end=${endISO}`;
-  console.log("API CALL URL:", apiUrl);
+  const pctToDate = (pct: number) =>
+    new Date(
+      DAY_START.getTime() +
+        (pct / 100) * (DAY_END.getTime() - DAY_START.getTime())
+    );
 
-  try {
-    const res = await fetch(apiUrl);
-    const contentType = res.headers.get("content-type") || "";
-    let json: any = null;
+  const [segments, setSegments] = useState<any[]>([]);
 
-    if (contentType.includes("application/json")) {
-      json = await res.json();
-    } else {
-      const text = await res.text();
-      throw new Error(`API did not return JSON: ${text}`);
+useEffect(() => {
+  fetch(
+    `${BASE_URL}/api/playback/hls/timeline?cameraId=6&fromDate=2026-02-05T00:00:00&toDate=2026-02-05T23:59:59`
+  )
+    .then((r) => {
+      console.log("Raw response:", r); 
+      return r.json();
+    })
+    .then((res) => {
+      console.log("Parsed JSON:", res);
+
+      const segs: any[] = [];
+      let cursor = DAY_START;
+
+      res.data.forEach((s: any) => {
+        const st = new Date(s.startTime);
+        const et = new Date(s.endTime);
+
+        if (st > cursor) {
+          segs.push({
+            start: dateToPct(cursor),
+            end: dateToPct(st),
+            type: "gap",
+          });
+        }
+
+        segs.push({
+          start: dateToPct(st),
+          end: dateToPct(et),
+          type: "recording",
+        });
+
+        cursor = et;
+      });
+
+      if (cursor < DAY_END) {
+        segs.push({
+          start: dateToPct(cursor),
+          end: 100,
+          type: "gap",
+        });
+      }
+
+      console.log("Final segments:", segs); 
+      setSegments(segs);
+    })
+    .catch((err) => {
+      console.error("API error:", err);
+    });
+}, []);
+
+  /* ---------------- CAMERA START ---------------- */
+  const startCamera = async (
+    cameraId: string,
+    date: Date
+  ): Promise<string | null> => {
+    const startISO = new Date(date.setHours(0, 0, 0, 0)).toISOString();
+    const endISO = new Date(date.setHours(23, 59, 59, 999)).toISOString();
+
+    const apiUrl = `${BASE_URL}/api/playback/hls/playlist/${cameraId}?start=${startISO}&end=${endISO}`;
+
+    setLoadingCameraIds((prev) => new Set(prev).add(cameraId));
+
+    try {
+      const res = await fetch(apiUrl);
+      const json = await res.json();
+
+      if (!res.ok || !json?.data?.playlist) {
+        throw new Error("No recordings");
+      }
+
+      const blob = new Blob([json.data.playlist], {
+        type: "application/vnd.apple.mpegurl",
+      });
+      const blobUrl = URL.createObjectURL(blob);
+
+      setPlayers((prev) => [
+        ...prev.filter(
+          (p) =>
+            !(
+              p.cameraId === cameraId &&
+              p.date.toDateString() === date.toDateString()
+            )
+        ),
+        {
+          cameraId,
+          blobUrl,
+          sessionId: json.data.sessionId,
+          date: new Date(date),
+        },
+      ]);
+
+      return blobUrl;
+    } catch (err: any) {
+      setCameraErrors((prev) => ({ ...prev, [cameraId]: err.message }));
+      return null;
+    } finally {
+      setLoadingCameraIds((prev) => {
+        const next = new Set(prev);
+        next.delete(cameraId);
+        return next;
+      });
     }
+  };
 
-    if (!res.ok || !json?.data?.playlist) {
-      throw new Error(json?.message || "No recordings found for selected time");
-    }
-
-    const blob = new Blob([json.data.playlist], { type: "application/vnd.apple.mpegurl" });
-    const blobUrl = URL.createObjectURL(blob);
-
-    setPlayers((prev) => [
-      ...prev,
-      { cameraId, blobUrl, sessionId: json.data.sessionId, date: targetDate },
-    ]);
-  } catch (err: any) {
-    console.error(err);
-    setCameraErrors((prev) => ({ ...prev, [cameraId]: err.message }));
-  }
-};
-  /** ---------------- GET VIDEO SRC ---------------- */
   const getVideoSrc = (cameraId: string) =>
-    players.find((p) => p.cameraId === cameraId && p.date.toDateString() === selectedDate.toDateString())?.blobUrl ?? "";
+    players.find(
+      (p) =>
+        p.cameraId === cameraId &&
+        p.date.toDateString() === selectedDate.toDateString()
+    )?.blobUrl ?? "";
 
-  /** ---------------- HANDLE DROP ---------------- */
-  const handleCameraDrop = (cameraId: string, slotIndex: number) => {
+  /* ---------------- EVENTS ---------------- */
+  const handleCameraDrop = async (cameraId: string, slotIndex: number) => {
     assignCameraToSlot(slotIndex, cameraId);
     setSelectedSlot(slotIndex);
 
-    // Default start = 12:00 AM of selectedDate
-    const defaultDate = new Date(selectedDate);
-    defaultDate.setHours(0, 0, 0, 0);
-
-    startCamera(cameraId, defaultDate);
-  };
-
-  /** ---------------- HANDLE DATE CHANGE ---------------- */
-  const handleDateChange = (date: Date) => {
-    setSelectedDate(date);
-
-    if (selectedSlot === null) return;
-    const slotCameraId = usePlaybackGridStore.getState().slotAssignments[selectedSlot];
-    if (slotCameraId) {
-      // Always start from 12:00 AM of selected date
-      const defaultDate = new Date(date);
-      defaultDate.setHours(0, 0, 0, 0);
-      startCamera(slotCameraId, defaultDate);
+    if (!getVideoSrc(cameraId)) {
+      await startCamera(cameraId, new Date(selectedDate));
     }
   };
 
+  const handleCameraClick = (cameraId: string) => {
+    startCamera(cameraId, new Date(selectedDate));
+  };
+
+  const handleTimelineSeek = async (pct: number) => {
+    if (!activeCameraId) return;
+
+    playback.seekTo(pct);
+    const seekTime = pctToDate(pct);
+
+    await startCamera(activeCameraId, seekTime);
+  };
+
+  /* ---------------- UI ---------------- */
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
       <Sidebar />
@@ -114,35 +208,30 @@ const startCamera = async (cameraId: string, date?: Date) => {
           selectedLayout="2x2"
           onLayoutChange={() => {}}
           onToggleCameraList={() => {}}
-           gridStore={usePlaybackGridStore()}
-          showCustomGridBuilder={false} 
-          gridStore={usePlaybackGridStore()} 
+          gridStore={usePlaybackGridStore()}
+          showCustomGridBuilder={false}
         />
       </div>
 
       <div className="flex flex-1 ml-[80px] gap-3 p-3 overflow-hidden">
-        <CameraTreeSidebar isVisible onCameraClick={startCamera} />
+        <CameraTreeSidebar isVisible onCameraClick={handleCameraClick} />
 
         <PlaybackCameraGrid
           selectedSlot={selectedSlot}
-          onSlotSelect={setSelectedSlot}
+          onSlotSelect={(i) => {
+            setSelectedSlot(i);
+            setIsTimelineExpanded(true);
+          }}
           getVideoSrc={getVideoSrc}
           onCameraDrop={handleCameraDrop}
-          isCameraLoading={(id: string) => loadingCameraIds.has(id)}
+          isCameraLoading={(id) => loadingCameraIds.has(id)}
           cameraErrors={cameraErrors}
-          onVideoPlaying={(id: string) => setLoadingCameraIds((prev) => {
-            const next = new Set(prev);
-            next.delete(id);
-            return next;
-          })}
-          onVideoWaiting={(id: string) => setLoadingCameraIds((prev) => new Set(prev).add(id))}
+          playback={playback}
         />
       </div>
 
       <div className="shrink-0 z-50">
         <PlaybackTimelineBar
-          selectedDate={selectedDate}
-          onDateChange={handleDateChange}
           isPlaying={playback.isPlaying}
           onTogglePlay={playback.togglePlay}
           onStop={playback.stop}
@@ -151,16 +240,23 @@ const startCamera = async (cameraId: string, date?: Date) => {
           onSkipBack={playback.skipBack}
           onSkipForward={playback.skipForward}
           speed={playback.speed}
+          currentTimestamp={playback.currentTimestamp}
           isSynced={playback.isSynced}
           onToggleSync={playback.setIsSynced}
           isTimelineExpanded={isTimelineExpanded}
-          onToggleTimeline={() => setIsTimelineExpanded((v) => !v)}
+          onToggleTimeline={() =>
+            setIsTimelineExpanded(!isTimelineExpanded)
+          }
+          zoomLevel={zoomLevel}
+          onZoomChange={setZoomLevel}
         />
 
         <PlaybackTimeline
           playheadPosition={playback.playheadPosition}
           isExpanded={isTimelineExpanded}
-          onSeek={playback.seekTo}
+          onSeek={handleTimelineSeek}
+          zoomLevel={zoomLevel}
+          segments={segments}
         />
 
         <PlaybackAlertsBar />

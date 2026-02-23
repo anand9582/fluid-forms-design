@@ -57,6 +57,7 @@ export default {
         Ailighteronered:"#DC2626",
         tablecolor:"#64748B",
         primarydarkblack: "#0A0A0A",
+        timelinebg:"#CBD5E1",
         labelcolor:"#171717",
         pagination: {
             text: "#404040",
