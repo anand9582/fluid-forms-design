@@ -103,9 +103,7 @@ useEffect(() => {
 }
 
 
-// NEEW CODE
-
-
+// demmy api use this testing is below
 
 import { useEffect, useState, useMemo, ChangeEvent } from "react";
 import { Search, ChevronDown, ChevronRight } from "lucide-react";
@@ -129,9 +127,9 @@ interface Props {
 // Dummy camera data
 // -----------------------
 const dummyCameras: Camera[] = [
-  { cameraId: "1", name: "Lobby Camera", streams: [{ id: "s1", status: "ONLINE" }] },
-  { cameraId: "2", name: "Entrance Camera", streams: [{ id: "s1", status: "OFFLINE" }] },
-  { cameraId: "3", name: "Parking Lot Camera", streams: [{ id: "s1", status: "ONLINE" }] },
+  { cameraId: "6", name: "Lobby Camera", streams: [{ id: "s1", status: "ONLINE" }] },
+  { cameraId: "6", name: "Entrance Camera", streams: [{ id: "s1", status: "OFFLINE" }] },
+  { cameraId: "6", name: "Parking Lot Camera", streams: [{ id: "s1", status: "ONLINE" }] },
   { cameraId: "4", name: "Elevator Camera", streams: [{ id: "s1", status: "OFFLINE" }] },
   { cameraId: "5", name: "Pool Area Camera", streams: [{ id: "s1", status: "ONLINE" }] },
 ];

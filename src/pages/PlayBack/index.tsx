@@ -112,7 +112,7 @@ const [segments, setSegments] = useState<any[]>([]);
       setSegments(uiSegs); 
       usePlaybackStore.getState().setSegments(storeSegs);
 
-      console.log("📦 store segments", storeSegs.length);
+      console.log("store segments", storeSegs.length);
     } catch (err) {
       console.error("Timeline fetch error:", err);
     }
@@ -189,16 +189,65 @@ const [segments, setSegments] = useState<any[]>([]);
     }
   };
 
-  /* ---------------- SEEK HANDLER ---------------- */
-  const handleSeekToDate = async (date: Date) => {
-    setSelectedDate(date);
-    playback.seekToDate(date);
+  // /* ---------------- SEEK HANDLER ---------------- */
+  // const handleSeekToDate = async (date: Date) => {
+  //   setSelectedDate(date);
+  //   playback.seekToDate(date);
 
-    const slotCameraIds = slotAssignments.filter(Boolean) as string[];
-    for (const cameraId of slotCameraIds) {
-      await startCamera(cameraId, date, { start: date, end: new Date(date.getTime() + 2 * 60 * 60 * 1000) });
+  //   const slotCameraIds = slotAssignments.filter(Boolean) as string[];
+  //   for (const cameraId of slotCameraIds) {
+  //     await startCamera(cameraId, date, { start: date, end: new Date(date.getTime() + 2 * 60 * 60 * 1000) });
+  //   }
+  // };
+
+const handleSeekToDate = async (date: Date) => {
+  setSelectedDate(date);
+
+  const segments = usePlaybackStore.getState().segments;
+  if (!segments.length) return;
+
+  const nextSegment =
+    segments.find((s) => date >= s.startTime && date <= s.endTime) ||
+    segments.find((s) => date < s.startTime);
+
+  if (!nextSegment) return;
+
+  const safeTime = date < nextSegment.startTime ? nextSegment.startTime : date;
+
+  // ✅ Update playhead
+  const DAY_START = new Date(safeTime);
+  DAY_START.setHours(0,0,0,0);
+  const DAY_END = new Date(safeTime);
+  DAY_END.setHours(23,59,59,999);
+  const pct = ((safeTime.getTime() - DAY_START.getTime()) / (DAY_END.getTime() - DAY_START.getTime())) * 100;
+
+  usePlaybackStore.getState().setCurrentTimestamp(safeTime);
+  usePlaybackStore.getState().playheadPosition = pct;
+
+  // ✅ Load cameras dynamically
+  const slotCameraIds = slotAssignments.filter(Boolean) as string[];
+  for (const cameraId of slotCameraIds) {
+    const existingPlayer = players.find(
+      (p) => p.cameraId === cameraId && p.date.toDateString() === selectedDate.toDateString()
+    );
+
+    if (!existingPlayer) {
+      await startCamera(cameraId, selectedDate, { start: nextSegment.startTime, end: nextSegment.endTime });
     }
-  };
+  }
+
+  // ✅ Load first slot video & play
+  const firstCameraId = slotCameraIds[0];
+  if (firstCameraId) {
+    const player = players.find(
+      (p) => p.cameraId === firstCameraId && p.date.toDateString() === selectedDate.toDateString()
+    );
+    if (player) {
+      playback.load(player.blobUrl);
+      playback.play();
+    }
+  }
+};
 
   /* ---------------- STOP ---------------- */
   const handleStop = () => {
@@ -276,7 +325,6 @@ const [segments, setSegments] = useState<any[]>([]);
           isExpanded={isTimelineExpanded}
         onSeek={(pct) => {
             // Convert pct back to Date
-            const DAY_START = new Date(selectedDate);
             DAY_START.setHours(0, 0, 0, 0);
             const DAY_END = new Date(selectedDate);
             DAY_END.setHours(23, 59, 59, 999);
