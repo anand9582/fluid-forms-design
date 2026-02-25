@@ -96,7 +96,6 @@ export function PlaybackCameraSlot({
           muted
           playsInline
           preload="auto"
-          controls
         />
       )}
 

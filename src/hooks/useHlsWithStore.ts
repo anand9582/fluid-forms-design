@@ -38,16 +38,22 @@ export function useHlsWithStore({ src, cameraId, segments, onReady }: Props) {
       hls.on(Hls.Events.MEDIA_ATTACHED, () => {
         hls.loadSource(src);
       });
+hls.on(Hls.Events.MANIFEST_PARSED, async () => {
+  onReady?.();
 
-      hls.on(Hls.Events.MANIFEST_PARSED, async () => {
-        onReady?.();
-        try {
-          await video.play();
-          console.log("Autoplay success", cameraId);
-        } catch (e) {
-          console.warn("Autoplay blocked", e);
-        }
-      });
+  const playVideo = async () => {
+    try {
+      if (!video.paused) return;
+      await video.play();
+      console.log("Autoplay success", cameraId);
+    } catch (err) {
+      console.warn("Autoplay blocked, retrying...", err);
+      setTimeout(playVideo, 200); // retry until browser allows it
+    }
+  };
+
+  playVideo();
+});
 
       // 🔹 Fragment loaded → force sync with currentTimestamp
       hls.on(Hls.Events.FRAG_LOADED, () => {

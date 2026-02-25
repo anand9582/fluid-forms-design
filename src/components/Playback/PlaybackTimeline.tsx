@@ -44,6 +44,15 @@ function generateTimeLabels(zoomLevel: number, playheadPosition: number) {
   return { labels, viewStart, visibleHours };
 }
 
+/* ---------- FORMAT 0-100% → hh:mm:ss ---------- */
+function formatTimeFromPct(pct: number) {
+  const totalSeconds = (pct / 100) * 24 * 60 * 60;
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = Math.floor(totalSeconds % 60);
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
 export function PlaybackTimeline({
   playheadPosition,
   isExpanded,
@@ -54,6 +63,9 @@ export function PlaybackTimeline({
   const [dragging, setDragging] = useState(false);
   const isDragging = useRef(false);
   const trackRef = useRef<HTMLDivElement | null>(null);
+
+  const [hoverTime, setHoverTime] = useState<number | null>(null);
+  const [hoverPos, setHoverPos] = useState<number | null>(null);
 
   const { labels, viewStart, visibleHours } = useMemo(
     () => generateTimeLabels(zoomLevel, playheadPosition),
@@ -74,30 +86,6 @@ export function PlaybackTimeline({
     [viewStartPct, viewWidthPct]
   );
 
-  /* ---------- SAFE SEEK ---------- */
-const onSeekSafe = useCallback(
-  (pos: number) => {
-    const absTime = viewportToAbs(pos);
-    // nearest recording segment
-    const recSegment =
-      segments.find((s) => absTime >= s.start && absTime <= s.end) ||
-      segments.find((s) => absTime < s.start);
-
-    if (!recSegment) return;
-
-    const safePos = absTime < recSegment.start ? recSegment.start : absTime;
-
-    console.log(
-      "🔹 onSeekSafe",
-      { pos, absTime, recSegment, safePos }
-    );
-
-    onSeek(safePos);
-  },
-  [segments, onSeek, viewportToAbs]
-);
-
-  /* ---------- MOUSE / DRAG ---------- */
   const getPosFromX = useCallback(
     (x: number) => {
       if (!trackRef.current) return null;
@@ -108,25 +96,50 @@ const onSeekSafe = useCallback(
     []
   );
 
+  /* ---------- SAFE SEEK ---------- */
+  const onSeekSafe = useCallback(
+    (pos: number) => {
+      const absTime = viewportToAbs(pos);
+      // nearest recording segment
+      const recSegment =
+        segments.find((s) => absTime >= s.start && absTime <= s.end) ||
+        segments.find((s) => absTime < s.start);
+
+      if (!recSegment) return;
+
+      const safePos = absTime < recSegment.start ? recSegment.start : absTime;
+
+      // update tooltip
+      setHoverTime(safePos);
+      setHoverPos(pos);
+
+      onSeek(safePos);
+    },
+    [segments, onSeek, viewportToAbs]
+  );
+
+  /* ---------- MOUSE / DRAG ---------- */
   const onMouseDown = (e: React.MouseEvent) => {
     isDragging.current = true;
     setDragging(true);
 
-    const pos = getPosFromX(e.clientX);
-    if (pos !== null) onSeekSafe(pos);
-
     const move = (me: MouseEvent) => {
       if (!isDragging.current) return;
-      const p = getPosFromX(me.clientX);
-      if (p !== null) onSeekSafe(p); // ✅ real-time drag
+      const pos = getPosFromX(me.clientX);
+      if (pos !== null) onSeekSafe(pos);
     };
 
     const up = () => {
       isDragging.current = false;
       setDragging(false);
+      setHoverTime(null);
+      setHoverPos(null);
       window.removeEventListener("mousemove", move);
       window.removeEventListener("mouseup", up);
     };
+
+    const pos = getPosFromX(e.clientX);
+    if (pos !== null) onSeekSafe(pos);
 
     window.addEventListener("mousemove", move);
     window.addEventListener("mouseup", up);
@@ -178,12 +191,20 @@ const onSeekSafe = useCallback(
                 className="absolute top-0 bottom-0 w-[2px] bg-primary"
                 style={{ left: `${playheadVp}%` }}
               />
-              <div
-                className="absolute -top-4 text-[10px] text-primary font-semibold"
-                style={{ left: `${playheadVp}%`, transform: 'translateX(-50%)' }}
-              >
-              </div>
             </>
+          )}
+
+          {/* Hover Tooltip */}
+          {hoverTime !== null && hoverPos !== null && (
+            <div
+              className="absolute -top-6 text-xs font-roboto font-medium text-white bg-blue-500 px-1 rounded pointer-events-none"
+              style={{
+                left: `${hoverPos}%`,
+                transform: "translateX(-50%)",
+              }}
+            >
+              {formatTimeFromPct(hoverTime)}
+            </div>
           )}
         </div>
       </div>
