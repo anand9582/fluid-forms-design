@@ -357,6 +357,7 @@ export function DevicesDataTable({
       state: { rowSelection },
       onRowSelectionChange: setRowSelection,
       initialState: { pagination: { pageSize: 5 } },
+      autoResetPageIndex: false,
   });
 
   useEffect(() => {

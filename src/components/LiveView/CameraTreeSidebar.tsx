@@ -25,11 +25,11 @@ useEffect(() => {
     fetchCameras();
   }, [fetchCameras]);
 
-  const filtered = useMemo(() => {
-    return cameras.filter((d) =>
-      d.name.toLowerCase().includes(search.toLowerCase())
-    );
-  }, [cameras, search]);
+const filtered = useMemo(() => {
+  return cameras.filter((d) =>
+    (d?.name ?? "").toLowerCase().includes(search.toLowerCase())
+  );
+}, [cameras, search]);
 
   const offlineCount = filtered.filter(
     (d) => !d.streams?.some((s) => s.status === "ONLINE")

@@ -75,21 +75,27 @@ export function PlaybackTimeline({
   );
 
   /* ---------- SAFE SEEK ---------- */
-  const onSeekSafe = useCallback(
-    (pos: number) => {
-      const absTime = viewportToAbs(pos);
-      // nearest recording segment
-      const recSegment =
-        segments.find((s) => absTime >= s.start && absTime <= s.end) ||
-        segments.find((s) => absTime < s.start);
+const onSeekSafe = useCallback(
+  (pos: number) => {
+    const absTime = viewportToAbs(pos);
+    // nearest recording segment
+    const recSegment =
+      segments.find((s) => absTime >= s.start && absTime <= s.end) ||
+      segments.find((s) => absTime < s.start);
 
-      if (!recSegment) return;
+    if (!recSegment) return;
 
-      const safePos = absTime < recSegment.start ? recSegment.start : absTime;
-      onSeek(safePos);
-    },
-    [segments, onSeek, viewportToAbs]
-  );
+    const safePos = absTime < recSegment.start ? recSegment.start : absTime;
+
+    console.log(
+      "🔹 onSeekSafe",
+      { pos, absTime, recSegment, safePos }
+    );
+
+    onSeek(safePos);
+  },
+  [segments, onSeek, viewportToAbs]
+);
 
   /* ---------- MOUSE / DRAG ---------- */
   const getPosFromX = useCallback(
@@ -158,7 +164,7 @@ export function PlaybackTimeline({
                 key={i}
                 className={cn(
                   "absolute top-[4px] bottom-[4px]",
-                  s.type === "recording" ? "bg-green-300" : "bg-slate-400"
+                  s.type === "recording" ? "bg-blue-300" : "bg-slate-400"
                 )}
                 style={{ left: `${l}%`, width: `${r - l}%` }}
               />
@@ -176,7 +182,6 @@ export function PlaybackTimeline({
                 className="absolute -top-4 text-[10px] text-primary font-semibold"
                 style={{ left: `${playheadVp}%`, transform: 'translateX(-50%)' }}
               >
-                {new Date((playheadPosition / 100) * 24 * 60 * 60 * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
               </div>
             </>
           )}

@@ -34,8 +34,8 @@ export const showAlert = (
     confirmButtonText: "OK",
     background: "linear-gradient(to bottom right, #f0f0f9 40%, #f0f0f9 100%)",
     color: "#0f172a",
-    iconColor, // sets the SweetAlert2 icon color
-    timer: 7000,
+    iconColor, 
+    timer: 1000,
     timerProgressBar: true,
     customClass: {
       popup: "rounded-xl shadow-lg",

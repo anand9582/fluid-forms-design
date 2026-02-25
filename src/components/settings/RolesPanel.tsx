@@ -126,15 +126,15 @@ useEffect(() => {
                       >
                       <button
                                onClick={() => {
-                                  if (hasUnsavedChanges) {
-                                    showAlert(
-                                      "Unsaved changes",
-                                      "Save changes before switching role",
-                                      "warning",
-                                      "#ff9966" 
-                                    );
-                                    return;
-                                  }
+                                  // if (hasUnsavedChanges) {
+                                  //   showAlert(
+                                  //     "Unsaved changes",
+                                  //     "Save changes before switching role",
+                                  //     "warning",
+                                  //     "#ff9966" 
+                                  //   );
+                                  //   return;
+                                  // }
                                   setSelectedRole(Number(role.id), role.name);
                                 }}
                               className={cn(

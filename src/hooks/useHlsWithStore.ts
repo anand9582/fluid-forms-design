@@ -10,12 +10,7 @@ interface Props {
   onReady?: () => void;
 }
 
-export function useHlsWithStore({
-  src,
-  cameraId,
-  segments,
-  onReady,
-}: Props) {
+export function useHlsWithStore({ src, cameraId, segments, onReady }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const retryRef = useRef<number | null>(null);
@@ -24,21 +19,12 @@ export function useHlsWithStore({
   const currentTimestamp = usePlaybackStore((s) => s.currentTimestamp);
   const speed = usePlaybackStore((s) => s.speed);
 
-  useEffect(() => {
-    console.log("🎯 useHlsWithStore render", {
-      cameraId,
-      src,
-      segmentsCount: segments.length,
-    });
-  }, [cameraId, src, segments]);
-
   /* ---------- HLS SETUP ---------- */
   useEffect(() => {
     const video = videoRef.current;
-
     if (!video || !src || !cameraId) return;
 
-    console.log("🔥 HLS init", cameraId);
+    console.log("HLS init", cameraId);
 
     if (Hls.isSupported()) {
       const hls = new Hls({
@@ -46,23 +32,44 @@ export function useHlsWithStore({
         maxBufferLength: 10,
         backBufferLength: 0,
       });
-
       hlsRef.current = hls;
       hls.attachMedia(video);
 
       hls.on(Hls.Events.MEDIA_ATTACHED, () => {
         hls.loadSource(src);
-        hls.startLoad(0);
       });
 
       hls.on(Hls.Events.MANIFEST_PARSED, async () => {
         onReady?.();
-
         try {
           await video.play();
-          console.log("▶️ Autoplay success", cameraId);
+          console.log("Autoplay success", cameraId);
         } catch (e) {
-          console.warn("⛔ Autoplay blocked", e);
+          console.warn("Autoplay blocked", e);
+        }
+      });
+
+      // 🔹 Fragment loaded → force sync with currentTimestamp
+      hls.on(Hls.Events.FRAG_LOADED, () => {
+        const segment = segments.find(
+          (s) =>
+            currentTimestamp >= s.startTime && currentTimestamp <= s.endTime
+        );
+        if (!segment) return;
+
+        const relativeTime =
+          (currentTimestamp.getTime() - segment.startTime.getTime()) / 1000;
+
+        if (Math.abs(video.currentTime - relativeTime) > 0.3) {
+          console.log("SYNC VIDEO", {
+            cameraId,
+            currentTimestamp,
+            segmentStart: segment.startTime,
+            segmentEnd: segment.endTime,
+            videoCurrentTime: video.currentTime,
+            relativeTime,
+          });
+          video.currentTime = relativeTime;
         }
       });
     } else {
@@ -91,40 +98,24 @@ export function useHlsWithStore({
       }
 
       video.playbackRate = parseFloat(speed.replace("x", "")) || 1;
-
       if (isPlaying) video.play().catch(() => {});
       else video.pause();
 
-      // -------- Safe segment selection --------
       const segment = segments.find(
         (s) =>
-          currentTimestamp >= s.startTime &&
-          currentTimestamp <= s.endTime
+          currentTimestamp >= s.startTime && currentTimestamp <= s.endTime
       );
 
       if (!segment) {
-        // Optionally: jump to next available segment if in a gap
         const nextSegment = segments.find((s) => currentTimestamp < s.startTime);
         if (nextSegment) {
-          console.log("⏭ Jumping to next segment", nextSegment.startTime);
           usePlaybackStore.getState().setCurrentTimestamp(nextSegment.startTime);
         }
-        return; // No valid segment for seeking
-      }
-
-      const relativeTime = (currentTimestamp.getTime() - segment.startTime.getTime()) / 1000;
-
-      if (relativeTime < 0) {
-        console.warn("⛔ Negative seek blocked", {
-          relativeTime,
-          current: currentTimestamp,
-          segmentStart: segment.startTime,
-        });
         return;
       }
 
+      const relativeTime = (currentTimestamp.getTime() - segment.startTime.getTime()) / 1000;
       if (Math.abs(video.currentTime - relativeTime) > 0.3) {
-        console.log("⏩ SEEK", relativeTime);
         video.currentTime = relativeTime;
       }
     };

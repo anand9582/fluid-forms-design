@@ -20,15 +20,15 @@ interface PlaybackTimelineBarProps {
   onToggleTimeline: () => void;
   zoomLevel: number;
   onZoomChange: (level: number) => void;
-    onFastForward: () => void;
-    speed: string;
-      onRewind: () => void;
-        onSkipBack: () => void;
-          onStop: () => void;
-            onSkipBack: () => void;
+  onFastForward: () => void;
+  speed: string;
+  onRewind: () => void;
+  onSkipBack: () => void;
+  onStop: () => void;
+  onSeekToDate: (date: Date) => void; 
 }
 
-export function PlaybackTimelineBar({ isTimelineExpanded, onToggleTimeline, zoomLevel, onZoomChange,onFastForward,speed,onRewind,onSkipBack,onStop,onSkipForward  }: PlaybackTimelineBarProps) {
+export function PlaybackTimelineBar({ isTimelineExpanded, onToggleTimeline, zoomLevel, onZoomChange,onFastForward,speed,onRewind,onSeekToDate ,onSkipBack,onStop,onSkipForward  }: PlaybackTimelineBarProps) {
   // Zustand store
   const isPlaying = usePlaybackStore((s) => s.isPlaying);
   const togglePlay = usePlaybackStore((s) => s.togglePlay);
@@ -57,15 +57,19 @@ export function PlaybackTimelineBar({ isTimelineExpanded, onToggleTimeline, zoom
     setPickerOpen(open);
   };
 
-  const handleApply = () => {
+const handleApply = () => {
     const d = new Date(selectedDate);
     let h = parseInt(timeHour) || 0;
     if (ampm === "PM" && h !== 12) h += 12;
     if (ampm === "AM" && h === 12) h = 0;
     d.setHours(h, parseInt(timeMinute) || 0, parseInt(timeSecond) || 0, 0);
-    seekToDate(d);
+
+    console.log("📅 Picker applied date:", d);
+
+    onSeekToDate(d); 
+
     setPickerOpen(false);
-  };
+};
 
   return (
     <div className="flex items-center gap-1.5 px-3 py-1 border-t border-border bg-background flex-shrink-0">

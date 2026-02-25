@@ -11,7 +11,7 @@ interface PlaybackStore {
   speed: string;
   currentTimestamp: Date;
   segments: Segment[];
-  playheadPosition: number; // 0-100
+  playheadPosition: number; 
   setIsPlaying: (val: boolean) => void;
   togglePlay: () => void;
   setSpeed: (val: string) => void;

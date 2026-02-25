@@ -1,5 +1,4 @@
-// components/PlaybackCameraSlot.tsx
-import React from "react";
+import React, { useRef } from "react";
 import { useDrop } from "react-dnd";
 import { Devices } from "@/components/Icons/Svg/liveViewIcons";
 import { cn } from "@/lib/utils";
@@ -27,6 +26,10 @@ export function PlaybackCameraSlot({
   isCameraLoading,
   errorMessage,
 }: Props) {
+  /* ---------------- REAL DOM REF (for fullscreen) ---------------- */
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  /* ---------------- REACT DND ---------------- */
   const [{ isOver }, dropRef] = useDrop({
     accept: "SIDEBAR_CAMERA",
     drop: (item: { cameraId: string }) => {
@@ -37,57 +40,83 @@ export function PlaybackCameraSlot({
     }),
   });
 
-  const segments = usePlaybackStore((s) => s.segments);
+  // connect react-dnd to real DOM node
+  dropRef(containerRef);
 
+  /* ---------------- FULLSCREEN TOGGLE ---------------- */
+  const handleFullscreenToggle = () => {
+    const element = containerRef.current;
+    if (!element) return;
+
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else {
+      element.requestFullscreen().catch((err) => {
+        console.error("Failed to enter fullscreen:", err);
+      });
+    }
+  };
+
+  /* ---------------- PLAYBACK ---------------- */
+  const segments = usePlaybackStore((s) => s.segments);
   const src = cameraId ? getVideoSrc(cameraId) : "";
 
-  const videoRef = useHlsWithStore({  
+  if (cameraId && !src) {
+    console.log("⏳ Waiting for blobUrl", cameraId);
+  }
+
+  const videoRef = useHlsWithStore({
     src,
     cameraId,
     segments,
   });
-console.log("🧩 Slot", {
-  index,
-  cameraId,
-  src,
-});
+  console.log(
+    "[PlaybackCameraSlot]",
+    "cameraId:", cameraId,
+    "loading:", cameraId ? isCameraLoading(cameraId) : "no-camera",
+    "src:", src
+  );
   return (
     <div
-      ref={dropRef as unknown as React.Ref<HTMLDivElement>}
+      ref={containerRef}
+      onDoubleClick={handleFullscreenToggle}
       onClick={onSelect}
       className={cn(
-        "relative w-full h-full overflow-hidden border bg-black cursor-pointer",
+        "relative w-full h-full overflow-hidden border  cursor-pointer select-none",
         selected && "ring-2 ring-primary",
         isOver && "border-primary"
       )}
     >
-      {/* VIDEO */}
+      {/* ---------------- VIDEO ---------------- */}
       {cameraId && !errorMessage && (
         <video
+          key={src}
           ref={videoRef}
           className="absolute inset-0 w-full h-full object-cover"
           muted
           playsInline
           preload="auto"
+          controls
         />
       )}
 
-      {/* EMPTY SLOT */}
+      {/* ---------------- EMPTY SLOT ---------------- */}
       {!cameraId && !errorMessage && (
-        <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2">
-          <Devices className="h-8 w-8 opacity-50" />
-          <span className="text-xs opacity-70">Drop Camera</span>
+        <div className="flex items-center justify-center h-full text-gray-400 gap-2 text-muted-foreground">
+           <Devices className="h-4 w-4" />
+            <span className="text-sm font-medium">Drop Camera</span>
         </div>
+       
       )}
 
-      {/* ERROR */}
+      {/* ---------------- ERROR ---------------- */}
       {errorMessage && (
         <div className="flex items-center justify-center h-full text-destructive text-xs p-2 text-center">
           {errorMessage}
         </div>
       )}
 
-      {/* LOADING */}
+      {/* ---------------- LOADING ---------------- */}
       {cameraId && !errorMessage && isCameraLoading(cameraId) && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/60">
           <div className="flex flex-col items-center gap-2 text-muted-foreground">

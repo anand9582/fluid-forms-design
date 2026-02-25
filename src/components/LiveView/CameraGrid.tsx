@@ -97,7 +97,7 @@ function CameraGridSlot({
   handleRefresh?: (slotIndex: number) => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
-
+  const containerRef = useRef<HTMLDivElement>(null);
   const assignCameraToSlot = useGridStore((s) => s.assignCameraToSlot);
   const swapSlots = useGridStore((s) => s.swapSlots);
 
@@ -110,6 +110,7 @@ function CameraGridSlot({
       isDragging: monitor.isDragging(),
     }),
   });
+
 
   /* DROP (SIDEBAR + GRID) */
   const [{ isOver }, dropRef] = useDrop({
@@ -127,6 +128,12 @@ function CameraGridSlot({
       isOver: monitor.isOver(),
     }),
   });
+ // 🔹 connect drag + drop to containerRef
+  useEffect(() => {
+    if (!containerRef.current) return;
+    dragRef(containerRef.current);
+    dropRef(containerRef.current);
+  }, [dragRef, dropRef]);
 
   useEffect(() => {
     if (!slot || !videoRef.current) return;
@@ -138,12 +145,24 @@ function CameraGridSlot({
     }
   }, [slot, play]);
 
+    /* ---------------- FULLSCREEN ---------------- */
+  const handleFullscreenToggle = () => {
+    const element = containerRef.current;
+    if (!element) return;
+
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else {
+      element.requestFullscreen().catch((err) => {
+        console.error("Failed to enter fullscreen:", err);
+      });
+    }
+  };
+
   return (
     <div
-      ref={(node) => {
-        dragRef(node);
-        dropRef(node);
-      }}
+      ref={containerRef}
+      onDoubleClick={handleFullscreenToggle}
       onClick={() => onSelect(index)}
       className={cn(
         "group  relative border w-full h-full cursor-pointer",
@@ -194,7 +213,7 @@ function CameraGridSlot({
                   }}>
                   <Camera size={16} />
                 </button>
-                <button className="p-1 bg-black rounded text-white/90">
+                <button className="p-1 bg-black rounded text-white/90" onClick={handleFullscreenToggle}>
                   <Minimize size={14} />
                 </button>
                 <button className="p-1 bg-black rounded text-white/90"  
