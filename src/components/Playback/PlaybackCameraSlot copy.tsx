@@ -99,4 +99,182 @@ export function PlaybackCameraSlot({
       )}
     </div>
   );
+
+
+  
+}
+
+
+// /dldldld
+
+
+import React, { useEffect, useRef, useState } from "react";
+import { useDrop } from "react-dnd";
+import Hls from "hls.js";
+import { Devices } from "@/components/Icons/Svg/liveViewIcons";
+import { cn } from "@/lib/utils";
+
+interface Props {
+  index: number;
+  cameraId: string | null;
+  selected: boolean;
+  onSelect: () => void;
+  onCameraDrop: (cameraId: string, slotIndex: number) => void;
+  getVideoSrc: (cameraId: string) => string;
+  isCameraLoading: (cameraId: string) => boolean;
+  errorMessage?: string;
+}
+
+export function PlaybackCameraSlot({
+  index,
+  cameraId,
+  selected,
+  onSelect,
+  onCameraDrop,
+  getVideoSrc,
+  isCameraLoading,
+  errorMessage,
+}: Props) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const hlsRef = useRef<Hls | null>(null);
+
+  const [isReady, setIsReady] = useState(false);
+
+  /* ---------------- DRAG DROP ---------------- */
+  const [{ isOver }, dropRef] = useDrop({
+    accept: "SIDEBAR_CAMERA",
+    drop: (item: { cameraId: string }) => {
+      onCameraDrop(item.cameraId, index);
+    },
+    collect: (monitor) => ({
+      isOver: monitor.isOver({ shallow: true }),
+    }),
+  });
+
+  dropRef(containerRef);
+
+  /* ---------------- HTML-STYLE HLS PLAY ---------------- */
+  function playHls(src: string) {
+    const video = videoRef.current;
+    if (!video || !src) return;
+
+    console.log("▶ HTML-style playHls", src);
+    setIsReady(false);
+
+    // ✅ create HLS only once (HTML jaisa)
+    if (!hlsRef.current && Hls.isSupported()) {
+      hlsRef.current = new Hls({
+        maxBufferLength: 30,
+        maxMaxBufferLength: 60,
+        enableWorker: true,
+        lowLatencyMode: true,
+      });
+    }
+
+    if (hlsRef.current) {
+      const hls = hlsRef.current;
+
+      hls.loadSource(src);
+      hls.attachMedia(video);
+
+      hls.once(Hls.Events.MANIFEST_PARSED, () => {
+        video
+          .play()
+          .then(() => console.log("▶ PLAY OK"))
+          .catch((e) => console.error("❌ PLAY FAIL", e));
+      });
+
+      hls.on(Hls.Events.ERROR, (_, data) => {
+        console.error("⚠ HLS ERROR", data);
+        if (data.fatal) {
+          try {
+            hls.recoverMediaError();
+          } catch (e) {
+            console.error("❌ HLS RECOVERY FAIL", e);
+          }
+        }
+      });
+
+      video.onplaying = () => {
+        console.log("🟢 VIDEO PLAYING");
+        setIsReady(true);
+      };
+    } else {
+      // 🍎 Safari native HLS
+      video.src = src;
+      video
+        .play()
+        .then(() => console.log("▶ PLAY OK (Safari)"))
+        .catch(() => {});
+      video.onplaying = () => setIsReady(true);
+    }
+  }
+
+  /* ---------------- CAMERA CHANGE ---------------- */
+  useEffect(() => {
+    if (!cameraId) return;
+
+    const src = getVideoSrc(cameraId);
+    if (!src) return;
+
+    playHls(src);
+  }, [cameraId]);
+
+  /* ---------------- CLEANUP (ONLY ON UNMOUNT) ---------------- */
+  useEffect(() => {
+    return () => {
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+    };
+  }, []);
+
+  /* ---------------- UI ---------------- */
+  return (
+    <div
+      ref={containerRef}
+      onClick={onSelect}
+      className={cn(
+        "relative w-full h-full overflow-hidden border cursor-pointer",
+        selected && "ring-2 ring-primary",
+        isOver && "border-primary"
+      )}
+    >
+      {/* VIDEO */}
+      {cameraId && !errorMessage && (
+        <video
+          ref={videoRef}
+          className="absolute inset-0 w-full h-full object-cover"
+          muted
+          playsInline
+          autoPlay
+          preload="auto"
+        />
+      )}
+
+      {/* EMPTY SLOT */}
+      {!cameraId && (
+        <div className="flex items-center justify-center h-full text-muted-foreground gap-2">
+          <Devices className="h-4 w-4" />
+          <span className="text-sm">Drop Camera</span>
+        </div>
+      )}
+
+      {/* ERROR */}
+      {errorMessage && (
+        <div className="flex items-center justify-center h-full text-destructive text-xs p-2">
+          {errorMessage}
+        </div>
+      )}
+
+      {/* LOADING */}
+      {cameraId && (isCameraLoading(cameraId) || !isReady) && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/60">
+          <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      )}
+    </div>
+  );
 }

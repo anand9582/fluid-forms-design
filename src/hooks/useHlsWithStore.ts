@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import Hls from "hls.js";
 import { Segment, usePlaybackStore } from "@/Store/playbackStore";
 
@@ -9,7 +9,12 @@ interface Props {
   onReady?: () => void;
 }
 
-export function useHlsWithStore({ src, cameraId, segments, onReady }: Props) {
+export function useHlsWithStore({
+  src,
+  cameraId,
+  segments,
+  onReady,
+}: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const [firstFrameReady, setFirstFrameReady] = useState(false);
@@ -20,29 +25,52 @@ export function useHlsWithStore({ src, cameraId, segments, onReady }: Props) {
 
   const speedMultiplier = parseFloat(speedStr.replace("x", "")) || 1;
 
-  /* ---------------- RESET ---------------- */
+  /* ---------- BUILD SEGMENT OFFSETS ---------- */
+  const segmentOffsets = useMemo(() => {
+    let acc = 0;
+    return segments.map((s) => {
+      const duration =
+        (s.endTime.getTime() - s.startTime.getTime()) / 1000;
+      const offset = acc;
+      acc += duration;
+      return { ...s, offset, duration };
+    });
+  }, [segments]);
+
+  /* ---------- RESET ---------- */
   useEffect(() => {
     setFirstFrameReady(false);
+    if (videoRef.current) {
+      videoRef.current.currentTime = 0;
+    }
   }, [src, cameraId]);
 
-  /* ---------------- INIT HLS ---------------- */
+  /* ---------- INIT HLS ---------- */
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !src || !cameraId) return;
 
-    const hls = new Hls({ lowLatencyMode: true, maxBufferLength: 10 });
-    hlsRef.current = hls;
+    const hls = new Hls({
+      lowLatencyMode: true,
+      maxBufferLength: 10,
+    });
 
+    hlsRef.current = hls;
     hls.attachMedia(video);
-    hls.on(Hls.Events.MEDIA_ATTACHED, () => hls.loadSource(src));
+
+    hls.on(Hls.Events.MEDIA_ATTACHED, () => {
+      hls.loadSource(src);
+    });
+
     hls.on(Hls.Events.MANIFEST_PARSED, () => {
-      hls.startLoad(0);
       video.play().catch(() => {});
     });
 
     video.onplaying = () => {
-      setFirstFrameReady(true);
-      onReady?.();
+      if (!firstFrameReady) {
+        setFirstFrameReady(true);
+        onReady?.();
+      }
     };
 
     return () => {
@@ -51,56 +79,84 @@ export function useHlsWithStore({ src, cameraId, segments, onReady }: Props) {
     };
   }, [src, cameraId]);
 
-  /* ---------------- SEEK TO TIMESTAMP ---------------- */
+  /* ---------- SEEK + GAP + END HANDLING ---------- */
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || !cameraId || !firstFrameReady) return;
+    if (!video || !firstFrameReady || !segmentOffsets.length) return;
 
-    const seg = segments.find(
-      (s) => currentTimestamp >= s.startTime && currentTimestamp <= s.endTime
-    );
-    if (!seg) return;
+    const { setHasVideo, setIsPlaying } =
+      usePlaybackStore.getState();
 
-    const targetSeconds = (currentTimestamp.getTime() - seg.startTime.getTime()) / 1000;
+    const lastSegment =
+      segmentOffsets[segmentOffsets.length - 1];
 
-    // Only seek if difference > 0.3s
-    if (Math.abs(video.currentTime - targetSeconds) > 0.3) {
-      video.currentTime = targetSeconds;
+    /* ----- AFTER LAST RECORDING ----- */
+    if (currentTimestamp > lastSegment.endTime) {
+      setHasVideo(false);
+      setIsPlaying(false);
+      video.pause();
+      return;
     }
 
-    // Apply normal playback
-    if (isPlaying && speedMultiplier <= 16) {
-      video.playbackRate = speedMultiplier;
-      video.muted = false;
-      video.play().catch(() => {});
-    }
-  }, [currentTimestamp, cameraId, firstFrameReady, segments, isPlaying, speedMultiplier]);
-
-  /* ---------------- FAST FORWARD / HIGH SPEED (>16x) ---------------- */
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video || !firstFrameReady) return;
-    if (!isPlaying || speedMultiplier <= 16) return;
-
-    video.muted = true; // mute for very high speed
-    const interval = setInterval(() => {
-      if (!video || video.paused) return;
-
-      const seg = segments.find(
-        (s) => currentTimestamp >= s.startTime && currentTimestamp <= s.endTime
+    /* ----- FIND ACTIVE / NEXT SEGMENT ----- */
+    const seg =
+      segmentOffsets.find(
+        (s) =>
+          currentTimestamp >= s.startTime &&
+          currentTimestamp <= s.endTime
+      ) ||
+      segmentOffsets.find(
+        (s) => currentTimestamp < s.startTime
       );
-      if (!seg) return;
 
-      const delta = 0.1 * speedMultiplier; // jump in seconds
-      video.currentTime = Math.min(seg.endTime.getTime() / 1000, video.currentTime + delta);
-    }, 100);
+    if (!seg) {
+      setHasVideo(false);
+      video.pause();
+      return;
+    }
 
-    return () => clearInterval(interval);
-  }, [isPlaying, firstFrameReady, speedMultiplier, currentTimestamp, segments]);
+    /* ----- GAP HANDLING ----- */
+    if (currentTimestamp < seg.startTime) {
+      setHasVideo(true);
 
-  /* ---------------- SKIP FORWARD / BACKWARD ---------------- */
-  // Isko hook me directly implement karne ki zarurat nahi, skip buttons me
-  // directly videoRef.current.currentTime +=/-= interval use karenge
+      const jumpTime = seg.offset;
+      if (Math.abs(video.currentTime - jumpTime) > 0.3) {
+        video.currentTime = jumpTime;
+      }
+
+      video.pause();
+      return;
+    }
+
+    /* ----- NORMAL SEEK ----- */
+    setHasVideo(true);
+
+    const logicalSeconds =
+      (currentTimestamp.getTime() -
+        seg.startTime.getTime()) /
+      1000;
+
+    const playlistTime =
+      seg.offset + Math.max(0, logicalSeconds);
+
+    if (Math.abs(video.currentTime - playlistTime) > 0.3) {
+      video.currentTime = playlistTime;
+    }
+
+    if (isPlaying) {
+      video.playbackRate = Math.min(speedMultiplier, 16);
+      video.muted = speedMultiplier > 16;
+      video.play().catch(() => {});
+    } else {
+      video.pause();
+    }
+  }, [
+    currentTimestamp,
+    segmentOffsets,
+    firstFrameReady,
+    isPlaying,
+    speedMultiplier,
+  ]);
 
   return { videoRef, firstFrameReady };
 }

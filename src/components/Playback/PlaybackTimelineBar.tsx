@@ -1,3 +1,4 @@
+// components/Playback/PlaybackTimelineBar.tsx
 import { useState } from "react";
 import { usePlaybackStore } from "@/Store/playbackStore";
 import {
@@ -19,21 +20,37 @@ interface PlaybackTimelineBarProps {
   onToggleTimeline: () => void;
   zoomLevel: number;
   onZoomChange: (level: number) => void;
+  speed: string;
+  isSynced: boolean;
+  onToggleSync: (synced: boolean) => void;
+  onRewind: () => void;
+  onSkipBack: () => void;
+  onStop: () => void;
+  onSkipForward: () => void;
+  onSeekToDate: (date: Date) => void;
 }
 
 export function PlaybackTimelineBar({
   isTimelineExpanded,
   onToggleTimeline,
   zoomLevel,
+  isSynced,
+  onToggleSync,
   onZoomChange,
+  speed,
+  onRewind,
+  onSkipBack,
+  onStop,
+  onSkipForward,
+  onSeekToDate
 }: PlaybackTimelineBarProps) {
 
   const isPlaying = usePlaybackStore((s) => s.isPlaying);
   const togglePlay = usePlaybackStore((s) => s.togglePlay);
   const currentTimestamp = usePlaybackStore((s) => s.currentTimestamp);
   const setSpeed = usePlaybackStore((s) => s.setSpeed);
-  const speed = usePlaybackStore((s) => s.speed);
-  const setCurrentTimestamp = usePlaybackStore((s) => s.setCurrentTimestamp); // add in store
+
+  const zoomPercent = ((zoomLevel - 1) / 9) * 100;
 
   const [pickerOpen, setPickerOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(currentTimestamp);
@@ -41,9 +58,6 @@ export function PlaybackTimelineBar({
   const [timeMinute, setTimeMinute] = useState(String(currentTimestamp.getMinutes()).padStart(2, "0"));
   const [timeSecond, setTimeSecond] = useState(String(currentTimestamp.getSeconds()).padStart(2, "0"));
   const [ampm, setAmpm] = useState<"AM" | "PM">(currentTimestamp.getHours() >= 12 ? "PM" : "AM");
-  const [isSynced, setIsSynced] = useState(true);
-
-  const zoomPercent = ((zoomLevel - 1) / 9) * 100;
 
   const handlePickerOpen = (open: boolean) => {
     if (open) {
@@ -57,37 +71,21 @@ export function PlaybackTimelineBar({
     setPickerOpen(open);
   };
 
-  const applyDateTime = () => {
+  const handleApply = () => {
     const d = new Date(selectedDate);
     let h = parseInt(timeHour) || 0;
     if (ampm === "PM" && h !== 12) h += 12;
     if (ampm === "AM" && h === 12) h = 0;
     d.setHours(h, parseInt(timeMinute) || 0, parseInt(timeSecond) || 0, 0);
-    setCurrentTimestamp(d);
+
+    onSeekToDate(d);
     setPickerOpen(false);
-  };
-
-  const skipSeconds = (sec: number) => {
-    const newTime = new Date(currentTimestamp.getTime() + sec * 1000);
-    setCurrentTimestamp(newTime);
-  };
-
-  const increaseSpeed = () => {
-    const current = parseFloat(speed.replace("x", "")) || 1;
-    const next = Math.min(36, current + 1);
-    setSpeed(next + "x");
-  };
-
-  const decreaseSpeed = () => {
-    const current = parseFloat(speed.replace("x", "")) || 1;
-    const next = Math.max(1, current - 1);
-    setSpeed(next + "x");
   };
 
   return (
     <div className="flex items-center gap-1.5 px-3 py-1 border-t border-border bg-background flex-shrink-0">
-
-      {/* Timeline label */}
+      
+      {/* TIMELINES label */}
       <div className="flex items-center gap-1">
         <Clock className="h-3.5 w-3.5 text-muted-foreground" />
         <span className="text-[12px] font-roboto font-medium text-slate-500 uppercase">Timelines</span>
@@ -121,19 +119,17 @@ export function PlaybackTimelineBar({
               <Button variant={ampm==="AM"?"default":"outline"} size="sm" className="h-7 px-2 text-[10px]" onClick={()=>setAmpm("AM")}>AM</Button>
               <Button variant={ampm==="PM"?"default":"outline"} size="sm" className="h-7 px-2 text-[10px]" onClick={()=>setAmpm("PM")}>PM</Button>
             </div>
-            <Button size="sm" className="w-full h-7 text-xs" onClick={applyDateTime}>Go to Date & Time</Button>
+            <Button size="sm" className="w-full h-7 text-xs" onClick={handleApply}>Go to Date & Time</Button>
           </div>
         </PopoverContent>
       </Popover>
 
       {/* Lock */}
-      <Button variant="ghost" size="icon" className="h-6 w-6 bg-timelinebg rounded">
-        <Lock className="h-3 w-3 text-muted-foreground" />
-      </Button>
+      <Button variant="ghost" size="icon" className="h-6 w-6 bg-timelinebg rounded"><Lock className="h-3 w-3 text-muted-foreground" /></Button>
 
-      {/* Synced */}
+      {/* Synced toggle */}
       <div className="flex items-center gap-1.5 ml-1">
-        <Switch checked={isSynced} onCheckedChange={setIsSynced} className="data-[state=checked]:bg-primary h-4 w-7"/>
+        <Switch checked={isSynced} onCheckedChange={onToggleSync} className="data-[state=checked]:bg-primary h-4 w-7"/>
         <span className="text-[11px] text-foreground font-medium">Synced</span>
       </div>
 
@@ -142,9 +138,9 @@ export function PlaybackTimelineBar({
       {/* Speed Badge */}
       {speed !== "1x" && <Badge variant="secondary" className="text-[10px] h-5 px-1.5 font-bold">{speed}</Badge>}
 
-      {/* Zoom */}
+      {/* Zoom Controls */}
       <div className="flex items-center gap-0.5 bg-timelinebg rounded">
-        <Button variant="ghost" size="icon" onClick={()=>onZoomChange(Math.max(1, zoomLevel-1))} disabled={zoomLevel<=1} title="Zoom Out">
+        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={()=>onZoomChange(Math.max(1, zoomLevel-1))} disabled={zoomLevel<=1} title="Zoom Out">
           <Mountain className="h-3 w-3 text-muted-foreground"/>
         </Button>
         <div className="w-16 h-[3px] bg-muted rounded-full mx-0.5 relative cursor-pointer"
@@ -156,30 +152,49 @@ export function PlaybackTimelineBar({
           <div className="absolute left-0 top-0 h-full bg-primary rounded-full" style={{width:`${zoomPercent}%`}}/>
           <div className="absolute top-1/2 -translate-y-1/2 w-2 h-2 bg-primary rounded-full border border-background" style={{left:`calc(${zoomPercent}% - 4px)`}}/>
         </div>
-        <Button variant="ghost" size="icon" onClick={()=>onZoomChange(Math.min(10, zoomLevel+1))} disabled={zoomLevel>=10} title="Zoom In">
+        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={()=>onZoomChange(Math.min(10, zoomLevel+1))} disabled={zoomLevel>=10} title="Zoom In">
           <Mountain className="h-3.5 w-3.5 text-muted-foreground"/>
         </Button>
       </div>
 
-      {/* Transport */}
+      {/* Transport Controls */}
       <div className="flex items-center gap-2 ml-1">
-        <Button variant="ghost" size="icon" onClick={()=>skipSeconds(-10)} title="Skip Back 10s"><SkipBack className="h-3 w-3"/></Button>
-        <Button variant="ghost" size="icon" onClick={togglePlay} title={isPlaying?"Pause":"Play"}>
+        <Button variant="ghost" size="icon" className="h-6 w-6 bg-timelinebg rounded text-slate-600" onClick={onRewind} title="Rewind"><Rewind className="h-2 w-2"/></Button>
+        <Button variant="ghost" size="icon" className="h-6 w-6 bg-timelinebg rounded text-slate-600" onClick={onSkipBack} title="Skip Back"><SkipBack className="h-3 w-3"/></Button>
+        <Button variant="ghost" size="icon" className={cn("h-6 w-6 rounded", isPlaying?"bg-primary text-primary-foreground hover:bg-primary/90":"bg-primary text-primary-foreground hover:bg-primary/90")} onClick={togglePlay} title={isPlaying?"Pause":"Play"}>
           {isPlaying?<Pause className="h-3 w-3"/>:<Play className="h-3 w-3"/>}
         </Button>
-        <Button variant="ghost" size="icon" onClick={()=>setCurrentTimestamp(currentTimestamp)} title="Stop">
-          <Square className="h-3 w-3"/>
+        <Button variant="ghost" size="icon" className="h-6 w-6 bg-timelinebg rounded text-slate-600" onClick={onStop} title="Stop"><Square className="h-3 w-3"/></Button>
+            <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 bg-timelinebg rounded text-slate-600"
+                onClick={() => {
+                  const skipSec = 10;
+                  const newTime = new Date(currentTimestamp.getTime() + skipSec * 1000);
+                  onSeekToDate(newTime);
+                }}
+                title="Skip Forward 10s"
+              >
+                <SkipForward className="h-3 w-3"/>
+              </Button>
+
+        {/* Fast Forward Button 1x → 36x */}
+        <Button variant="ghost" size="icon" className={cn("h-6 w-6 rounded bg-timelinebg text-slate-600", speed!=="1x"?"bg-primary text-primary-foreground hover:bg-primary/90":"")} title="Fast Forward" onClick={()=>{
+          const current = parseFloat(speed.replace("x","")) || 1;
+          const next = Math.min(36, current+1);
+          setSpeed(next+"x");
+        }}>
+          <FastForward className="h-3 w-3"/>
         </Button>
-        <Button variant="ghost" size="icon" onClick={()=>skipSeconds(10)} title="Skip Forward 10s"><SkipForward className="h-3 w-3"/></Button>
-        <Button variant="ghost" size="icon" onClick={increaseSpeed} title="Fast Forward"><FastForward className="h-3 w-3"/></Button>
       </div>
 
-      {/* Actions */}
+      {/* Action Buttons */}
       <div className="flex items-center gap-2 ml-1">
-        <Button variant="ghost" size="icon"><Filter className="h-3 w-3"/></Button>
-        <Button variant="ghost" size="icon"><Bookmark className="h-3 w-3"/></Button>
-        <Button variant="ghost" size="icon"><Scissors className="h-3 w-3"/></Button>
-        <Button variant="ghost" size="icon"><MoreHorizontal className="h-3 w-3"/></Button>
+        <Button variant="ghost" size="icon" className="h-6 w-6 bg-timelinebg rounded text-slate-600"><Filter className="h-3 w-3"/></Button>
+        <Button variant="ghost" size="icon" className="h-6 w-6 bg-timelinebg rounded text-slate-600"><Bookmark className="h-3 w-3"/></Button>
+        <Button variant="ghost" size="icon" className="h-6 w-6 bg-timelinebg rounded text-slate-600"><Scissors className="h-3 w-3"/></Button>
+        <Button variant="ghost" size="icon" className="h-6 w-6 bg-timelinebg rounded text-slate-600"><MoreHorizontal className="h-3 w-3"/></Button>
       </div>
 
       {/* Export */}
@@ -187,8 +202,8 @@ export function PlaybackTimelineBar({
         <Download className="h-3 w-3"/> Export
       </Button>
 
-      {/* Expand */}
-      <Button variant="default" size="icon" onClick={onToggleTimeline}>
+      {/* Expand/Collapse */}
+      <Button variant="default" size="icon" className="h-6 w-6 rounded bg-primary hover:bg-primary/90 ml-1" onClick={onToggleTimeline}>
         <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", isTimelineExpanded && "rotate-180")}/>
       </Button>
     </div>
