@@ -1,5 +1,4 @@
-// hooks/useHlsWithStore.ts
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Hls from "hls.js";
 import { Segment, usePlaybackStore } from "@/Store/playbackStore";
 
@@ -13,125 +12,95 @@ interface Props {
 export function useHlsWithStore({ src, cameraId, segments, onReady }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
-  const retryRef = useRef<number | null>(null);
+  const [firstFrameReady, setFirstFrameReady] = useState(false);
 
   const isPlaying = usePlaybackStore((s) => s.isPlaying);
   const currentTimestamp = usePlaybackStore((s) => s.currentTimestamp);
-  const speed = usePlaybackStore((s) => s.speed);
+  const speedStr = usePlaybackStore((s) => s.speed);
 
-  /* ---------- HLS SETUP ---------- */
+  const speedMultiplier = parseFloat(speedStr.replace("x", "")) || 1;
+
+  /* ---------------- RESET ---------------- */
+  useEffect(() => {
+    setFirstFrameReady(false);
+  }, [src, cameraId]);
+
+  /* ---------------- INIT HLS ---------------- */
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !src || !cameraId) return;
 
-    console.log("HLS init", cameraId);
+    const hls = new Hls({ lowLatencyMode: true, maxBufferLength: 10 });
+    hlsRef.current = hls;
 
-    if (Hls.isSupported()) {
-      const hls = new Hls({
-        lowLatencyMode: true,
-        maxBufferLength: 10,
-        backBufferLength: 0,
-      });
-      hlsRef.current = hls;
-      hls.attachMedia(video);
+    hls.attachMedia(video);
+    hls.on(Hls.Events.MEDIA_ATTACHED, () => hls.loadSource(src));
+    hls.on(Hls.Events.MANIFEST_PARSED, () => {
+      hls.startLoad(0);
+      video.play().catch(() => {});
+    });
 
-      hls.on(Hls.Events.MEDIA_ATTACHED, () => {
-        hls.loadSource(src);
-      });
-hls.on(Hls.Events.MANIFEST_PARSED, async () => {
-  onReady?.();
-
-  const playVideo = async () => {
-    try {
-      if (!video.paused) return;
-      await video.play();
-      console.log("Autoplay success", cameraId);
-    } catch (err) {
-      console.warn("Autoplay blocked, retrying...", err);
-      setTimeout(playVideo, 200); // retry until browser allows it
-    }
-  };
-
-  playVideo();
-});
-
-      // 🔹 Fragment loaded → force sync with currentTimestamp
-      hls.on(Hls.Events.FRAG_LOADED, () => {
-        const segment = segments.find(
-          (s) =>
-            currentTimestamp >= s.startTime && currentTimestamp <= s.endTime
-        );
-        if (!segment) return;
-
-        const relativeTime =
-          (currentTimestamp.getTime() - segment.startTime.getTime()) / 1000;
-
-        if (Math.abs(video.currentTime - relativeTime) > 0.3) {
-          console.log("SYNC VIDEO", {
-            cameraId,
-            currentTimestamp,
-            segmentStart: segment.startTime,
-            segmentEnd: segment.endTime,
-            videoCurrentTime: video.currentTime,
-            relativeTime,
-          });
-          video.currentTime = relativeTime;
-        }
-      });
-    } else {
-      video.src = src;
-    }
-
-    video.muted = true;
-    video.playsInline = true;
-    video.preload = "auto";
+    video.onplaying = () => {
+      setFirstFrameReady(true);
+      onReady?.();
+    };
 
     return () => {
-      hlsRef.current?.destroy();
+      hls.destroy();
       hlsRef.current = null;
     };
   }, [src, cameraId]);
 
-  /* ---------- PLAY / SEEK ---------- */
+  /* ---------------- SEEK TO TIMESTAMP ---------------- */
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || !cameraId) return;
+    if (!video || !cameraId || !firstFrameReady) return;
 
-    const sync = () => {
-      if (video.readyState < 3) {
-        retryRef.current = window.setTimeout(sync, 50);
-        return;
-      }
+    const seg = segments.find(
+      (s) => currentTimestamp >= s.startTime && currentTimestamp <= s.endTime
+    );
+    if (!seg) return;
 
-      video.playbackRate = parseFloat(speed.replace("x", "")) || 1;
-      if (isPlaying) video.play().catch(() => {});
-      else video.pause();
+    const targetSeconds = (currentTimestamp.getTime() - seg.startTime.getTime()) / 1000;
 
-      const segment = segments.find(
-        (s) =>
-          currentTimestamp >= s.startTime && currentTimestamp <= s.endTime
+    // Only seek if difference > 0.3s
+    if (Math.abs(video.currentTime - targetSeconds) > 0.3) {
+      video.currentTime = targetSeconds;
+    }
+
+    // Apply normal playback
+    if (isPlaying && speedMultiplier <= 16) {
+      video.playbackRate = speedMultiplier;
+      video.muted = false;
+      video.play().catch(() => {});
+    }
+  }, [currentTimestamp, cameraId, firstFrameReady, segments, isPlaying, speedMultiplier]);
+
+  /* ---------------- FAST FORWARD / HIGH SPEED (>16x) ---------------- */
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !firstFrameReady) return;
+    if (!isPlaying || speedMultiplier <= 16) return;
+
+    video.muted = true; // mute for very high speed
+    const interval = setInterval(() => {
+      if (!video || video.paused) return;
+
+      const seg = segments.find(
+        (s) => currentTimestamp >= s.startTime && currentTimestamp <= s.endTime
       );
+      if (!seg) return;
 
-      if (!segment) {
-        const nextSegment = segments.find((s) => currentTimestamp < s.startTime);
-        if (nextSegment) {
-          usePlaybackStore.getState().setCurrentTimestamp(nextSegment.startTime);
-        }
-        return;
-      }
+      const delta = 0.1 * speedMultiplier; // jump in seconds
+      video.currentTime = Math.min(seg.endTime.getTime() / 1000, video.currentTime + delta);
+    }, 100);
 
-      const relativeTime = (currentTimestamp.getTime() - segment.startTime.getTime()) / 1000;
-      if (Math.abs(video.currentTime - relativeTime) > 0.3) {
-        video.currentTime = relativeTime;
-      }
-    };
+    return () => clearInterval(interval);
+  }, [isPlaying, firstFrameReady, speedMultiplier, currentTimestamp, segments]);
 
-    sync();
+  /* ---------------- SKIP FORWARD / BACKWARD ---------------- */
+  // Isko hook me directly implement karne ki zarurat nahi, skip buttons me
+  // directly videoRef.current.currentTime +=/-= interval use karenge
 
-    return () => {
-      if (retryRef.current) clearTimeout(retryRef.current);
-    };
-  }, [isPlaying, currentTimestamp, speed, segments, cameraId]);
-
-  return videoRef;
+  return { videoRef, firstFrameReady };
 }

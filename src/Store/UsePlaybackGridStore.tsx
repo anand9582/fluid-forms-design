@@ -40,8 +40,6 @@ const usePlaybackGridStore = create<PlaybackGridStore>((set, get) => ({
     }),
 
     clearAllSlots: () => set((state) => ({
-      slotAssignments: Array(state.layout.rows * state.layout.cols).fill(null),
-      playingCameraIds: new Set(),
     })),
 }));
 

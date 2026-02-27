@@ -184,15 +184,23 @@ export function PlaybackTimeline({
             );
           })}
 
-          {/* Playhead */}
-          {playheadVp >= 0 && playheadVp <= 100 && (
-            <>
-              <div
-                className="absolute top-0 bottom-0 w-[2px] bg-primary"
-                style={{ left: `${playheadVp}%` }}
-              />
-            </>
-          )}
+        {/* Playhead */}
+        {playheadVp >= 0 && playheadVp <= 100 && (
+          <>
+            {/* Vertical line */}
+            <div
+              className="absolute top-0 bottom-0 w-[2px] bg-primary z-10 pointer-events-none transition-left duration-75"
+              style={{ left: `${playheadVp}%` }}
+            />
+
+            {/* Arrow / diamond marker on top */}
+            <div
+              className="absolute -top-0.5 w-2.5 h-2.5 bg-primary rounded-sm rotate-45 shadow z-20 pointer-events-none"
+              style={{ left: `${playheadVp}%`, transform: "translateX(-50%)" }}
+            />
+            
+          </>
+        )}
 
           {/* Hover Tooltip */}
           {hoverTime !== null && hoverPos !== null && (

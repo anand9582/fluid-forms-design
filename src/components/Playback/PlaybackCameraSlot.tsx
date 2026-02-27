@@ -65,11 +65,7 @@ export function PlaybackCameraSlot({
     console.log("⏳ Waiting for blobUrl", cameraId);
   }
 
-  const videoRef = useHlsWithStore({
-    src,
-    cameraId,
-    segments,
-  });
+ const { videoRef, firstFrameReady } = useHlsWithStore({ src, cameraId, segments });
   console.log(
     "[PlaybackCameraSlot]",
     "cameraId:", cameraId,
@@ -90,12 +86,12 @@ export function PlaybackCameraSlot({
       {/* ---------------- VIDEO ---------------- */}
       {cameraId && !errorMessage && (
         <video
-          key={src}
           ref={videoRef}
           className="absolute inset-0 w-full h-full object-cover"
           muted
           playsInline
           preload="auto"
+          controls
         />
       )}
 
@@ -116,14 +112,14 @@ export function PlaybackCameraSlot({
       )}
 
       {/* ---------------- LOADING ---------------- */}
-      {cameraId && !errorMessage && isCameraLoading(cameraId) && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/60">
-          <div className="flex flex-col items-center gap-2 text-muted-foreground">
-            <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-            <span className="text-xs">Loading stream…</span>
-          </div>
-        </div>
-      )}
+ {cameraId && (isCameraLoading(cameraId) || !firstFrameReady) && (
+  <div className="absolute inset-0 flex items-center justify-center bg-black/60">
+    <div className="flex flex-col items-center gap-2 text-muted-foreground">
+      <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      <span className="text-xs">Loading stream…</span>
+    </div>
+  </div>
+)}
     </div>
   );
 }
