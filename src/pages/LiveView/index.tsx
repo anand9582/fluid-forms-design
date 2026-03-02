@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo,useRef, useCallback, useEffect } from "react";
 import {
   CameraTreeSidebar,
   LiveViewToolbar,
@@ -10,7 +10,7 @@ import {
 import { useGridController } from "@/hooks/useGridController";
 import { SidebarCameraStore } from "@/Store/SidebarCameraStore";
 import useGridStore from "@/Store/UseGridStore";
-
+import { useStreamStore } from "@/Store/useStreamStore";
 export interface CameraStatus {
   id: string;
   name: string;
@@ -25,7 +25,8 @@ export default function LiveView() {
     const [mainSubMap, setMainSubMap] = useState<Record<number, "main" | "sub">>(
     {}
   );
-
+  const instanceRef = useRef<Record<number, string | null>>({}); 
+  const instanceMeta = useRef<Record<string, { type: "main" | "sub"; cameraId: string }>>({});
   const cameras = SidebarCameraStore((state) => state.cameras);
 
   const {
@@ -36,7 +37,7 @@ export default function LiveView() {
     resizeSlots,
   } = useGridStore();
 
-  const { play,handleSnapshot,handleRefresh} = useGridController();
+  const { play,handleSnapshot,handleRefresh,closeConnection} = useGridController();
 
 //  Grid resize hone par slots auto adjust
   useEffect(() => {
@@ -74,12 +75,58 @@ export default function LiveView() {
   };
 
   /* Main / Sub toggle */
-    const toggleMainSub = (slotIndex: number) => {
-      setMainSubMap((prev) => ({
-        ...prev,
-        [slotIndex]: prev[slotIndex] === "main" ? "sub" : "main",
-      }));
-    };
+const toggleMainSub = (slotIndex: number, cameraId: string) => {
+  if (!cameraId) return;
+
+  const streams = useStreamStore.getState().streams;
+
+  const currentType: "main" | "sub" = mainSubMap[slotIndex] ?? "sub";
+  const nextType: "main" | "sub" = currentType === "sub" ? "main" : "sub";
+
+  console.log(`Toggle ${cameraId} → ${nextType.toUpperCase()} (Slot ${slotIndex})`);
+
+  // 1. Close old stream in this slot
+  const oldStream = streams.find(s => s.slotId === slotIndex);
+  if (oldStream) {
+    console.log(`Closing ${oldStream.streamType.toUpperCase()} in slot ${slotIndex}`);
+    oldStream.pc.close();
+    useStreamStore.getState().removeStreamByInstanceId(oldStream.instanceId);
+  }
+
+  // 2. Remove leftover SUB stream if same camera has any in other slots
+  const leftoverSub = streams.find(
+    s => s.cameraId === cameraId && s.streamType === "sub" && s.slotId !== slotIndex
+  );
+  if (leftoverSub) {
+    console.log(`Closing leftover SUB for ${cameraId} (instance ${leftoverSub.instanceId})`);
+    leftoverSub.pc.close();
+    useStreamStore.getState().removeStreamByInstanceId(leftoverSub.instanceId);
+  }
+
+  // 3. Play new stream
+  const videoEl = document.querySelector<HTMLVideoElement>(`#video-slot-${slotIndex}`);
+  if (!videoEl) return;
+
+  const pc = play(cameraId, videoEl, nextType, slotIndex); // play() should return RTCPeerConnection
+
+  // 4. Add new stream to Zustand store
+  const newInstanceId = crypto.randomUUID();
+  useStreamStore.getState().addStream({
+    instanceId: newInstanceId,
+    cameraId,
+    pc,
+    streamType: nextType,
+    slotId: slotIndex,
+  });
+
+  // 5. Update mainSubMap using React state
+  setMainSubMap(prev => ({
+    ...prev,
+    [slotIndex]: nextType,
+  }));
+
+  console.log(`Started ${nextType.toUpperCase()} for ${cameraId} in Slot ${slotIndex}`);
+};
 
 //  Selected camera for sidebar
   const getSelectedCamera = useCallback(() => {
@@ -115,7 +162,12 @@ export default function LiveView() {
           />
         </div>
 
-        <AISurveillanceSidebar selectedCamera={getSelectedCamera()} />
+       <AISurveillanceSidebar
+          selectedCamera={getSelectedCamera()}
+          selectedSlotIndex={selectedSlotIndex}
+          mainSubMap={mainSubMap}
+          toggleMainSub={toggleMainSub}
+        />
       </div>
 
       <div className="h-[53px] shrink-0">

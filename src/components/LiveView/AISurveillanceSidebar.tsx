@@ -50,6 +50,9 @@ interface ControlsSidebarProps {
     location: string;
     bitrate: string;
   } | null;
+   selectedSlotIndex: number | null;
+  mainSubMap: Record<number, "main" | "sub">;
+  toggleMainSub: (slotIndex: number) => void;
 }
 
 // AI Features data
@@ -67,7 +70,7 @@ const aiFeatures = [
   },
 ];
 
-export function AISurveillanceSidebar({ selectedCamera }: ControlsSidebarProps) {
+export function AISurveillanceSidebar({ selectedCamera,selectedSlotIndex,mainSubMap,toggleMainSub }: ControlsSidebarProps) {
   const [activeTab, setActiveTab] = useState<"controls" | "sequencing" | "playback">("controls");
   const [streamQuality, setStreamQuality] = useState("4k");
   const [features, setFeatures] = useState(aiFeatures);
@@ -82,83 +85,81 @@ const [playlist, setPlaylist] = useState<string[]>([
   "Camera 3",
 ]);
 
-
-  const toggleFeature = (id: string) => {
-    setFeatures(prev => 
-      prev.map(f => f.id === id ? { ...f, enabled: !f.enabled } : f)
-    );
-  };
+ const handleStreamChange = (value: "main" | "sub") => {
+  setStreamQuality(value);
+  console.log("Stream switched to:", value);
+};
 
   // If no camera is selected, show workspace management view
-  if (!selectedCamera) {
-    return (
-      <div className="hidden lg:flex w-72 border-l border-border bg-white flex-col flex-shrink-0 h-full">
+  // if (!selectedCamera) {
+  //   return (
+  //     <div className="hidden lg:flex w-72 border-l border-border bg-white flex-col flex-shrink-0 h-full">
 
-      {/* Workspace Management */}
-      <div className="p-4">
-        <div className="flex items-center gap-2 mb-5">
-          <Settings className="h-5 w-5 text-slate-500" />
-            <span className="text-sm font-roboto font-medium text-slate-500 uppercase tracking-wide">
-                Workspace Management
-            </span>
-        </div>
+  //     {/* Workspace Management */}
+  //     <div className="p-4">
+  //       <div className="flex items-center gap-2 mb-5">
+  //         <Settings className="h-5 w-5 text-slate-500" />
+  //           <span className="text-sm font-roboto font-medium text-slate-500 uppercase tracking-wide">
+  //               Workspace Management
+  //           </span>
+  //       </div>
 
-          <Button
-              variant="outline"
-              size="sm"
-              className="w-full justify-between rounded-sm h-10 text-sm font-roboto font-medium shadow-sm bg-white"
-            >
-              <span className="text-slate-500"> 
-                Clear all grid slot
-              </span>
-              <X className="h-4 w-4 text-slate-500" />
-            </Button>
+  //         <Button
+  //             variant="outline"
+  //             size="sm"
+  //             className="w-full justify-between rounded-sm h-10 text-sm font-roboto font-medium shadow-sm bg-white"
+  //           >
+  //             <span className="text-slate-500"> 
+  //               Clear all grid slot
+  //             </span>
+  //             <X className="h-4 w-4 text-slate-500" />
+  //           </Button>
 
-      </div>
+  //     </div>
 
-      {/* AI Surveillance Suite */}
-      <div className="p-4">
-        <div className="flex items-center gap-2 mb-4">
-          <AISurveillanceIcons className="h-4 w-4" />
-          <span className="text-[12px] font-semibold text-slate-500  uppercase tracking-wide">
-              AI Surveillance Suite
-          </span>
-          <span className="ml-auto rounded-lg bg-violet-600 px-3 py-2 text-sm font-roboto font-medium text-white">
-              PRO
-          </span>
-        </div>
+  //     {/* AI Surveillance Suite */}
+  //     <div className="p-4">
+  //       <div className="flex items-center gap-2 mb-4">
+  //         <AISurveillanceIcons className="h-4 w-4" />
+  //         <span className="text-[12px] font-semibold text-slate-500  uppercase tracking-wide">
+  //             AI Surveillance Suite
+  //         </span>
+  //         <span className="ml-auto rounded-lg bg-violet-600 px-3 py-2 text-sm font-roboto font-medium text-white">
+  //             PRO
+  //         </span>
+  //       </div>
 
-        {/* Feature List */}
-          <div className="space-y-2">
-            {features.map((feature) => (
-              <div
-                key={feature.id}
-                className={cn(
-                  "flex items-center justify-between rounded-lg px-3 py-3",
-                  feature.enabled
-                    ? "bg-slate-100"
-                    : "bg-slate-100 "
-                )}
-              >
-                <div className="flex items-center gap-3">
-                  <feature.icon className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-roboto font-medium text-foreground">
-                     {feature.name}
-                  </span>
-                </div>
+  //       {/* Feature List */}
+  //         <div className="space-y-2">
+  //           {features.map((feature) => (
+  //             <div
+  //               key={feature.id}
+  //               className={cn(
+  //                 "flex items-center justify-between rounded-lg px-3 py-3",
+  //                 feature.enabled
+  //                   ? "bg-slate-100"
+  //                   : "bg-slate-100 "
+  //               )}
+  //             >
+  //               <div className="flex items-center gap-3">
+  //                 <feature.icon className="h-4 w-4 text-muted-foreground" />
+  //                 <span className="text-sm font-roboto font-medium text-foreground">
+  //                    {feature.name}
+  //                 </span>
+  //               </div>
 
-                <Switch
-                  checked={feature.enabled}
-                  onCheckedChange={() => toggleFeature(feature.id)}
-                  disabled={!feature.enabled && feature.proOnly}
-                />
-              </div>
-            ))}
-          </div>
-      </div>
-    </div>
-    );
-  }
+  //               <Switch
+  //                 checked={feature.enabled}
+  //                 onCheckedChange={() => toggleFeature(feature.id)}
+  //                 disabled={!feature.enabled && feature.proOnly}
+  //               />
+  //             </div>
+  //           ))}
+  //         </div>
+  //     </div>
+  //   </div>
+  //   );
+  // }
 
   // Camera selected - show controls view
   return (
@@ -197,36 +198,37 @@ const [playlist, setPlaylist] = useState<string[]>([
   {/* CONTROLS TAB */}
   <TabsContent value="controls"className="flex-1   overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent pb-[60px]">
   <div className="flex-1 p-3 pt-0 space-y-6">
-           <div className="rounded-sm border border-border p-4 space-y-1.5 bg-[#f8fafc]">
+           {/* <div className="rounded-sm border border-border p-4 space-y-1.5 bg-[#f8fafc]">
                <h3 className="text-sm font-semibold text-foreground mb-1">{selectedCamera.name}</h3>
-            <p className="text-xs text-muted-foreground mb-3 font-roboto font-medium">{selectedCamera.location}</p>
+               <p className="text-xs text-muted-foreground mb-3 font-roboto font-medium">{selectedCamera.location}</p>
                     <div className="flex items-center gap-2">
                   <Badge className="bg-red-100 text-red-600 hover:bg-red-200  font-roboto font-bold text-[10px] px-2 tracking-widest py-1 mt-2 border border-red-300 rounded">RECORDING</Badge>
-                 {/* Vertical Divider */}
                      <span className="h-4 w-px bg-border" />
                  <span className="text-xs text-muted-foreground font-roboto font-medium">{selectedCamera.bitrate} kbps</span>
               </div>
-                </div>
+                </div> */}
         
 
             
          {/* Stream Quality */}
-            <div className="space-y-1">
-              <label className=" uppercase tracking-wide text-xs text-muted-foreground  font-roboto font-bold">
-                Stream Quality
-              </label>
-              <Select value={streamQuality} onValueChange={setStreamQuality}>
-                <SelectTrigger className="w-full bg-white text-black border border-border focus:bg-white">
-                  <SelectValue placeholder="Select quality" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="4k">High Definition (4K)</SelectItem>
-                  <SelectItem value="1080p">Full HD (1080p)</SelectItem>
-                  <SelectItem value="720p">HD (720p)</SelectItem>
-                  <SelectItem value="480p">SD (480p)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+           <div className="space-y-1">
+                <label className="uppercase tracking-wide text-xs text-muted-foreground font-roboto font-bold">
+                  Stream Quality
+                </label>
+
+                  <Select
+                    value={mainSubMap[selectedSlotIndex] || "sub"} 
+                    onValueChange={() => toggleMainSub(selectedSlotIndex)} 
+                  >
+                    <SelectTrigger className="w-full bg-white text-black border border-border focus:bg-white">
+                      <SelectValue placeholder="Select quality" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="sub">Sub</SelectItem>
+                      <SelectItem value="main">Main</SelectItem>
+                    </SelectContent>
+                  </Select>
+              </div>
 
             {/* PTZ Controls */}
             <div className="space-y-1">
@@ -322,16 +324,15 @@ const [playlist, setPlaylist] = useState<string[]>([
   <TabsContent value="sequencing" className="flex-1 p-4 pt-0 overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent pb-[60px]">
   <div className="space-y-4">
                 {/* Camera Info Card */}
-                 <div className="rounded-sm border border-border p-4 space-y-1.5 bg-[#f8fafc]">
+                 {/* <div className="rounded-sm border border-border p-4 space-y-1.5 bg-[#f8fafc]">
                   <h3 className="text-sm font-semibold text-foreground mb-1">{selectedCamera.name}</h3>
                     <p className="text-xs text-muted-foreground mb-3 font-roboto font-medium">{selectedCamera.location}</p>
                             <div className="flex items-center gap-2">
                           <Badge className="bg-red-100 text-red-600 hover:bg-red-200  font-roboto font-bold text-[10px] px-2 tracking-widest py-1 mt-2 border border-red-300 rounded">RECORDING</Badge>
-                        {/* Vertical Divider */}
                             <span className="h-4 w-px bg-border" />
                         <span className="text-xs text-muted-foreground font-roboto font-medium">{selectedCamera.bitrate} kbps</span>
                       </div>
-                </div>
+                </div> */}
 
                 {/* Sequence Configuration Card */}
                 <div className="rounded-lg border border-border p-4 space-y-4 bg-[#f8fafc]">
@@ -419,16 +420,15 @@ const [playlist, setPlaylist] = useState<string[]>([
             <TabsContent value="playback" className="flex-1 p-4 pt-0 overflow-y-auto">
                 <div className="space-y-4">
                 {/* Camera Info Card */}
-                 <div className="rounded-sm border border-border p-4 space-y-1.5 bg-[#f8fafc]">
+                 {/* <div className="rounded-sm border border-border p-4 space-y-1.5 bg-[#f8fafc]">
                   <h3 className="text-sm font-semibold text-foreground mb-1">{selectedCamera.name}</h3>
                     <p className="text-xs text-muted-foreground mb-3 font-roboto font-medium">{selectedCamera.location}</p>
                             <div className="flex items-center gap-2">
                           <Badge className="bg-red-100 text-red-600 hover:bg-red-200  font-roboto font-bold text-[10px] px-2 tracking-widest py-1 mt-2 border border-red-300 rounded">RECORDING</Badge>
-                        {/* Vertical Divider */}
                             <span className="h-4 w-px bg-border" />
                         <span className="text-xs text-muted-foreground font-roboto font-medium">{selectedCamera.bitrate} kbps</span>
                       </div>
-                </div>
+                </div> */}
                <Button className="w-full gap-2" size="default">
                     Start Playback
                      <PlayCircle   size={16} />

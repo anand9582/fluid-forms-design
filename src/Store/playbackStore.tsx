@@ -6,53 +6,79 @@ export interface Segment {
 }
 
 interface PlaybackStore {
+  globalTime: Date;
   isPlaying: boolean;
   isSeeking: boolean;
-  speed: string;
-  currentTimestamp: Date;
+  playbackSpeed: number;
+
   segments: Segment[];
-  playheadPosition: number;
   hasVideo: boolean;
 
-  setIsPlaying: (v: boolean) => void;
-  setIsSeeking: (v: boolean) => void;
-  setSegments: (s: Segment[]) => void;
-  setHasVideo: (v: boolean) => void;
-  seekToDate: (date: Date) => void;
+  play: () => void;
+  pause: () => void;
+  setSpeed: (speed: number) => void;
+  seekTo: (date: Date, callback?: () => void) => void;
+  updateFromVideo: (date: Date) => void;
+
+  setSegments: (segments: Segment[]) => void;
+  setHasVideo: (value: boolean) => void;
+
+  startClock: () => void;
+  stopClock: () => void;
 }
 
+let clockInterval: NodeJS.Timeout | null = null;
+
 export const usePlaybackStore = create<PlaybackStore>((set, get) => ({
+  globalTime: new Date(),
   isPlaying: false,
   isSeeking: false,
-  speed: "1x",
-  currentTimestamp: new Date(),
+  playbackSpeed: 1,
   segments: [],
-  playheadPosition: 0,
   hasVideo: false,
 
-  setIsPlaying: (v) => set({ isPlaying: v }),
-  setIsSeeking: (v) => set({ isSeeking: v }),
+  play: () => {
+    set({ isPlaying: true });
+    get().startClock();
+  },
+
+  pause: () => {
+    set({ isPlaying: false });
+    get().stopClock();
+  },
+
+  setSpeed: (speed) => set({ playbackSpeed: speed }),
+
+  seekTo: (date, callback) => {
+    set({ globalTime: date, isSeeking: true });
+    setTimeout(() => {
+      set({ isSeeking: false });
+      if (callback) callback();
+    }, 50);
+  },
+
+  updateFromVideo: (date) => {
+    if (get().isSeeking) return;
+    set({ globalTime: date });
+  },
+
   setSegments: (segments) => set({ segments }),
-  setHasVideo: (v) => set({ hasVideo: v }),
+  setHasVideo: (value) => set({ hasVideo: value }),
 
-  seekToDate: (date) => {
-    const { segments } = get();
-    if (!segments.length) return;
+  startClock: () => {
+    if (clockInterval) return;
+    clockInterval = setInterval(() => {
+      const { globalTime, playbackSpeed, isPlaying } = get();
+      if (!isPlaying) return;
+      const nextTime = new Date(globalTime.getTime() + 250 * playbackSpeed);
+      set({ globalTime: nextTime });
+    }, 250);
+  },
 
-    const dayStart = new Date(date);
-    dayStart.setHours(0, 0, 0, 0);
-
-    const dayEnd = new Date(date);
-    dayEnd.setHours(23, 59, 59, 999);
-
-    const pct =
-      ((date.getTime() - dayStart.getTime()) /
-        (dayEnd.getTime() - dayStart.getTime())) *
-      100;
-
-    set({
-      currentTimestamp: date,
-      playheadPosition: Math.max(0, Math.min(100, pct)),
-    });
+  stopClock: () => {
+    if (clockInterval) {
+      clearInterval(clockInterval);
+      clockInterval = null;
+    }
   },
 }));

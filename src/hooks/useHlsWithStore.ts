@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, useMemo } from "react";
+// useHlsWithStore.ts
+import { useEffect, useMemo, useRef } from "react";
 import Hls from "hls.js";
 import { Segment, usePlaybackStore } from "@/Store/playbackStore";
 
@@ -6,108 +7,63 @@ interface Props {
   src: string;
   cameraId: string | null;
   segments: Segment[];
-  onReady?: () => void;
 }
 
-export function useHlsWithStore({
-  src,
-  cameraId,
-  segments,
-  onReady,
-}: Props) {
+export function useHlsWithStore({ src, cameraId, segments }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
-  const [firstFrameReady, setFirstFrameReady] = useState(false);
 
-  const isPlaying = usePlaybackStore((s) => s.isPlaying);
-  const currentTimestamp = usePlaybackStore((s) => s.currentTimestamp);
-  const speedStr = usePlaybackStore((s) => s.speed);
+  const { globalTime, isPlaying, playbackSpeed, isSeeking, updateFromVideo, setHasVideo } =
+    usePlaybackStore();
 
-  const speedMultiplier = parseFloat(speedStr.replace("x", "")) || 1;
-
-  /* ---------- BUILD SEGMENT OFFSETS ---------- */
+  /* ============================
+     Build segment offsets
+  ============================ */
   const segmentOffsets = useMemo(() => {
     let acc = 0;
     return segments.map((s) => {
-      const duration =
-        (s.endTime.getTime() - s.startTime.getTime()) / 1000;
+      const duration = (s.endTime.getTime() - s.startTime.getTime()) / 1000; // sec
       const offset = acc;
       acc += duration;
       return { ...s, offset, duration };
     });
   }, [segments]);
 
-  /* ---------- RESET ---------- */
-  useEffect(() => {
-    setFirstFrameReady(false);
-    if (videoRef.current) {
-      videoRef.current.currentTime = 0;
-    }
-  }, [src, cameraId]);
-
-  /* ---------- INIT HLS ---------- */
+  /* ============================
+     Init HLS only once per src
+  ============================ */
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !src || !cameraId) return;
 
-    const hls = new Hls({
-      lowLatencyMode: true,
-      maxBufferLength: 10,
-    });
-
-    hlsRef.current = hls;
-    hls.attachMedia(video);
-
-    hls.on(Hls.Events.MEDIA_ATTACHED, () => {
+    if (!hlsRef.current) {
+      const hls = new Hls({ maxBufferLength: 15, enableWorker: true, lowLatencyMode: false });
+      hls.attachMedia(video);
       hls.loadSource(src);
-    });
-
-    hls.on(Hls.Events.MANIFEST_PARSED, () => {
-      video.play().catch(() => {});
-    });
-
-    video.onplaying = () => {
-      if (!firstFrameReady) {
-        setFirstFrameReady(true);
-        onReady?.();
-      }
-    };
+      hlsRef.current = hls;
+    }
 
     return () => {
-      hls.destroy();
-      hlsRef.current = null;
+      // optional: destroy only if component unmounts
+      return () => {
+        if (hlsRef.current) {
+          hlsRef.current.destroy();
+          hlsRef.current = null;
+        }
+      };
     };
   }, [src, cameraId]);
 
-  /* ---------- SEEK + GAP + END HANDLING ---------- */
+  /* ============================
+     MASTER CLOCK → VIDEO SEEK
+  ============================ */
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || !firstFrameReady || !segmentOffsets.length) return;
+    if (!video || !segmentOffsets.length) return;
 
-    const { setHasVideo, setIsPlaying } =
-      usePlaybackStore.getState();
-
-    const lastSegment =
-      segmentOffsets[segmentOffsets.length - 1];
-
-    /* ----- AFTER LAST RECORDING ----- */
-    if (currentTimestamp > lastSegment.endTime) {
-      setHasVideo(false);
-      setIsPlaying(false);
-      video.pause();
-      return;
-    }
-
-    /* ----- FIND ACTIVE / NEXT SEGMENT ----- */
     const seg =
-      segmentOffsets.find(
-        (s) =>
-          currentTimestamp >= s.startTime &&
-          currentTimestamp <= s.endTime
-      ) ||
-      segmentOffsets.find(
-        (s) => currentTimestamp < s.startTime
-      );
+      segmentOffsets.find((s) => globalTime >= s.startTime && globalTime <= s.endTime) ||
+      segmentOffsets.find((s) => globalTime < s.startTime);
 
     if (!seg) {
       setHasVideo(false);
@@ -115,48 +71,66 @@ export function useHlsWithStore({
       return;
     }
 
-    /* ----- GAP HANDLING ----- */
-    if (currentTimestamp < seg.startTime) {
-      setHasVideo(true);
-
-      const jumpTime = seg.offset;
-      if (Math.abs(video.currentTime - jumpTime) > 0.3) {
-        video.currentTime = jumpTime;
-      }
-
-      video.pause();
-      return;
-    }
-
-    /* ----- NORMAL SEEK ----- */
     setHasVideo(true);
 
-    const logicalSeconds =
-      (currentTimestamp.getTime() -
-        seg.startTime.getTime()) /
-      1000;
+    // Calculate target time in segment
+    const logicalSeconds = (globalTime.getTime() - seg.startTime.getTime()) / 1000;
+    const targetTime = seg.offset + logicalSeconds;
 
-    const playlistTime =
-      seg.offset + Math.max(0, logicalSeconds);
+    // Check if targetTime is already buffered
+    const buffered = Array.from({ length: video.buffered.length }, (_, i) => ({
+      start: video.buffered.start(i),
+      end: video.buffered.end(i),
+    }));
+    const inBuffer = buffered.some((b) => targetTime >= b.start && targetTime <= b.end);
 
-    if (Math.abs(video.currentTime - playlistTime) > 0.3) {
-      video.currentTime = playlistTime;
+    if (Math.abs(video.currentTime - targetTime) > 0.05) {
+      if (video.fastSeek) {
+        video.fastSeek(targetTime);
+      } else {
+        video.currentTime = targetTime;
+      }
     }
 
-    if (isPlaying) {
-      video.playbackRate = Math.min(speedMultiplier, 16);
-      video.muted = speedMultiplier > 16;
+    if (isPlaying && inBuffer) {
+      video.playbackRate = Math.min(playbackSpeed, 16);
+      video.muted = playbackSpeed > 4; // high speed mute
       video.play().catch(() => {});
     } else {
       video.pause();
     }
-  }, [
-    currentTimestamp,
-    segmentOffsets,
-    firstFrameReady,
-    isPlaying,
-    speedMultiplier,
-  ]);
+  }, [globalTime, isPlaying, playbackSpeed, segmentOffsets]);
 
-  return { videoRef, firstFrameReady };
+  /* ============================
+     VIDEO → MASTER CLOCK (Follow)
+  ============================ */
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !segmentOffsets.length) return;
+
+    let rafId: number;
+    const sync = () => {
+      if (!isPlaying || isSeeking) {
+        rafId = requestAnimationFrame(sync);
+        return;
+      }
+
+      const current = video.currentTime;
+      const seg = segmentOffsets.find(
+        (s) => current >= s.offset && current <= s.offset + s.duration
+      );
+
+      if (seg) {
+        const realTime = new Date(seg.startTime.getTime() + (current - seg.offset) * 1000);
+        updateFromVideo(realTime);
+      }
+
+      rafId = requestAnimationFrame(sync);
+    };
+
+    rafId = requestAnimationFrame(sync);
+    return () => cancelAnimationFrame(rafId);
+  }, [isPlaying, isSeeking, segmentOffsets]);
+
+  return { videoRef };
 }
