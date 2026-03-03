@@ -215,7 +215,6 @@ const [playlist, setPlaylist] = useState<string[]>([
                 <label className="uppercase tracking-wide text-xs text-muted-foreground font-roboto font-bold">
                   Stream Quality
                 </label>
-
                   <Select
                     value={mainSubMap[selectedSlotIndex] || "sub"} 
                     onValueChange={() => toggleMainSub(selectedSlotIndex)} 

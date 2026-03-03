@@ -1,3 +1,62 @@
+// import { create } from "zustand";
+
+// export interface Segment {
+//   startTime: Date;
+//   endTime: Date;
+// }
+
+// interface PlaybackStore {
+//   globalTime: Date;
+//   isPlaying: boolean;
+//   isSeeking: boolean;
+//   playbackSpeed: number;
+//   hasVideo: boolean;
+
+//   play: () => void;
+//   pause: () => void;
+//   setSpeed: (speed: number) => void;
+//   seekTo: (date: Date) => void;
+//   updateFromVideo: (date: Date) => void;
+//   setHasVideo: (value: boolean) => void;
+// }
+
+// export const usePlaybackStore = create<PlaybackStore>((set, get) => ({
+//   globalTime: new Date(),
+//   isPlaying: false,
+//   isSeeking: false,
+//   playbackSpeed: 1,
+//   hasVideo: false,
+
+//   play: () => set({ isPlaying: true }),
+//   pause: () => set({ isPlaying: false }),
+//   setSpeed: (speed) => set({ playbackSpeed: speed }),
+
+//   seekTo: (date) => {
+//     console.log("🔹 [seekTo] called with:", date);
+//     set({
+//       globalTime: new Date(date),
+//       isSeeking: true,
+//     });
+
+//     // ✅ Use timeout to allow HLS effect to pick up the seek
+//     setTimeout(() => {
+//       set({ isSeeking: false });
+//       const { globalTime } = get();
+//       console.log("🔹 [seekTo] isSeeking set false, globalTime =", globalTime);
+//     }, 50); // 50ms is usually safe
+//   },
+
+//   updateFromVideo: (date) => {
+//     const { isSeeking, isPlaying } = get();
+//     if (isSeeking || !isPlaying) return;
+//     set({ globalTime: new Date(date) });
+//   },
+
+//   setHasVideo: (value) => set({ hasVideo: value }),
+// }));
+
+
+
 import { create } from "zustand";
 
 export interface Segment {
@@ -11,74 +70,35 @@ interface PlaybackStore {
   isSeeking: boolean;
   playbackSpeed: number;
 
-  segments: Segment[];
-  hasVideo: boolean;
-
+  seekTo: (date: Date) => void;
   play: () => void;
   pause: () => void;
   setSpeed: (speed: number) => void;
-  seekTo: (date: Date, callback?: () => void) => void;
+
   updateFromVideo: (date: Date) => void;
-
-  setSegments: (segments: Segment[]) => void;
-  setHasVideo: (value: boolean) => void;
-
-  startClock: () => void;
-  stopClock: () => void;
 }
-
-let clockInterval: NodeJS.Timeout | null = null;
 
 export const usePlaybackStore = create<PlaybackStore>((set, get) => ({
   globalTime: new Date(),
   isPlaying: false,
   isSeeking: false,
   playbackSpeed: 1,
-  segments: [],
-  hasVideo: false,
 
-  play: () => {
-    set({ isPlaying: true });
-    get().startClock();
-  },
-
-  pause: () => {
-    set({ isPlaying: false });
-    get().stopClock();
-  },
+  play: () => set({ isPlaying: true }),
+  pause: () => set({ isPlaying: false }),
 
   setSpeed: (speed) => set({ playbackSpeed: speed }),
 
-  seekTo: (date, callback) => {
+  seekTo: (date) => {
     set({ globalTime: date, isSeeking: true });
+
     setTimeout(() => {
       set({ isSeeking: false });
-      if (callback) callback();
-    }, 50);
+    }, 120);
   },
 
   updateFromVideo: (date) => {
     if (get().isSeeking) return;
     set({ globalTime: date });
-  },
-
-  setSegments: (segments) => set({ segments }),
-  setHasVideo: (value) => set({ hasVideo: value }),
-
-  startClock: () => {
-    if (clockInterval) return;
-    clockInterval = setInterval(() => {
-      const { globalTime, playbackSpeed, isPlaying } = get();
-      if (!isPlaying) return;
-      const nextTime = new Date(globalTime.getTime() + 250 * playbackSpeed);
-      set({ globalTime: nextTime });
-    }, 250);
-  },
-
-  stopClock: () => {
-    if (clockInterval) {
-      clearInterval(clockInterval);
-      clockInterval = null;
-    }
   },
 }));

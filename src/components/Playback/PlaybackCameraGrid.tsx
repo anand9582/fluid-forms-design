@@ -2,12 +2,18 @@ import React, { useMemo } from "react";
 import usePlaybackGridStore from "@/Store/UsePlaybackGridStore";
 import { PlaybackCameraSlot } from "./PlaybackCameraSlot";
 
+interface RawSegment {
+  startTime: Date;
+  endTime: Date;
+}
+
 interface Props {
   selectedSlot: number | null;
   onSlotSelect: (i: number | null) => void;
   getVideoSrc: (cameraId: string) => string;
   onCameraDrop: (cameraId: string, slotIndex: number) => void;
   isCameraLoading: (cameraId: string) => boolean;
+  rawSegmentsPerSlot: Record<number, RawSegment[]>;
 }
 
 export function PlaybackCameraGrid({
@@ -16,17 +22,13 @@ export function PlaybackCameraGrid({
   getVideoSrc,
   onCameraDrop,
   isCameraLoading,
+  rawSegmentsPerSlot,
 }: Props) {
   const { layout, slotAssignments } = usePlaybackGridStore();
-
   const totalSlots = layout.rows * layout.cols;
 
   const displaySlots = useMemo(
-    () =>
-      Array.from(
-        { length: totalSlots },
-        (_, i) => slotAssignments[i] || null
-      ),
+    () => Array.from({ length: totalSlots }, (_, i) => slotAssignments[i] || null),
     [slotAssignments, totalSlots]
   );
 
@@ -45,12 +47,11 @@ export function PlaybackCameraGrid({
             index={index}
             cameraId={cameraId}
             selected={selectedSlot === index}
-            onSelect={() =>
-              onSlotSelect(selectedSlot === index ? null : index)
-            }
+            onSelect={() => onSlotSelect(selectedSlot === index ? null : index)}
             onCameraDrop={onCameraDrop}
             getVideoSrc={getVideoSrc}
             isCameraLoading={isCameraLoading}
+            rawSegmentsPerSlot={rawSegmentsPerSlot}
           />
         ))}
       </div>
