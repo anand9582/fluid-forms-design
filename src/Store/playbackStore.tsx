@@ -57,6 +57,54 @@
 
 
 
+// import { create } from "zustand";
+
+// export interface Segment {
+//   startTime: Date;
+//   endTime: Date;
+// }
+
+// interface PlaybackStore {
+//   globalTime: Date;
+//   isPlaying: boolean;
+//   isSeeking: boolean;
+//   playbackSpeed: number;
+
+//   seekTo: (date: Date) => void;
+//   play: () => void;
+//   pause: () => void;
+//   setSpeed: (speed: number) => void;
+
+//   updateFromVideo: (date: Date) => void;
+// }
+
+// export const usePlaybackStore = create<PlaybackStore>((set, get) => ({
+//   globalTime: new Date(),
+//   isPlaying: false,
+//   isSeeking: false,
+//   playbackSpeed: 1,
+
+//   play: () => set({ isPlaying: true }),
+//   pause: () => set({ isPlaying: false }),
+
+//   setSpeed: (speed) => set({ playbackSpeed: speed }),
+
+//   seekTo: (date) => {
+//     set({ globalTime: date, isSeeking: true });
+
+//     setTimeout(() => {
+//       set({ isSeeking: false });
+//     }, 120);
+//   },
+
+//   updateFromVideo: (date) => {
+//     if (get().isSeeking) return;
+//     set({ globalTime: date });
+//   },
+// }));
+
+
+
 import { create } from "zustand";
 
 export interface Segment {
@@ -70,9 +118,11 @@ interface PlaybackStore {
   isSeeking: boolean;
   playbackSpeed: number;
 
-  seekTo: (date: Date) => void;
   play: () => void;
   pause: () => void;
+
+  seekTo: (date: Date) => void;
+  seekBySeconds: (sec: number) => void; 
   setSpeed: (speed: number) => void;
 
   updateFromVideo: (date: Date) => void;
@@ -83,18 +133,28 @@ export const usePlaybackStore = create<PlaybackStore>((set, get) => ({
   isPlaying: false,
   isSeeking: false,
   playbackSpeed: 1,
-
+  setPlaybackSpeed: (speed: number) => set({ playbackSpeed: speed }),
   play: () => set({ isPlaying: true }),
   pause: () => set({ isPlaying: false }),
 
-  setSpeed: (speed) => set({ playbackSpeed: speed }),
+setSpeed: (speed) => {
+  if (speed < 0) {
+    set({ playbackSpeed: Math.max(speed, -32) });
+  } else {
+    set({ playbackSpeed: Math.min(Math.max(speed, 0.25), 36) });
+  }
+},
 
   seekTo: (date) => {
     set({ globalTime: date, isSeeking: true });
+    setTimeout(() => set({ isSeeking: false }), 120);
+  },
 
-    setTimeout(() => {
-      set({ isSeeking: false });
-    }, 120);
+  seekBySeconds: (sec) => {
+    const now = get().globalTime;
+    const next = new Date(now.getTime() + sec * 1000);
+    set({ globalTime: next, isSeeking: true });
+    setTimeout(() => set({ isSeeking: false }), 120);
   },
 
   updateFromVideo: (date) => {

@@ -11,9 +11,9 @@ export const useGridController = () => {
     } = useGridStore();
 
   const gridRef = useRef<HTMLDivElement>(null);
-  const { play, closeConnection, closeSlotConnections, getActiveConnectionCount } =
-    usePlayCamera(console.log);
-
+  const { play, closeConnection, closeSlotConnections, getActiveConnectionCount } = usePlayCamera(console.log);
+   
+   
   useEffect(() => {
     resizeSlots();
   }, [layout.rows, layout.cols, resizeSlots]);

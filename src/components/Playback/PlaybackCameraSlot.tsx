@@ -45,13 +45,24 @@ export function PlaybackCameraSlot({
   const segments = rawSegmentsPerSlot?.[index] || [];
   const src = cameraId ? getVideoSrc(cameraId) : "";
 
-  const { videoRef } = useHlsWithStore({ src, cameraId, segments });
+  const { videoRef } = useHlsWithStore({ src, cameraId, segments, isMaster: true,  });
 
-  
+    /* ---------------- FULLSCREEN ---------------- */
+  const toggleFullscreen = () => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else {
+      el.requestFullscreen().catch(() => {});
+    }
+  };
   return (
     <div
       ref={containerRef}
       onClick={onSelect}
+       onDoubleClick={toggleFullscreen}
       className={cn(
         "relative w-full h-full overflow-hidden border cursor-pointer select-none bg-black",
         selected && "ring-2 ring-primary",
@@ -59,7 +70,7 @@ export function PlaybackCameraSlot({
       )}
     >
       {cameraId && src && !errorMessage && (
-        <video ref={videoRef} className="absolute inset-0 w-full h-full object-cover" muted playsInline preload="auto" controls />
+        <video ref={videoRef} className="absolute inset-0 w-full h-full object-cover" muted autoPlay playsInline preload="auto" controls={true} />
       )}
 
       {!cameraId && !errorMessage && (

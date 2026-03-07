@@ -10,7 +10,7 @@ import {
 import { useGridController } from "@/hooks/useGridController";
 import { SidebarCameraStore } from "@/Store/SidebarCameraStore";
 import useGridStore from "@/Store/UseGridStore";
-import { useStreamStore } from "@/Store/useStreamStore";
+import { useStreamStore } from "@/Store/UseStreamStore";
 export interface CameraStatus {
   id: string;
   name: string;
@@ -75,59 +75,101 @@ export default function LiveView() {
   };
 
   /* Main / Sub toggle */
-const toggleMainSub = (slotIndex: number, cameraId: string) => {
+const toggleMainSub = (
+  slotIndex: number,
+  cameraId: string,
+  nextType: "main" | "sub" // dropdown se hamesha pass hoga
+) => {
   if (!cameraId) return;
 
   const streams = useStreamStore.getState().streams;
+  console.log("=== TOGGLE START ===");
+  console.log(`Slot: ${slotIndex}, Camera: ${cameraId}, Next Type: ${nextType}`);
+  console.log("Current Streams BEFORE toggle:", JSON.parse(JSON.stringify(streams)));
 
-  const currentType: "main" | "sub" = mainSubMap[slotIndex] ?? "sub";
-  const nextType: "main" | "sub" = currentType === "sub" ? "main" : "sub";
-
-  console.log(`Toggle ${cameraId} → ${nextType.toUpperCase()} (Slot ${slotIndex})`);
-
-  // 1. Close old stream in this slot
-  const oldStream = streams.find(s => s.slotId === slotIndex);
+  // ----------------------
+  // 1️⃣ Close old stream in this slot
+  // ----------------------
+  const oldStream = streams.find((s) => s.slotId === slotIndex);
   if (oldStream) {
-    console.log(`Closing ${oldStream.streamType.toUpperCase()} in slot ${slotIndex}`);
-    oldStream.pc.close();
+    try {
+      oldStream.pc.close();
+      console.log(`✅ Closed old stream in slot ${slotIndex} (${oldStream.streamType})`);
+    } catch (err) {
+      console.warn(`⚠️ Failed to close old stream in slot ${slotIndex}`, err);
+    }
     useStreamStore.getState().removeStreamByInstanceId(oldStream.instanceId);
+  } else {
+    console.log(`No old stream found in slot ${slotIndex}`);
   }
 
-  // 2. Remove leftover SUB stream if same camera has any in other slots
+  // ----------------------
+  // 2️⃣ Close leftover SUB stream of same camera in other slots
+  // ----------------------
   const leftoverSub = streams.find(
-    s => s.cameraId === cameraId && s.streamType === "sub" && s.slotId !== slotIndex
+    (s) =>
+      s.cameraId === cameraId &&
+      s.streamType === "sub" &&
+      s.slotId !== slotIndex
   );
   if (leftoverSub) {
-    console.log(`Closing leftover SUB for ${cameraId} (instance ${leftoverSub.instanceId})`);
-    leftoverSub.pc.close();
+    try {
+      leftoverSub.pc.close();
+      console.log(
+        `✅ Closed leftover SUB for ${cameraId} in slot ${leftoverSub.slotId}`
+      );
+    } catch (err) {
+      console.warn(`⚠️ Failed to close leftover SUB in slot ${leftoverSub.slotId}`, err);
+    }
     useStreamStore.getState().removeStreamByInstanceId(leftoverSub.instanceId);
+  } else {
+    console.log("No leftover SUB found for this camera in other slots");
   }
 
-  // 3. Play new stream
-  const videoEl = document.querySelector<HTMLVideoElement>(`#video-slot-${slotIndex}`);
-  if (!videoEl) return;
+  // ----------------------
+  // 3️⃣ Play new stream
+  // ----------------------
+  const videoEl = document.querySelector<HTMLVideoElement>(
+    `#video-slot-${slotIndex}`
+  );
+  if (!videoEl) {
+    console.warn(`⚠️ Video element not found for slot ${slotIndex}`);
+    return;
+  }
 
-  const pc = play(cameraId, videoEl, nextType, slotIndex); // play() should return RTCPeerConnection
-
-  // 4. Add new stream to Zustand store
-  const newInstanceId = crypto.randomUUID();
-  useStreamStore.getState().addStream({
-    instanceId: newInstanceId,
+  const { pc: newPc, instanceId: newInstanceIdFromPlay } = play(
     cameraId,
-    pc,
+    videoEl,
+    nextType,
+    slotIndex
+  );
+  console.log(`🎬 Started new ${nextType} stream for camera ${cameraId} in slot ${slotIndex}`);
+
+  // ----------------------
+  // 4️⃣ Add new stream to Zustand store
+  // ----------------------
+  useStreamStore.getState().addStream({
+    instanceId: newInstanceIdFromPlay,
+    cameraId,
+    pc: newPc,
     streamType: nextType,
     slotId: slotIndex,
   });
 
-  // 5. Update mainSubMap using React state
-  setMainSubMap(prev => ({
+  // ----------------------
+  // 5️⃣ Update dropdown / UI state
+  // ----------------------
+  setMainSubMap((prev) => ({
     ...prev,
     [slotIndex]: nextType,
   }));
 
-  console.log(`Started ${nextType.toUpperCase()} for ${cameraId} in Slot ${slotIndex}`);
+  // ----------------------
+  // 6️⃣ Debug: Streams after toggle
+  // ----------------------
+  console.log("Current Streams AFTER toggle:", JSON.parse(JSON.stringify(useStreamStore.getState().streams)));
+  console.log("=== TOGGLE END ===");
 };
-
 //  Selected camera for sidebar
   const getSelectedCamera = useCallback(() => {
     if (selectedSlotIndex === null) return null;

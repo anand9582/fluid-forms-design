@@ -1,7 +1,7 @@
 import { useCallback, useRef } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { APISERVERURL, API_URLS } from "@/components/Config/api";
-import { useStreamStore , CameraStream } from "@/Store/UseStreamStore";
+import { useStreamStore , CameraStream } from "@/Store/useStreamStore";
 
 export const usePlayCamera = (addDebugLog: (msg: string) => void) => {
   const {

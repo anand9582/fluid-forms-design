@@ -10,7 +10,7 @@ interface RawSegment {
 interface Props {
   selectedSlot: number | null;
   onSlotSelect: (i: number | null) => void;
-  getVideoSrc: (cameraId: string) => string;
+  getVideoSrc: (slotIndex: number) => string;
   onCameraDrop: (cameraId: string, slotIndex: number) => void;
   isCameraLoading: (cameraId: string) => boolean;
   rawSegmentsPerSlot: Record<number, RawSegment[]>;
@@ -49,7 +49,7 @@ export function PlaybackCameraGrid({
             selected={selectedSlot === index}
             onSelect={() => onSlotSelect(selectedSlot === index ? null : index)}
             onCameraDrop={onCameraDrop}
-            getVideoSrc={getVideoSrc}
+            getVideoSrc={() => getVideoSrc(index)} 
             isCameraLoading={isCameraLoading}
             rawSegmentsPerSlot={rawSegmentsPerSlot}
           />

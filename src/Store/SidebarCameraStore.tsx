@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import { Device } from "@/components/LiveView/DeviceTypes";
 import { APISERVERURL, API_URLS } from "@/components/Config/api";
-import { dummyCameras } from "@/Store/dummyCameraData";
 
 
 interface CameraStore {
@@ -34,13 +33,6 @@ export const SidebarCameraStore = create<CameraStore>((set) => ({
 
     set({ cameras: mapped, loading: false });
   },
-  
-  //  fetchCameras: async () => {
-  //   set({ loading: true });
-  //   await new Promise((r) => setTimeout(r, 500));
-  //   set({ cameras: dummyCameras, loading: false });
-  // },
-
   addCamera: (camera) =>
     set((state) => ({
       cameras: [...state.cameras, camera],

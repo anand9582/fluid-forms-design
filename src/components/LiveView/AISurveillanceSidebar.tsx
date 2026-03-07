@@ -46,13 +46,14 @@ import {
 
 interface ControlsSidebarProps {
   selectedCamera?: {
+    id: string
     name: string;
     location: string;
     bitrate: string;
   } | null;
    selectedSlotIndex: number | null;
   mainSubMap: Record<number, "main" | "sub">;
-  toggleMainSub: (slotIndex: number) => void;
+  toggleMainSub: (slotIndex: number, cameraId: string, stream: "main" | "sub") => void;
 }
 
 // AI Features data
@@ -87,7 +88,6 @@ const [playlist, setPlaylist] = useState<string[]>([
 
  const handleStreamChange = (value: "main" | "sub") => {
   setStreamQuality(value);
-  console.log("Stream switched to:", value);
 };
 
   // If no camera is selected, show workspace management view
@@ -215,18 +215,27 @@ const [playlist, setPlaylist] = useState<string[]>([
                 <label className="uppercase tracking-wide text-xs text-muted-foreground font-roboto font-bold">
                   Stream Quality
                 </label>
-                  <Select
-                    value={mainSubMap[selectedSlotIndex] || "sub"} 
-                    onValueChange={() => toggleMainSub(selectedSlotIndex)} 
-                  >
-                    <SelectTrigger className="w-full bg-white text-black border border-border focus:bg-white">
-                      <SelectValue placeholder="Select quality" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="sub">Sub</SelectItem>
-                      <SelectItem value="main">Main</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    <Select
+                  value={
+                    selectedSlotIndex !== null && mainSubMap[selectedSlotIndex]
+                      ? mainSubMap[selectedSlotIndex]
+                      : "sub" // default value
+                  }
+                 onValueChange={(value: "main" | "sub") => {
+                    console.log("Dropdown changed to:", value, "for slot:", selectedSlotIndex);
+                      if (selectedCamera && selectedSlotIndex !== null) {
+                        toggleMainSub(selectedSlotIndex, selectedCamera.id, value);
+                      }
+                    }}
+                >
+                  <SelectTrigger className="w-full bg-white text-black border border-border focus:bg-white">
+                    <SelectValue placeholder="Select quality" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="sub">Sub</SelectItem>
+                    <SelectItem value="main">Main</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
             {/* PTZ Controls */}
