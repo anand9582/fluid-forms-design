@@ -247,7 +247,6 @@
 
 //   return { videoRef };
 // }
-
 import { useEffect, useMemo, useRef, useState } from "react";
 import Hls from "hls.js";
 import { Segment, usePlaybackStore } from "@/Store/playbackStore";
@@ -282,10 +281,8 @@ export function useHlsWithStore({
     updateFromVideo,
   } = usePlaybackStore();
 
-  // Decide which time to follow
   const currentTime = isSync ? globalTime : cameraTimes[slotIndex] || globalTime;
 
-  // ---------------- SEGMENT OFFSETS ----------------
   const segmentOffsets = useMemo(() => {
     let acc = 0;
     return segments.map((s) => {
@@ -301,26 +298,24 @@ export function useHlsWithStore({
     const video = videoRef.current;
     if (!video || !src || !cameraId) return;
 
-    setIsVideoReady(false); // loader start
+    setIsVideoReady(false);
     const startTime = performance.now();
     console.log(`[HLS] start loading camera ${cameraId} at`, new Date());
 
-const hls = new Hls({
-  startLevel: 0,      // lowest bitrate first → faster first frame
-  maxBufferLength: 10,
-  enableWorker: true
-});
+    const hls = new Hls({
+      startLevel: 0, // low bitrate first → fast first frame
+      maxBufferLength: 10,
+      enableWorker: true,
+    });
     hlsRef.current = hls;
 
     hls.attachMedia(video);
     hls.loadSource(src);
 
-    // Manifest parsed → video can start
     hls.on(Hls.Events.MANIFEST_PARSED, () => {
       console.log(`[HLS] camera ${cameraId} manifest parsed at`, new Date());
     });
 
-    // Video actually playable
     const onCanPlay = () => {
       setIsVideoReady(true); // loader hide
       const endTime = performance.now();
@@ -337,6 +332,26 @@ const hls = new Hls({
       video.removeEventListener("canplay", onCanPlay);
     };
   }, [src, cameraId]);
+
+  // ---------------- SEEK HANDLING ----------------
+  // loader show on seek
+  useEffect(() => {
+    if (!videoRef.current) return;
+    const video = videoRef.current;
+
+    if (isSeeking) {
+      setIsVideoReady(false); // show loader
+    }
+
+    const onCanPlay = () => {
+      if (isSeeking) {
+        setIsVideoReady(true); // hide loader after seek segment ready
+      }
+    };
+
+    video.addEventListener("canplay", onCanPlay);
+    return () => video.removeEventListener("canplay", onCanPlay);
+  }, [isSeeking]);
 
   // ---------------- MASTER → VIDEO SYNC ----------------
   useEffect(() => {
@@ -357,18 +372,13 @@ const hls = new Hls({
     const targetTime = seg.offset + logicalSeconds;
 
     if (!isFinite(targetTime) || targetTime < 0) return;
+    if (Math.abs(video.currentTime - targetTime) > 0.5) video.currentTime = targetTime;
 
-    if (Math.abs(video.currentTime - targetTime) > 0.5) {
-      video.currentTime = targetTime;
-    }
-
-    // Cleanup reverse interval
     if (reverseIntervalRef.current !== null) {
       clearInterval(reverseIntervalRef.current);
       reverseIntervalRef.current = null;
     }
 
-    // Play / Reverse logic
     if (isPlaying) {
       if (playbackSpeed >= 0) {
         video.playbackRate = Math.min(playbackSpeed, 16);
@@ -388,9 +398,7 @@ const hls = new Hls({
           }
         }, 33);
       }
-    } else {
-      video.pause();
-    }
+    } else video.pause();
   }, [currentTime, isPlaying, playbackSpeed, segmentOffsets]);
 
   // ---------------- VIDEO → STORE ----------------
@@ -410,8 +418,7 @@ const hls = new Hls({
       const endOfTimeline = lastSeg.offset + lastSeg.duration;
       if (current >= endOfTimeline - 0.2) {
         video.currentTime = firstSeg.offset;
-        const restartTime = new Date(firstSeg.startTime);
-        updateFromVideo(restartTime, slotIndex);
+        updateFromVideo(new Date(firstSeg.startTime), slotIndex);
         return;
       }
 
