@@ -45,7 +45,13 @@ export function PlaybackCameraSlot({
   const segments = rawSegmentsPerSlot?.[index] || [];
   const src = cameraId ? getVideoSrc(cameraId) : "";
 
-  const { videoRef } = useHlsWithStore({ src, cameraId, segments, isMaster: true,  });
+  const { videoRef } = useHlsWithStore({
+  src,
+  cameraId,
+  segments,
+  slotIndex: index,
+  isMaster: true,
+});
 
     /* ---------------- FULLSCREEN ---------------- */
   const toggleFullscreen = () => {

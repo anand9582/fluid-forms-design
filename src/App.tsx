@@ -34,10 +34,10 @@ const App = () => (
           <Routes>
             <Route path="/" element={<LoginPage />} />
             {/* PROTECTED ROUTES */}
-            <Route element={<ProtectedRoute />}>
+            {/* <Route element={<ProtectedRoute />}> */}
                 <Route element={<AppLayout />}>
                   <Route path="/dashboard" element={<Index />} />
-                  {/* <Route path="/" element={<AddedDevicesPage />} /> */}
+                   {/* <Route path="/" element={<AddedDevicesPage />} /> */}
                   <Route path="/live" element={<LiveView />} />
                    <Route path="/playback" element={<PlayBack />} />
                   <Route path="/settings" element={<SettingsLayout />}>
@@ -45,7 +45,7 @@ const App = () => (
                   </Route>
                    <Route path="*" element={<NotFound />} />
               </Route>
-            </Route>
+            {/* </Route> */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>

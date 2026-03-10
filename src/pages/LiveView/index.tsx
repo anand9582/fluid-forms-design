@@ -74,11 +74,10 @@ export default function LiveView() {
     }));
   };
 
-  /* Main / Sub toggle */
 const toggleMainSub = (
   slotIndex: number,
   cameraId: string,
-  nextType: "main" | "sub" // dropdown se hamesha pass hoga
+  nextType: "main" | "sub"
 ) => {
   if (!cameraId) return;
 
@@ -88,15 +87,15 @@ const toggleMainSub = (
   console.log("Current Streams BEFORE toggle:", JSON.parse(JSON.stringify(streams)));
 
   // ----------------------
-  // 1️⃣ Close old stream in this slot
+  // Close old stream in this slot
   // ----------------------
   const oldStream = streams.find((s) => s.slotId === slotIndex);
   if (oldStream) {
     try {
       oldStream.pc.close();
-      console.log(`✅ Closed old stream in slot ${slotIndex} (${oldStream.streamType})`);
+      console.log(`Closed old stream in slot ${slotIndex} (${oldStream.streamType})`);
     } catch (err) {
-      console.warn(`⚠️ Failed to close old stream in slot ${slotIndex}`, err);
+      console.warn(` Failed to close old stream in slot ${slotIndex}`, err);
     }
     useStreamStore.getState().removeStreamByInstanceId(oldStream.instanceId);
   } else {
@@ -104,7 +103,7 @@ const toggleMainSub = (
   }
 
   // ----------------------
-  // 2️⃣ Close leftover SUB stream of same camera in other slots
+  // Close leftover SUB stream of same camera in other slots
   // ----------------------
   const leftoverSub = streams.find(
     (s) =>
@@ -116,10 +115,10 @@ const toggleMainSub = (
     try {
       leftoverSub.pc.close();
       console.log(
-        `✅ Closed leftover SUB for ${cameraId} in slot ${leftoverSub.slotId}`
+        ` Closed leftover SUB for ${cameraId} in slot ${leftoverSub.slotId}`
       );
     } catch (err) {
-      console.warn(`⚠️ Failed to close leftover SUB in slot ${leftoverSub.slotId}`, err);
+      console.warn(` Failed to close leftover SUB in slot ${leftoverSub.slotId}`, err);
     }
     useStreamStore.getState().removeStreamByInstanceId(leftoverSub.instanceId);
   } else {
@@ -127,13 +126,13 @@ const toggleMainSub = (
   }
 
   // ----------------------
-  // 3️⃣ Play new stream
+  //  Play new stream
   // ----------------------
   const videoEl = document.querySelector<HTMLVideoElement>(
     `#video-slot-${slotIndex}`
   );
   if (!videoEl) {
-    console.warn(`⚠️ Video element not found for slot ${slotIndex}`);
+    console.warn(`Video element not found for slot ${slotIndex}`);
     return;
   }
 
@@ -146,7 +145,7 @@ const toggleMainSub = (
   console.log(`🎬 Started new ${nextType} stream for camera ${cameraId} in slot ${slotIndex}`);
 
   // ----------------------
-  // 4️⃣ Add new stream to Zustand store
+  // Add new stream to Zustand store
   // ----------------------
   useStreamStore.getState().addStream({
     instanceId: newInstanceIdFromPlay,
@@ -157,7 +156,7 @@ const toggleMainSub = (
   });
 
   // ----------------------
-  // 5️⃣ Update dropdown / UI state
+  //  Update dropdown / UI state
   // ----------------------
   setMainSubMap((prev) => ({
     ...prev,
@@ -165,7 +164,7 @@ const toggleMainSub = (
   }));
 
   // ----------------------
-  // 6️⃣ Debug: Streams after toggle
+  //  Debug: Streams after toggle
   // ----------------------
   console.log("Current Streams AFTER toggle:", JSON.parse(JSON.stringify(useStreamStore.getState().streams)));
   console.log("=== TOGGLE END ===");
