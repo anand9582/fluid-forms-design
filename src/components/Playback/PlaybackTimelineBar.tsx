@@ -1,5 +1,4 @@
-// PlaybackTimelineBar.tsx
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { usePlaybackStore } from "@/Store/playbackStore";
 
 import {
@@ -92,7 +91,8 @@ export function PlaybackTimelineBar({
   const zoomPercent = ((zoomLevel - 1) / 9) * 100;
 
   const togglePlay = () => {
-    isPlaying ? pause() : play();
+    if (isPlaying) pause();
+    else play();
   };
 
   const handleOpenPicker = (open: boolean) => {
@@ -115,9 +115,27 @@ export function PlaybackTimelineBar({
     if (ampm === "AM" && h === 12) h = 0;
 
     d.setHours(h, parseInt(minute) || 0, parseInt(second) || 0, 0);
-    onSeekToDate(d);
+
+    onSeekToDate(d); // store update
     setPickerOpen(false);
   };
+
+  // -----------------------
+  // Instant live display while picker is open
+  // -----------------------
+  const displayTime = useMemo(() => {
+    if (!pickerOpen) return globalTime;
+    const h = parseInt(hour) || 0;
+    const realHour = ampm === "PM" ? (h === 12 ? 12 : h + 12) : (h === 12 ? 0 : h);
+    return new Date(
+      selectedDate.getFullYear(),
+      selectedDate.getMonth(),
+      selectedDate.getDate(),
+      realHour,
+      parseInt(minute) || 0,
+      parseInt(second) || 0
+    );
+  }, [pickerOpen, selectedDate, hour, minute, second, ampm, globalTime]);
 
   const handleForwardSpeedSelect = (speed: number) => {
     setSpeed(speed);
@@ -146,7 +164,7 @@ export function PlaybackTimelineBar({
           >
             <CalendarIcon className="h-3 w-3" />
             <span className="font-mono">
-              {formatPlaybackTimestamp(globalTime)}
+              {formatPlaybackTimestamp(displayTime)}
             </span>
           </button>
         </AppTooltip>
@@ -197,32 +215,33 @@ export function PlaybackTimelineBar({
           </div>
         )}
       </div>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="flex items-center gap-1.5 ml-1">
-                <Switch
-                  checked={isSync}
-                  onCheckedChange={(v) => setSynced(v)}
-                  className="data-[state=checked]:bg-primary h-4 w-7"
-                />
-                <span className="text-[11px] text-foreground font-medium">
-                    Synced
-                </span>
-              </div>
-            </TooltipTrigger>
 
-            <TooltipContent side="top">
-              <p>
-                {isSync
-                  ? "All cameras seek together"
-                  : "Seek selected camera only"}
-              </p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+      {/* SYNC SWITCH */}
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="flex items-center gap-1.5 ml-1">
+              <Switch
+                checked={isSync}
+                onCheckedChange={(v) => setSynced(v)}
+                className="data-[state=checked]:bg-primary h-4 w-7"
+              />
+              <span className="text-[11px] text-foreground font-medium">
+                Synced
+              </span>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            <p>
+              {isSync
+                ? "All cameras seek together"
+                : "Seek selected camera only"}
+            </p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
 
-      <div className="flex-1" /> {/* CENTER SPACE */}
+      <div className="flex-1" />
 
       {/* ZOOM CONTROLS */}
       <div className="flex items-center gap-2 bg-timelinebg rounded text-slate-600">
@@ -265,13 +284,13 @@ export function PlaybackTimelineBar({
 
       {/* PLAYBACK CONTROLS */}
       <div className="flex items-center gap-3 bg-muted/60 px-1 rounded">
-        <PlaybackControlButton label="Rewind" onClick={onRewind}>
-          <Rewind className="h-3 w-3" />
-        </PlaybackControlButton>
         <PlaybackControlButton label="Previous Frame" onClick={onSkipBack}>
           <SkipBack className="h-3 w-3" />
         </PlaybackControlButton>
-        <PlaybackControlButton label={isPlaying ? "Pause" : "Play"} onClick={togglePlay}>
+        <PlaybackControlButton
+          label={isPlaying ? "Pause" : "Play"}
+          onClick={togglePlay}
+        >
           {isPlaying ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
         </PlaybackControlButton>
         <PlaybackControlButton label="Stop" onClick={onStop}>
@@ -283,7 +302,6 @@ export function PlaybackTimelineBar({
 
         {/* SPEED CONTROLS */}
         <div className="flex items-center bg-timelinebg rounded-full text-slate-600">
-          {/* REVERSE SPEED */}
           <div className="relative border-r border-slate-300">
             <PlaybackControlButton
               label="Reverse Speed"
@@ -312,7 +330,6 @@ export function PlaybackTimelineBar({
             )}
           </div>
 
-          {/* FAST FORWARD */}
           <div className="relative">
             <PlaybackControlButton
               label="Fast Forward Speed"
@@ -356,8 +373,10 @@ export function PlaybackTimelineBar({
           <MoreHorizontal className="h-3 w-3" />
         </PlaybackControlButton>
 
-        {/* EXPORT */}
-        <Button size="sm" className="h-7 text-xs px-3 bg-primary font-roboto font-medium rounded flex items-center gap-1">
+        <Button
+          size="sm"
+          className="h-7 text-xs px-3 bg-primary font-roboto font-medium rounded flex items-center gap-1"
+        >
           <Download className="h-3 w-3" /> Export
         </Button>
       </div>

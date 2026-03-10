@@ -1,4 +1,254 @@
-import { useEffect, useMemo, useRef } from "react";
+// import { useEffect, useMemo, useRef } from "react";
+// import Hls from "hls.js";
+// import { Segment, usePlaybackStore } from "@/Store/playbackStore";
+
+// interface Props {
+//   src: string;
+//   cameraId: string | null;
+//   segments: Segment[];
+//   slotIndex: number; // ⭐ important
+//   isMaster?: boolean;
+// }
+
+// export function useHlsWithStore({
+//   src,
+//   cameraId,
+//   segments,
+//   slotIndex,
+//   isMaster = false,
+// }: Props) {
+
+//   const videoRef = useRef<HTMLVideoElement>(null);
+//   const hlsRef = useRef<Hls | null>(null);
+//   const reverseIntervalRef = useRef<number | null>(null);
+
+//   const {
+//     globalTime,
+//     cameraTimes,
+//     isSync,
+//     isPlaying,
+//     playbackSpeed,
+//     isSeeking,
+//     updateFromVideo,
+//   } = usePlaybackStore();
+
+//   // ⭐ decide which time to follow
+//   const currentTime = isSync
+//     ? globalTime
+//     : cameraTimes[slotIndex] || globalTime;
+
+//   // ---------------- AUTO PLAY ----------------
+
+//   useEffect(() => {
+//     const video = videoRef.current;
+//     if (!video || !isPlaying) return;
+
+//     video.muted = true;
+//     video.play().catch(() => {});
+//   }, [isPlaying]);
+
+//   // ---------------- SEGMENT OFFSETS ----------------
+
+//   const segmentOffsets = useMemo(() => {
+//     let acc = 0;
+
+//     return segments.map((s) => {
+//       const duration =
+//         (s.endTime.getTime() - s.startTime.getTime()) / 1000;
+
+//       const offset = acc;
+//       acc += duration;
+
+//       return { ...s, offset, duration };
+//     });
+
+//   }, [segments]);
+
+//   // ---------------- HLS INIT ----------------
+
+//   useEffect(() => {
+
+//     const video = videoRef.current;
+//     if (!video || !src || !cameraId) return;
+
+//     const hls = new Hls({
+//       maxBufferLength: 20,
+//       enableWorker: true,
+//     });
+
+//     hlsRef.current = hls;
+
+//     hls.attachMedia(video);
+//     hls.loadSource(src);
+
+//     return () => {
+//       hls.destroy();
+//       hlsRef.current = null;
+//     };
+
+//   }, [src, cameraId]);
+
+//   // ---------------- MASTER → VIDEO SYNC ----------------
+
+//   useEffect(() => {
+
+//     const video = videoRef.current;
+//     if (!video || !segmentOffsets.length) return;
+
+//     let seg = segmentOffsets.find(
+//       (s) => currentTime >= s.startTime && currentTime <= s.endTime
+//     );
+
+//     if (!seg) {
+//       seg = segmentOffsets[0];
+//       video.currentTime = seg.offset;
+//       return;
+//     }
+
+//     const logicalSeconds =
+//       (currentTime.getTime() - seg.startTime.getTime()) / 1000;
+
+//     const targetTime = seg.offset + logicalSeconds;
+
+//     if (!isFinite(targetTime) || targetTime < 0) return;
+
+//     if (Math.abs(video.currentTime - targetTime) > 0.5) {
+//       video.currentTime = targetTime;
+//     }
+
+//     // --------- REVERSE CLEANUP ---------
+
+//     if (reverseIntervalRef.current !== null) {
+//       clearInterval(reverseIntervalRef.current);
+//       reverseIntervalRef.current = null;
+//     }
+
+//     // --------- PLAY / REVERSE ---------
+
+//     if (isPlaying) {
+
+//       if (playbackSpeed >= 0) {
+
+//         video.playbackRate = Math.min(playbackSpeed, 16);
+//         video.muted = playbackSpeed > 4;
+//         video.play().catch(() => {});
+
+//       } else {
+
+//         video.pause();
+
+//         const step = Math.abs(playbackSpeed) / 30;
+
+//         reverseIntervalRef.current = window.setInterval(() => {
+
+//           if (!video) return;
+
+//           video.currentTime =
+//             video.currentTime - step;
+
+//           if (video.currentTime <= seg!.offset) {
+
+//             if (reverseIntervalRef.current !== null) {
+//               clearInterval(reverseIntervalRef.current);
+//               reverseIntervalRef.current = null;
+//             }
+
+//           }
+
+//         }, 33);
+
+//       }
+
+//     } else {
+
+//       video.pause();
+
+//     }
+
+//   }, [currentTime, isPlaying, playbackSpeed, segmentOffsets]);
+
+//   // ---------------- VIDEO → STORE ----------------
+
+// useEffect(() => {
+
+//   if (!isMaster) return;
+
+//   const video = videoRef.current;
+//   if (!video || !segmentOffsets.length) return;
+
+//   const firstSeg = segmentOffsets[0];
+//   const lastSeg = segmentOffsets[segmentOffsets.length - 1];
+
+//   const onTimeUpdate = () => {
+
+//     if (isSeeking) return;
+
+//     const current = video.currentTime;
+
+//     if (!isFinite(current)) return;
+
+//     // ---------------- LOOP CHECK ----------------
+
+//     const endOfTimeline =
+//       lastSeg.offset + lastSeg.duration;
+
+//     if (current >= endOfTimeline - 0.2) {
+
+//       // jump to first recording
+//       video.currentTime = firstSeg.offset;
+
+//       const restartTime = new Date(firstSeg.startTime);
+
+//       updateFromVideo(restartTime, slotIndex);
+
+//       return;
+//     }
+
+//     // ---------------- NORMAL SYNC ----------------
+
+//     const seg = segmentOffsets.find(
+//       (s) =>
+//         current >= s.offset &&
+//         current <= s.offset + s.duration
+//     );
+
+//     if (!seg) return;
+
+//     const realTime = new Date(
+//       seg.startTime.getTime() +
+//         (current - seg.offset) * 1000
+//     );
+
+//     updateFromVideo(realTime, slotIndex);
+
+//   };
+
+//   video.addEventListener("timeupdate", onTimeUpdate);
+
+//   return () =>
+//     video.removeEventListener("timeupdate", onTimeUpdate);
+
+// }, [isMaster, isSeeking, segmentOffsets]);
+
+//   // ---------------- CLEANUP ----------------
+
+//   useEffect(() => {
+
+//     return () => {
+
+//       if (reverseIntervalRef.current !== null) {
+//         clearInterval(reverseIntervalRef.current);
+//         reverseIntervalRef.current = null;
+//       }
+
+//     };
+
+//   }, []);
+
+//   return { videoRef };
+// }
+
+import { useEffect, useMemo, useRef, useState } from "react";
 import Hls from "hls.js";
 import { Segment, usePlaybackStore } from "@/Store/playbackStore";
 
@@ -6,7 +256,7 @@ interface Props {
   src: string;
   cameraId: string | null;
   segments: Segment[];
-  slotIndex: number; // ⭐ important
+  slotIndex: number;
   isMaster?: boolean;
 }
 
@@ -17,10 +267,10 @@ export function useHlsWithStore({
   slotIndex,
   isMaster = false,
 }: Props) {
-
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const reverseIntervalRef = useRef<number | null>(null);
+  const [isVideoReady, setIsVideoReady] = useState(false);
 
   const {
     globalTime,
@@ -32,66 +282,64 @@ export function useHlsWithStore({
     updateFromVideo,
   } = usePlaybackStore();
 
-  // ⭐ decide which time to follow
-  const currentTime = isSync
-    ? globalTime
-    : cameraTimes[slotIndex] || globalTime;
-
-  // ---------------- AUTO PLAY ----------------
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video || !isPlaying) return;
-
-    video.muted = true;
-    video.play().catch(() => {});
-  }, [isPlaying]);
+  // Decide which time to follow
+  const currentTime = isSync ? globalTime : cameraTimes[slotIndex] || globalTime;
 
   // ---------------- SEGMENT OFFSETS ----------------
-
   const segmentOffsets = useMemo(() => {
     let acc = 0;
-
     return segments.map((s) => {
-      const duration =
-        (s.endTime.getTime() - s.startTime.getTime()) / 1000;
-
+      const duration = (s.endTime.getTime() - s.startTime.getTime()) / 1000;
       const offset = acc;
       acc += duration;
-
       return { ...s, offset, duration };
     });
-
   }, [segments]);
 
   // ---------------- HLS INIT ----------------
-
   useEffect(() => {
-
     const video = videoRef.current;
     if (!video || !src || !cameraId) return;
 
-    const hls = new Hls({
-      maxBufferLength: 20,
-      enableWorker: true,
-    });
+    setIsVideoReady(false); // loader start
+    const startTime = performance.now();
+    console.log(`[HLS] start loading camera ${cameraId} at`, new Date());
 
+const hls = new Hls({
+  startLevel: 0,      // lowest bitrate first → faster first frame
+  maxBufferLength: 10,
+  enableWorker: true
+});
     hlsRef.current = hls;
 
     hls.attachMedia(video);
     hls.loadSource(src);
 
+    // Manifest parsed → video can start
+    hls.on(Hls.Events.MANIFEST_PARSED, () => {
+      console.log(`[HLS] camera ${cameraId} manifest parsed at`, new Date());
+    });
+
+    // Video actually playable
+    const onCanPlay = () => {
+      setIsVideoReady(true); // loader hide
+      const endTime = performance.now();
+      console.log(`[HLS] camera ${cameraId} can start playing at`, new Date());
+      console.log(`[HLS] camera ${cameraId} loading took`, Math.round(endTime - startTime), "ms");
+    };
+
+    video.addEventListener("canplay", onCanPlay);
+
     return () => {
       hls.destroy();
       hlsRef.current = null;
+      setIsVideoReady(false);
+      video.removeEventListener("canplay", onCanPlay);
     };
-
   }, [src, cameraId]);
 
   // ---------------- MASTER → VIDEO SYNC ----------------
-
   useEffect(() => {
-
     const video = videoRef.current;
     if (!video || !segmentOffsets.length) return;
 
@@ -105,9 +353,7 @@ export function useHlsWithStore({
       return;
     }
 
-    const logicalSeconds =
-      (currentTime.getTime() - seg.startTime.getTime()) / 1000;
-
+    const logicalSeconds = (currentTime.getTime() - seg.startTime.getTime()) / 1000;
     const targetTime = seg.offset + logicalSeconds;
 
     if (!isFinite(targetTime) || targetTime < 0) return;
@@ -116,112 +362,81 @@ export function useHlsWithStore({
       video.currentTime = targetTime;
     }
 
-    // --------- REVERSE CLEANUP ---------
-
+    // Cleanup reverse interval
     if (reverseIntervalRef.current !== null) {
       clearInterval(reverseIntervalRef.current);
       reverseIntervalRef.current = null;
     }
 
-    // --------- PLAY / REVERSE ---------
-
+    // Play / Reverse logic
     if (isPlaying) {
-
       if (playbackSpeed >= 0) {
-
         video.playbackRate = Math.min(playbackSpeed, 16);
         video.muted = playbackSpeed > 4;
         video.play().catch(() => {});
-
       } else {
-
         video.pause();
-
         const step = Math.abs(playbackSpeed) / 30;
-
         reverseIntervalRef.current = window.setInterval(() => {
-
           if (!video) return;
-
-          video.currentTime =
-            video.currentTime - step;
-
+          video.currentTime = video.currentTime - step;
           if (video.currentTime <= seg!.offset) {
-
             if (reverseIntervalRef.current !== null) {
               clearInterval(reverseIntervalRef.current);
               reverseIntervalRef.current = null;
             }
-
           }
-
         }, 33);
-
       }
-
     } else {
-
       video.pause();
-
     }
-
   }, [currentTime, isPlaying, playbackSpeed, segmentOffsets]);
 
   // ---------------- VIDEO → STORE ----------------
-
   useEffect(() => {
-
     if (!isMaster) return;
-
     const video = videoRef.current;
     if (!video || !segmentOffsets.length) return;
 
+    const firstSeg = segmentOffsets[0];
+    const lastSeg = segmentOffsets[segmentOffsets.length - 1];
+
     const onTimeUpdate = () => {
-
       if (isSeeking) return;
-
       const current = video.currentTime;
-
       if (!isFinite(current)) return;
 
-      const seg = segmentOffsets.find(
-        (s) =>
-          current >= s.offset &&
-          current <= s.offset + s.duration
-      );
+      const endOfTimeline = lastSeg.offset + lastSeg.duration;
+      if (current >= endOfTimeline - 0.2) {
+        video.currentTime = firstSeg.offset;
+        const restartTime = new Date(firstSeg.startTime);
+        updateFromVideo(restartTime, slotIndex);
+        return;
+      }
 
+      const seg = segmentOffsets.find(
+        (s) => current >= s.offset && current <= s.offset + s.duration
+      );
       if (!seg) return;
 
-      const realTime = new Date(
-        seg.startTime.getTime() +
-          (current - seg.offset) * 1000
-      );
-
+      const realTime = new Date(seg.startTime.getTime() + (current - seg.offset) * 1000);
       updateFromVideo(realTime, slotIndex);
-
     };
 
     video.addEventListener("timeupdate", onTimeUpdate);
-
-    return () =>
-      video.removeEventListener("timeupdate", onTimeUpdate);
-
+    return () => video.removeEventListener("timeupdate", onTimeUpdate);
   }, [isMaster, isSeeking, segmentOffsets]);
 
   // ---------------- CLEANUP ----------------
-
   useEffect(() => {
-
     return () => {
-
       if (reverseIntervalRef.current !== null) {
         clearInterval(reverseIntervalRef.current);
         reverseIntervalRef.current = null;
       }
-
     };
-
   }, []);
 
-  return { videoRef };
+  return { videoRef, isVideoReady };
 }

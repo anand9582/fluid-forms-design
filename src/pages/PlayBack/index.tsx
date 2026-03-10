@@ -161,26 +161,37 @@
     /* =========================================================
       CAMERA DROP
     ========================================================= */
-    const handleCameraDrop = async (cameraId: string, slotIndex: number) => {
-      assignCameraToSlot(slotIndex, cameraId);
-      setSelectedSlot(slotIndex);
+ const handleCameraDrop = async (cameraId: string, slotIndex: number) => {
+  assignCameraToSlot(slotIndex, cameraId);
+  setSelectedSlot(slotIndex);
 
-      const segments = await fetchTimelineForSlot(slotIndex, cameraId);
-      const blobUrl = await startCamera(cameraId, slotIndex);
-      if (!blobUrl) return;
+  // loader start
+  setLoadingCameraIds(prev => new Set(prev).add(cameraId));
 
-      // 🔥 first recording segment
-      const firstRecording = segments?.find((s: any) => s.type === "recording");
-      if (firstRecording) {
-        const seekDate = new Date(selectedDate);
-        const hour = Math.floor(firstRecording.start);
-        const minutes = Math.floor((firstRecording.start % 1) * 60);
-        seekDate.setHours(hour, minutes, 0, 0);
-        playback.seekTo(seekDate);
-      }
-      playback.play();
-    };
+  const segments = await fetchTimelineForSlot(slotIndex, cameraId);
+  const blobUrl = await startCamera(cameraId, slotIndex);
 
+  // loader hide
+  setLoadingCameraIds(prev => {
+    const copy = new Set(prev);
+    copy.delete(cameraId);
+    return copy;
+  });
+
+  if (!blobUrl) return;
+
+  // seek first recording
+  const firstRecording = segments?.find(s => s.type === "recording");
+  if (firstRecording) {
+    const seekDate = new Date(selectedDate);
+    const hour = Math.floor(firstRecording.start);
+    const minutes = Math.floor((firstRecording.start % 1) * 60);
+    seekDate.setHours(hour, minutes, 0, 0);
+    playback.seekTo(seekDate);
+  }
+
+  playback.play();
+};
     /* =========================================================
       SEEK HANDLER
     ========================================================= */
@@ -212,7 +223,7 @@
       seekDate.setMinutes(Math.floor((clampedHour % 1) * 60));
       seekDate.setSeconds(Math.floor((clampedHour * 3600) % 60));
 
-      playback.seekTo(seekDate, seekSlot); // ✅ important
+      playback.seekTo(seekDate, seekSlot);
       return;
     }
 

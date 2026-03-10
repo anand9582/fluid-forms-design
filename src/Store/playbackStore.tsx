@@ -8,7 +8,6 @@ export interface Segment {
 interface PlaybackStore {
   globalTime: Date;
   cameraTimes: Record<number, Date>;
-
   isSync: boolean;
   isPlaying: boolean;
   isSeeking: boolean;
@@ -20,7 +19,6 @@ interface PlaybackStore {
 
   setSpeed: (speed: number) => void;
   setSynced: (sync: boolean) => void;
-
   seekTo: (date: Date, slotIndex?: number) => void;
   seekBySeconds: (sec: number, slotIndex?: number) => void;
   seekToHour: (absHour: number, slotIndex?: number) => void;
@@ -63,23 +61,32 @@ export const usePlaybackStore = create<PlaybackStore>((set, get) => ({
 
   // ---------------- SYNC MODE ----------------
 
-  setSynced: (sync) => {
-    const { globalTime } = get();
+setSynced: (sync) => {
+  const { globalTime, cameraTimes } = get();
 
-    console.log("SYNC MODE:", sync ? "ON" : "OFF");
+  if (sync) {
 
-    if (sync) {
-      set({
-        isSync: true,
-        cameraTimes: {},
-        globalTime: new Date(globalTime),
-      });
-    } else {
-      set({
-        isSync: false,
-      });
-    }
-  },
+    set({
+      isSync: true,
+      cameraTimes: {},
+      globalTime: new Date(globalTime),
+    });
+
+  } else {
+
+    const newTimes: Record<number, Date> = {};
+
+    Object.keys(cameraTimes).forEach((slot) => {
+      newTimes[Number(slot)] = new Date(globalTime);
+    });
+
+    set({
+      isSync: false,
+      cameraTimes: newTimes,
+    });
+
+  }
+},
 
   // ---------------- SEEK ----------------
 
@@ -89,10 +96,8 @@ export const usePlaybackStore = create<PlaybackStore>((set, get) => ({
     set({ isSeeking: true });
 
     if (isSync) {
-      // global seek
       set({ globalTime: date });
     } else {
-      // independent seek
       if (slotIndex !== undefined) {
         set((state) => ({
           cameraTimes: {
@@ -101,7 +106,6 @@ export const usePlaybackStore = create<PlaybackStore>((set, get) => ({
           },
         }));
       } else {
-        // fallback so timeline never breaks
         set({ globalTime: date });
       }
     }

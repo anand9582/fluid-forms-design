@@ -45,15 +45,15 @@ export function PlaybackCameraSlot({
   const segments = rawSegmentsPerSlot?.[index] || [];
   const src = cameraId ? getVideoSrc(cameraId) : "";
 
-  const { videoRef } = useHlsWithStore({
-  src,
-  cameraId,
-  segments,
-  slotIndex: index,
-  isMaster: true,
-});
+  // ✅ HLS + playback hook with video ready state
+  const { videoRef, isVideoReady } = useHlsWithStore({
+    src,
+    cameraId,
+    segments,
+    slotIndex: index,
+    isMaster: true,
+  });
 
-    /* ---------------- FULLSCREEN ---------------- */
   const toggleFullscreen = () => {
     const el = containerRef.current;
     if (!el) return;
@@ -64,21 +64,42 @@ export function PlaybackCameraSlot({
       el.requestFullscreen().catch(() => {});
     }
   };
+
   return (
     <div
       ref={containerRef}
       onClick={onSelect}
-       onDoubleClick={toggleFullscreen}
+      onDoubleClick={toggleFullscreen}
       className={cn(
         "relative w-full h-full overflow-hidden border cursor-pointer select-none bg-black",
         selected && "ring-2 ring-primary",
         isOver && "border-primary"
       )}
     >
+      {/* VIDEO */}
       {cameraId && src && !errorMessage && (
-        <video ref={videoRef} className="absolute inset-0 w-full h-full object-cover" muted autoPlay playsInline preload="auto" controls={true} />
+        <video
+          ref={videoRef}
+          className="absolute inset-0 w-full h-full object-cover"
+          muted
+          autoPlay
+          playsInline
+          preload="auto"
+          controls={false}
+        />
       )}
 
+      {/* LOADING SPINNER */}
+      {cameraId && (!isVideoReady || isCameraLoading(cameraId)) && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-50">
+          <div className="flex flex-col items-center gap-2 text-muted-foreground">
+            <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <span className="text-xs">Loading stream…</span>
+          </div>
+        </div>
+      )}
+
+      {/* DROP PLACEHOLDER */}
       {!cameraId && !errorMessage && (
         <div className="flex items-center justify-center h-full text-muted-foreground gap-2">
           <Devices className="h-4 w-4" />
@@ -86,18 +107,10 @@ export function PlaybackCameraSlot({
         </div>
       )}
 
+      {/* ERROR */}
       {errorMessage && (
         <div className="flex items-center justify-center h-full text-destructive text-xs p-2 text-center">
           {errorMessage}
-        </div>
-      )}
-
-      {cameraId && isCameraLoading(cameraId) && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/60">
-          <div className="flex flex-col items-center gap-2 text-muted-foreground">
-            <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-            <span className="text-xs">Loading stream…</span>
-          </div>
         </div>
       )}
     </div>

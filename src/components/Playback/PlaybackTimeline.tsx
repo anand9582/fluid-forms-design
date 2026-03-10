@@ -1,4 +1,4 @@
-import React, { useRef, useMemo } from "react";
+import React, { useRef, useMemo, useState,useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { usePlaybackStore } from "@/Store/playbackStore";
@@ -13,13 +13,80 @@ interface Props {
   segmentsPerSlot: Record<number, SegmentHour[]>;
   cameraNames: Record<number, string>;
   zoomLevel: number;
-  onSeek: (hour: number, slotIndex?: number) => void;
 }
 
 const CAMERA_COL_WIDTH = 160;
 
-/* ---------------- TIME LABELS ---------------- */
+/* ---------------- UTILS ---------------- */
+
+const formatHour = (hour: number) => {
+  const h = Math.floor(hour);
+  const m = Math.floor((hour - h) * 60);
+  const h12 = h % 12 || 12;
+  const period = h < 12 ? "AM" : "PM";
+  return `${h12}:${String(m).padStart(2, "0")} ${period}`;
+};
+
+const hourToViewport = (
+  hour: number,
+  viewStart: number,
+  visibleHours: number
+) => ((hour - viewStart) / visibleHours) * 100;
+
+/* -------- SMART SNAP SYSTEM -------- */
+
+const clampHourToRecordings = (
+  absHour: number,
+  slotSegments: SegmentHour[]
+): number | null => {
+
+  const recordings = slotSegments
+    .filter((s) => s.type === "recording")
+    .sort((a, b) => a.start - b.start);
+
+  if (!recordings.length) return null;
+
+  const first = recordings[0];
+  const last = recordings[recordings.length - 1];
+
+  /* before first recording */
+  if (absHour <= first.start) return first.start;
+
+  /* after last recording */
+  if (absHour >= last.end) return last.end;
+
+  /* inside recording */
+  for (const rec of recordings) {
+    if (absHour >= rec.start && absHour <= rec.end) {
+      return absHour;
+    }
+  }
+
+  /* inside gap → snap */
+  let nearestEdge = first.start;
+  let minDist = Math.abs(absHour - nearestEdge);
+
+  for (const rec of recordings) {
+
+    const startDist = Math.abs(absHour - rec.start);
+    const endDist = Math.abs(absHour - rec.end);
+
+    if (startDist < minDist) {
+      minDist = startDist;
+      nearestEdge = rec.start;
+    }
+
+    if (endDist < minDist) {
+      minDist = endDist;
+      nearestEdge = rec.end;
+    }
+  }
+
+  return nearestEdge;
+};
+
 function generateTimeLabels(zoomLevel: number, playheadHour: number) {
+
   const totalHours = 24;
   const visibleHours = totalHours / zoomLevel;
 
@@ -27,132 +94,80 @@ function generateTimeLabels(zoomLevel: number, playheadHour: number) {
   viewStart = Math.max(0, Math.min(totalHours - visibleHours, viewStart));
 
   const step =
-    visibleHours <= 1
-      ? 0.0833
-      : visibleHours <= 2
-      ? 0.1667
-      : visibleHours <= 4
-      ? 0.25
-      : visibleHours <= 8
-      ? 0.5
-      : 1;
+    visibleHours <= 1 ? 0.0833 :
+    visibleHours <= 2 ? 0.1667 :
+    visibleHours <= 4 ? 0.25 :
+    visibleHours <= 8 ? 0.5 : 1;
 
   const labels: string[] = [];
+
   for (let t = viewStart; t <= viewStart + visibleHours; t += step) {
-    const h = Math.floor(t);
-    const min = Math.floor((t - h) * 60);
-    const h12 = h % 12 || 12;
-    const period = h < 12 ? "AM" : "PM";
-    labels.push(`${h12}:${String(min).padStart(2, "0")} ${period}`);
+    labels.push(formatHour(t));
   }
 
   return { labels, viewStart, visibleHours };
 }
 
-/* ---------------- SEEK LOGIC ---------------- */
+/* ---------------- SEEK ---------------- */
+
 export const handleSeek = (
   absHour: number,
   segmentsPerSlot: Record<number, SegmentHour[]>,
-  selectedDate: Date,
   playback: ReturnType<typeof usePlaybackStore>,
   slotIndex?: number
 ) => {
+
+  const seekDate = new Date(playback.globalTime);
+
   if (playback.isSync) {
-    // sync mode, global seek
-    const seekDate = new Date(selectedDate);
+    // --- SYNC SEEK ---
     seekDate.setHours(Math.floor(absHour));
     seekDate.setMinutes(Math.floor((absHour % 1) * 60));
     seekDate.setSeconds(Math.floor((absHour * 3600) % 60));
+
     playback.seekTo(seekDate);
     return;
   }
 
-  // individual mode, independent slot
-  const targetSlot = slotIndex;
-  if (targetSlot === undefined || targetSlot === null) return;
+  // --- INDIVIDUAL SEEK ---
+  if (slotIndex === undefined) return;
 
-  const slotSegments = segmentsPerSlot[targetSlot] || [];
-  const recordings = slotSegments.filter((s) => s.type === "recording");
-  if (!recordings.length) return;
+  const slotSegments = segmentsPerSlot[slotIndex] || [];
+  const clamped = clampHourToRecordings(absHour, slotSegments);
 
-  let nearest = recordings[0];
-  let minDist = Math.min(Math.abs(absHour - nearest.start), Math.abs(absHour - nearest.end));
-
-  for (const s of recordings) {
-    const dist = Math.min(Math.abs(absHour - s.start), Math.abs(absHour - s.end));
-    if (dist < minDist) {
-      nearest = s;
-      minDist = dist;
-    }
+  if (clamped === null) {
+    console.warn("No recordings available");
+    return;
   }
 
-  const clampedHour = Math.max(nearest.start, Math.min(absHour, nearest.end));
+  seekDate.setHours(Math.floor(clamped));
+  seekDate.setMinutes(Math.floor((clamped % 1) * 60));
+  seekDate.setSeconds(Math.floor((clamped * 3600) % 60));
 
-  const seekDate = new Date(selectedDate);
-  seekDate.setHours(Math.floor(clampedHour));
-  seekDate.setMinutes(Math.floor((clampedHour % 1) * 60));
-  seekDate.setSeconds(Math.floor((clampedHour * 3600) % 60));
+  // Update individual camera time
+  playback.seekTo(seekDate, slotIndex);
 
-  playback.seekTo(seekDate, targetSlot);
+  // ALSO update globalTime to reflect this individual seek
+  playback.seekTo(seekDate);
 };
 
-/* ========================================================= */
+/* ---------------- COMPONENT ---------------- */
 
 export function PlaybackTimeline({
   segmentsPerSlot,
   cameraNames,
-  zoomLevel,
+  zoomLevel
 }: Props) {
+
   const playback = usePlaybackStore();
+
   const trackRef = useRef<HTMLDivElement | null>(null);
+
   const dragging = useRef(false);
 
-  const playheadHour =
-    playback.isSync
-      ? playback.globalTime.getHours() +
-        playback.globalTime.getMinutes() / 60 +
-        playback.globalTime.getSeconds() / 3600
-      : 0; // individual slots handle their own playhead
-
-  const { labels, viewStart, visibleHours } = useMemo(
-    () => generateTimeLabels(zoomLevel, playheadHour),
-    [zoomLevel, playheadHour]
-  );
-
-  const toViewport = (absHour: number) => ((absHour - viewStart) / visibleHours) * 100;
-  const viewportToAbs = (vp: number) => viewStart + (vp / 100) * visibleHours;
-
-  /* ---------------- MOUSE SEEK ---------------- */
-  const onMouseDown = (e: React.MouseEvent, slotIndex: number | null) => {
-    dragging.current = true;
-
-    const move = (me: MouseEvent) => {
-      requestAnimationFrame(() => {
-        if (!dragging.current || !trackRef.current) return;
-        const rect = trackRef.current.getBoundingClientRect();
-        const vp = ((me.clientX - rect.left) / rect.width) * 100;
-        if (vp < 0 || vp > 100) return;
-        const absHour = viewportToAbs(vp);
-        handleSeek(absHour, segmentsPerSlot, new Date(), playback, slotIndex ?? undefined);
-      });
-    };
-
-    const up = () => {
-      dragging.current = false;
-      window.removeEventListener("mousemove", move);
-      window.removeEventListener("mouseup", up);
-    };
-
-    if (trackRef.current) {
-      const rect = trackRef.current.getBoundingClientRect();
-      const vp = ((e.clientX - rect.left) / rect.width) * 100;
-      const absHour = viewportToAbs(vp);
-      handleSeek(absHour, segmentsPerSlot, new Date(), playback, slotIndex ?? undefined);
-    }
-
-    window.addEventListener("mousemove", move);
-    window.addEventListener("mouseup", up);
-  };
+  const [hoverHour, setHoverHour] = useState<number | null>(null);
+  const [tooltipText, setTooltipText] = useState("");
+  const [tooltipPos, setTooltipPos] = useState(0);
 
   const nonEmptySlots = Object.entries(segmentsPerSlot)
     .filter(([_, segs]) => segs.length > 0)
@@ -160,10 +175,139 @@ export function PlaybackTimeline({
 
   const hasSegments = nonEmptySlots.length > 0;
 
+   /* ---------------- AUTO SEEK FIRST RECORDING ---------------- */
+
+  useEffect(() => {
+
+    if (!nonEmptySlots.length) return;
+
+    const slotIndex = nonEmptySlots[0];
+    const segments = segmentsPerSlot[slotIndex] || [];
+
+    const recordings = segments
+      .filter(s => s.type === "recording")
+      .sort((a,b)=>a.start-b.start);
+
+    if (!recordings.length) return;
+
+    const first = recordings[0];
+
+    const seekDate = new Date(playback.globalTime);
+
+    seekDate.setHours(Math.floor(first.start));
+    seekDate.setMinutes(Math.floor((first.start % 1) * 60));
+    seekDate.setSeconds(0);
+
+    playback.seekTo(seekDate, playback.isSync ? undefined : slotIndex);
+
+  }, [segmentsPerSlot]);
+
+  const playheadHour = useMemo(() => {
+
+    if (playback.isSync) {
+
+      const t = playback.globalTime;
+
+      return t.getHours() + t.getMinutes() / 60 + t.getSeconds() / 3600;
+
+    } else {
+
+      const firstSlot = nonEmptySlots[0];
+
+      if (firstSlot === undefined) return 0;
+
+      const t = playback.cameraTimes[firstSlot] || playback.globalTime;
+
+      return t.getHours() + t.getMinutes() / 60 + t.getSeconds() / 3600;
+    }
+
+  }, [playback.globalTime, playback.cameraTimes, playback.isSync, nonEmptySlots]);
+
+  const { labels, viewStart, visibleHours } = useMemo(
+    () => generateTimeLabels(zoomLevel, playheadHour),
+    [zoomLevel, playheadHour]
+  );
+
+  const toViewport = (hour: number) =>
+    hourToViewport(hour, viewStart, visibleHours);
+
+  const viewportToAbs = (vp: number) =>
+    viewStart + (vp / 100) * visibleHours;
+
+  /* ---------------- DRAG ---------------- */
+
+const onMouseDown = (e: React.MouseEvent, slotIndex: number) => {
+
+    dragging.current = true;
+
+    const move = (me: MouseEvent) => {
+
+      requestAnimationFrame(() => {
+
+        if (!dragging.current || !trackRef.current) return;
+
+        const rect = trackRef.current.getBoundingClientRect();
+
+        const vp = ((me.clientX - rect.left) / rect.width) * 100;
+
+        if (vp < 0 || vp > 100) return;
+
+        let absHour = viewportToAbs(vp);
+
+        const slotSegs = segmentsPerSlot[slotIndex] || [];
+
+        const recordings = slotSegs
+          .filter(s => s.type === "recording")
+          .sort((a,b)=>a.start-b.start);
+
+        const clamped = clampHourToRecordings(absHour, slotSegs);
+
+        if (clamped === null) {
+
+          setTooltipText("No recordings available");
+          setTooltipPos(vp);
+          return;
+        }
+
+        absHour = clamped;
+
+        let tooltip = formatHour(absHour);
+
+        const lastRec = recordings[recordings.length - 1];
+
+        if (lastRec && absHour >= lastRec.end) {
+          tooltip = "End of recordings";
+        }
+
+        setHoverHour(absHour);
+        setTooltipText(tooltip);
+        setTooltipPos(vp);
+
+        handleSeek(absHour, segmentsPerSlot, playback, slotIndex);
+
+      });
+    };
+
+    const up = () => {
+
+      dragging.current = false;
+
+      setHoverHour(null);
+
+      window.removeEventListener("mousemove", move);
+      window.removeEventListener("mouseup", up);
+    };
+
+    window.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", up);
+
+    move({ clientX: e.clientX } as MouseEvent);
+  };
+
   return (
-    <div className="border-t overflow-hidden">
+    <div className="border-t">
+      {/* HEADER */}
       <div className="flex border-b items-center">
-        {/* Camera column */}
         <div style={{ width: CAMERA_COL_WIDTH }}>
           {nonEmptySlots.map((slotIndex, idx) => (
             <div
@@ -175,7 +319,6 @@ export function PlaybackTimeline({
           ))}
         </div>
 
-        {/* Timeline */}
         <div ref={trackRef} className="flex-1 relative bg-muted/20 flex flex-col py-1 pt-3">
           {nonEmptySlots.map((slotIndex) => {
             const segments = segmentsPerSlot[slotIndex]!;
@@ -183,18 +326,14 @@ export function PlaybackTimeline({
             return (
               <div
                 key={slotIndex}
-                className="relative h-[14px] mb-2 cursor-pointer"
+                className="relative h-[10px] mb-2 cursor-pointer"
                 onMouseDown={(e) => onMouseDown(e, slotIndex)}
               >
                 {segments.map((s, i) => {
-                  const startVp = toViewport(s.start);
-                  const endVp = toViewport(s.end);
-                  if (endVp < 0 || startVp > 100) return null;
-                  const left = Math.max(0, startVp);
-                  const right = Math.min(100, endVp);
+                  const left = Math.max(0, toViewport(s.start));
+                  const right = Math.min(100, toViewport(s.end));
                   const width = right - left;
                   if (width <= 0) return null;
-
                   return (
                     <div
                       key={i}
@@ -204,61 +343,39 @@ export function PlaybackTimeline({
                   );
                 })}
 
-{/* Individual camera playhead */}
-{!playback.isSync && (() => {
-  const camTime = playback.cameraTimes[slotIndex];
-  if (!camTime) return null;
+                {/* Individual playhead */}
+                {!playback.isSync && (() => {
+                  const camTime = playback.cameraTimes[slotIndex];
+                  if (!camTime) return null;
+                  const camHour = camTime.getHours() + camTime.getMinutes() / 60 + camTime.getSeconds() / 3600;
+                  const camVp = toViewport(camHour);
+                  if (camVp < 0 || camVp > 100) return null;
 
-  const camHour =
-    camTime.getHours() +
-    camTime.getMinutes() / 60 +
-    camTime.getSeconds() / 3600;
-  const camVp = toViewport(camHour);
-  if (camVp < 0 || camVp > 100) return null;
-
-  const topOffset = -4; // negative so line goes a bit above timeline
-  const lineHeight = 18; // total length of line
-  const circleSize = 7; // diameter of circle
-
-  return (
-    <>
-      {/* vertical line starting slightly above the timeline */}
-      <div
-        className="absolute w-[1px] bg-primary rounded"
-        style={{
-          left: `${camVp}%`,
-          top: `${topOffset}px`,
-          height: `${lineHeight}px`,
-        }}
-      />
-      {/* circle on top of line */}
-      <div
-        className="absolute bg-blue-600 rounded-full shadow-lg"
-            style={{
-              width: `${circleSize}px`,
-              height: `${circleSize}px`,
-              left: `${camVp}%`,
-              top: `${topOffset}px`,
-              transform: "translate(-50%, -50%)",
-            }}
-          />
-        </>
-      );
-    })()}
+                  return (
+                    <>
+                      <div className="absolute w-[1px] bg-primary rounded" style={{ left: `${camVp}%`, top: -4, height: 18 }} />
+                      <div className="absolute bg-blue-600 rounded-full shadow-lg" style={{ width: 7, height: 7, left: `${camVp}%`, top: -4, transform: "translate(-50%, -50%)" }} />
+                    </>
+                  );
+                })()}
               </div>
             );
           })}
 
-          {/* Global playhead (sync mode) */}
-          {playback.isSync &&
-            hasSegments &&
-            playheadHour >= 0 &&
-            playheadHour <= 100 && (
-              <>
-                <div className="absolute w-[1px] bg-primary top-0" style={{ left: `${toViewport(playheadHour)}%`, height: "100%" }} />
-                <div className="absolute w-[7px] h-2 bg-blue-600 rounded-full shadow-lg -translate-x-1/2 -translate-y-1/2 top-0" style={{ left: `${toViewport(playheadHour)}%` }} />
-              </>
-            )}
+          {/* Global playhead */}
+          {playback.isSync && hasSegments && (
+            <>
+              <div className="absolute w-[1px] bg-primary top-0" style={{ left: `${toViewport(playheadHour)}%`, height: "100%" }} />
+              <div className="absolute w-[7px] h-2 bg-blue-600 rounded-full shadow-lg -translate-x-1/2 -translate-y-1/2 top-0" style={{ left: `${toViewport(playheadHour)}%` }} />
+            </>
+          )}
+
+          {/* Tooltip */}
+          {hoverHour !== null && (
+            <div className="absolute -top-6 px-2 py-1 bg-black text-white text-xs rounded shadow-lg pointer-events-none" style={{ left: `${tooltipPos}%`, transform: "translateX(-50%)" }}>
+              {tooltipText}
+            </div>
+          )}
         </div>
       </div>
 
@@ -270,11 +387,8 @@ export function PlaybackTimeline({
             {visibleHours >= 1 ? `${Math.round(visibleHours)}H` : `${Math.round(visibleHours * 60)}M`}
           </Badge>
         </div>
-
         <div className="flex-1 flex justify-between items-center text-[10px] text-slate-500 bg-neutral-100 px-1">
-          {labels.map((l, i) => (
-            <span key={i}>{l}</span>
-          ))}
+          {labels.map((l, i) => <span key={i}>{l}</span>)}
         </div>
       </div>
     </div>
