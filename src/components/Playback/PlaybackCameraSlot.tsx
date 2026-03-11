@@ -190,9 +190,9 @@ export function PlaybackCameraSlot({
 
   // ---------------- SPINNER LOGIC ----------------
   // show loader when:
-  // 1️⃣ camera assigned but HLS not ready
-  // 2️⃣ camera still loading
-  // 3️⃣ user is seeking on timeline
+  //  camera assigned but HLS not ready
+  //  camera still loading
+  //  user is seeking on timeline
   const showLoader =
     !!cameraId && (!isVideoReady || isCameraLoading(cameraId) || isSeeking);
 
@@ -216,7 +216,7 @@ export function PlaybackCameraSlot({
           autoPlay
           playsInline
           preload="auto"
-          controls={false}
+          controls={true}
         />
       )}
 

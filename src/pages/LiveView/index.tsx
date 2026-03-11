@@ -10,7 +10,7 @@ import {
 import { useGridController } from "@/hooks/useGridController";
 import { SidebarCameraStore } from "@/Store/SidebarCameraStore";
 import useGridStore from "@/Store/UseGridStore";
-import { useStreamStore } from "@/Store/UseStreamStore";
+import { useStreamStore } from "@/Store/useStreamStore";
 export interface CameraStatus {
   id: string;
   name: string;
@@ -39,7 +39,6 @@ export default function LiveView() {
 
   const { play,handleSnapshot,handleRefresh,closeConnection} = useGridController();
 
-//  Grid resize hone par slots auto adjust
   useEffect(() => {
     resizeSlots();
   }, [layout.rows, layout.cols, resizeSlots]);
@@ -61,7 +60,6 @@ export default function LiveView() {
     });
   }, [slotAssignments, cameras]);
 
-  /* Sidebar se camera click */
   const handleCameraClick = (cameraId: string) => {
     const freeIndex = slotAssignments.findIndex((s) => s === null);
     if (freeIndex === -1) return;
