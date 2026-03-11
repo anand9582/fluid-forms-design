@@ -120,7 +120,7 @@ export const handleSeek = (
   const seekDate = new Date(playback.globalTime);
 
   if (playback.isSync) {
-    // --- SYNC SEEK ---
+
     seekDate.setHours(Math.floor(absHour));
     seekDate.setMinutes(Math.floor((absHour % 1) * 60));
     seekDate.setSeconds(Math.floor((absHour * 3600) % 60));
@@ -129,10 +129,10 @@ export const handleSeek = (
     return;
   }
 
-  // --- INDIVIDUAL SEEK ---
   if (slotIndex === undefined) return;
 
   const slotSegments = segmentsPerSlot[slotIndex] || [];
+
   const clamped = clampHourToRecordings(absHour, slotSegments);
 
   if (clamped === null) {
@@ -144,11 +144,7 @@ export const handleSeek = (
   seekDate.setMinutes(Math.floor((clamped % 1) * 60));
   seekDate.setSeconds(Math.floor((clamped * 3600) % 60));
 
-  // Update individual camera time
   playback.seekTo(seekDate, slotIndex);
-
-  // ALSO update globalTime to reflect this individual seek
-  playback.seekTo(seekDate);
 };
 
 /* ---------------- COMPONENT ---------------- */
@@ -326,7 +322,7 @@ const onMouseDown = (e: React.MouseEvent, slotIndex: number) => {
             return (
               <div
                 key={slotIndex}
-                className="relative h-[10px] mb-2 cursor-pointer"
+                className="relative h-[14px] mb-2 cursor-pointer"
                 onMouseDown={(e) => onMouseDown(e, slotIndex)}
               >
                 {segments.map((s, i) => {

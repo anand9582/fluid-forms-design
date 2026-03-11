@@ -30,13 +30,13 @@ interface GridStore {
 }
 
 interface LiveViewToolbarProps {
-  gridStore: GridStore;  
-  showCameraList: boolean;
-  onToggleCameraList: () => void;
-  selectedLayout: string;
-  onLayoutChange: (layout: string) => void;
-  showCustomGridBuilder?: boolean; 
-}
+    gridStore: GridStore;  
+    showCameraList: boolean;
+    onToggleCameraList: () => void;
+    selectedLayout: string;
+    onLayoutChange: (layout: string) => void;
+    showCustomGridBuilder?: boolean; 
+  }
 
 export function LiveViewToolbar({ 
   gridStore,
