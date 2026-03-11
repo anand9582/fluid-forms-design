@@ -1,5 +1,6 @@
-import { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { usePlaybackStore } from "@/Store/playbackStore";
+
 import {
   Clock,
   Calendar as CalendarIcon,
@@ -12,14 +13,25 @@ import {
   Square,
   ChevronDown,
   Mountain,
+  Filter,
+  Bookmark,
+  Download,
+  Scissors,
+  MoreHorizontal,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  TooltipProvider,
+} from "@/components/ui/tooltip";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
-
-import { AppTooltip } from "@/components/ui/AppTooltip"; // common tooltip
-
+import { AppTooltip } from "@/components/ui/AppTooltip";
+import { PlaybackControlButton } from "@/components/Common/PlaybackControlButton";
 import { cn } from "@/lib/utils";
 import { formatPlaybackTimestamp } from "@/hooks/use-playback";
 
@@ -54,13 +66,14 @@ export function PlaybackTimelineBar({
     play,
     pause,
     playbackSpeed,
-    setPlaybackSpeed,
+    setSpeed,
+    isSync,
+    setSynced,
   } = usePlaybackStore();
 
   const [pickerOpen, setPickerOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(globalTime);
 
-  // forward/reverse speed dropdown states
   const [forwardSpeedOpen, setForwardSpeedOpen] = useState(false);
   const [reverseSpeedOpen, setReverseSpeedOpen] = useState(false);
 
@@ -78,7 +91,8 @@ export function PlaybackTimelineBar({
   const zoomPercent = ((zoomLevel - 1) / 9) * 100;
 
   const togglePlay = () => {
-    isPlaying ? pause() : play();
+    if (isPlaying) pause();
+    else play();
   };
 
   const handleOpenPicker = (open: boolean) => {
@@ -96,53 +110,73 @@ export function PlaybackTimelineBar({
   const applyDateTime = () => {
     const d = new Date(selectedDate);
     let h = parseInt(hour) || 0;
+
     if (ampm === "PM" && h !== 12) h += 12;
     if (ampm === "AM" && h === 12) h = 0;
+
     d.setHours(h, parseInt(minute) || 0, parseInt(second) || 0, 0);
-    onSeekToDate(d);
+
+    onSeekToDate(d); // store update
     setPickerOpen(false);
   };
 
+  // -----------------------
+  // Instant live display while picker is open
+  // -----------------------
+  const displayTime = useMemo(() => {
+    if (!pickerOpen) return globalTime;
+    const h = parseInt(hour) || 0;
+    const realHour = ampm === "PM" ? (h === 12 ? 12 : h + 12) : (h === 12 ? 0 : h);
+    return new Date(
+      selectedDate.getFullYear(),
+      selectedDate.getMonth(),
+      selectedDate.getDate(),
+      realHour,
+      parseInt(minute) || 0,
+      parseInt(second) || 0
+    );
+  }, [pickerOpen, selectedDate, hour, minute, second, ampm, globalTime]);
+
   const handleForwardSpeedSelect = (speed: number) => {
-    setPlaybackSpeed(speed);
+    setSpeed(speed);
     setForwardSpeedOpen(false);
   };
 
   const handleReverseSpeedSelect = (speed: number) => {
-    setPlaybackSpeed(speed);
+    setSpeed(speed);
     setReverseSpeedOpen(false);
   };
 
   return (
-    <div className="flex items-center gap-1 px-3 py-1 border-t bg-background">
-      {/* LEFT */}
-      <div className="flex items-center gap-1">
-        <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-        <span className="text-[12px] font-medium text-muted-foreground">
-          TIMELINE
-        </span>
+    <div className="flex items-center h-9 px-2 py-3 gap-4 border-t bg-muted/30 text-[11px]">
+      {/* LEFT: Clock + Timeline label */}
+      <div className="flex items-center gap-1 text-muted-foreground">
+        <Clock className="h-3 w-3" />
+        <span className="font-semibold tracking-wide">TIMELINE</span>
       </div>
 
       {/* DATE PICKER */}
-      <div>
+      <div className="relative">
         <AppTooltip label="Select Date & Time" side="top">
           <button
-            className="flex items-center gap-1.5 px-2 py-0.5 bg-muted rounded"
             onClick={() => handleOpenPicker(!pickerOpen)}
+            className="flex items-center gap-1 px-2 py-[2px] rounded bg-muted"
           >
-            <CalendarIcon className="h-3.5 w-3.5" />
-            <span className="text-[11px] font-mono">
-              {formatPlaybackTimestamp(globalTime)}
+            <CalendarIcon className="h-3 w-3" />
+            <span className="font-mono">
+              {formatPlaybackTimestamp(displayTime)}
             </span>
           </button>
         </AppTooltip>
+
         {pickerOpen && (
-          <div className="absolute mt-2 z-50 bg-background border rounded shadow p-3">
+          <div className="absolute bottom-full mt-2 z-50 bg-background border rounded shadow p-3">
             <Calendar
               mode="single"
               selected={selectedDate}
               onSelect={(d) => d && setSelectedDate(d)}
             />
+
             <div className="flex items-center gap-1 mt-2">
               <Input
                 value={hour}
@@ -174,26 +208,48 @@ export function PlaybackTimelineBar({
                 PM
               </Button>
             </div>
-            <Button
-              size="sm"
-              className="w-full mt-2"
-              onClick={applyDateTime}
-            >
+
+            <Button size="sm" className="w-full mt-2" onClick={applyDateTime}>
               Go to Date & Time
             </Button>
           </div>
         )}
       </div>
 
+      {/* SYNC SWITCH */}
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="flex items-center gap-1.5 ml-1">
+              <Switch
+                checked={isSync}
+                onCheckedChange={(v) => setSynced(v)}
+                className="data-[state=checked]:bg-primary h-4 w-7"
+              />
+              <span className="text-[11px] text-foreground font-medium">
+                Synced
+              </span>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            <p>
+              {isSync
+                ? "All cameras seek together"
+                : "Seek selected camera only"}
+            </p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
       <div className="flex-1" />
 
-      {/* ZOOM */}
-      <div className="flex items-center gap-1 bg-muted/60 rounded px-1">
+      {/* ZOOM CONTROLS */}
+      <div className="flex items-center gap-2 bg-timelinebg rounded text-slate-600">
         <AppTooltip label="Zoom Out" side="top">
           <Button
             size="icon"
             variant="ghost"
-            className="h-7 w-7"
+            className="h-6 w-6"
             onClick={() => onZoomChange(Math.max(1, zoomLevel - 1))}
           >
             <Mountain className="h-3 w-3" />
@@ -218,7 +274,7 @@ export function PlaybackTimelineBar({
           <Button
             size="icon"
             variant="ghost"
-            className="h-7 w-7"
+            className="h-6 w-6"
             onClick={() => onZoomChange(Math.min(10, zoomLevel + 1))}
           >
             <Mountain className="h-3 w-3" />
@@ -226,67 +282,45 @@ export function PlaybackTimelineBar({
         </AppTooltip>
       </div>
 
-      {/* TRANSPORT */}
-      <div className="flex items-center gap-0.5 ml-1 bg-muted/60 px-1 rounded">
-        <AppTooltip label="Rewind" side="top">
-          <Button size="icon" variant="ghost" onClick={onRewind}>
-            <Rewind className="h-3.5 w-3.5" />
-          </Button>
-        </AppTooltip>
+      {/* PLAYBACK CONTROLS */}
+      <div className="flex items-center gap-3 bg-muted/60 px-1 rounded">
+        <PlaybackControlButton label="Previous Frame" onClick={onSkipBack}>
+          <SkipBack className="h-3 w-3" />
+        </PlaybackControlButton>
+        <PlaybackControlButton
+          label={isPlaying ? "Pause" : "Play"}
+          onClick={togglePlay}
+        >
+          {isPlaying ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
+        </PlaybackControlButton>
+        <PlaybackControlButton label="Stop" onClick={onStop}>
+          <Square className="h-3 w-3" />
+        </PlaybackControlButton>
+        <PlaybackControlButton label="Next Frame" onClick={onSkipForward}>
+          <SkipForward className="h-3 w-3" />
+        </PlaybackControlButton>
 
-        <AppTooltip label="Previous Frame" side="top">
-          <Button size="icon" variant="ghost" onClick={onSkipBack}>
-            <SkipBack className="h-3.5 w-3.5" />
-          </Button>
-        </AppTooltip>
+        {/* SPEED CONTROLS */}
+        <div className="flex items-center bg-timelinebg rounded-full text-slate-600">
+          <div className="relative border-r border-slate-300">
+            <PlaybackControlButton
+              label="Reverse Speed"
+              className="rounded-full w-9"
+              active={playbackSpeed < 0}
+              onClick={() => setReverseSpeedOpen((v) => !v)}
+            >
+              <Rewind className="h-3 w-3" />
+            </PlaybackControlButton>
 
-        <AppTooltip label={isPlaying ? "Pause" : "Play"} side="top">
-          <Button size="icon" variant="ghost" onClick={togglePlay}>
-            {isPlaying ? (
-              <Pause className="h-3.5 w-3.5" />
-            ) : (
-              <Play className="h-3.5 w-3.5" />
-            )}
-          </Button>
-        </AppTooltip>
-
-        <AppTooltip label="Stop" side="top">
-          <Button size="icon" variant="ghost" onClick={onStop}>
-            <Square className="h-3.5 w-3.5" />
-          </Button>
-        </AppTooltip>
-
-        <AppTooltip label="Next Frame" side="top">
-          <Button size="icon" variant="ghost" onClick={onSkipForward}>
-            <SkipForward className="h-3.5 w-3.5" />
-          </Button>
-        </AppTooltip>
-
-        {/* FAST + REVERSE SPEED */}
-        <div className="flex gap-1">
-          {/* FAST FORWARD */}
-          <div className="relative">
-            <AppTooltip label="Fast Forward Speed" side="top">
-              <Button
-                size="icon"
-                variant="ghost"
-                className={cn(playbackSpeed > 0 && "bg-primary text-white")}
-                onClick={() => setForwardSpeedOpen((v) => !v)}
-              >
-                <FastForward className="h-3.5 w-3.5" />
-              </Button>
-            </AppTooltip>
-
-            {forwardSpeedOpen && (
-              <div className="absolute bottom-full right-0 mb-1 bg-background border rounded shadow-md overflow-hidden z-50">
-                {[1, 2, 4, 8, 16, 36].map((speed) => (
+            {reverseSpeedOpen && (
+              <div className="absolute bottom-full left-0 mb-1 bg-background border rounded shadow-md">
+                {[-1, -2, -4, -8, -16, -32].map((speed) => (
                   <button
                     key={speed}
-                    onClick={() => handleForwardSpeedSelect(speed)}
+                    onClick={() => handleReverseSpeedSelect(speed)}
                     className={cn(
-                      "w-12 px-2 py-1 text-[11px] text-left hover:bg-muted",
-                      playbackSpeed === speed &&
-                        "bg-primary text-white font-bold"
+                      "block w-12 px-2 py-1 text-left hover:bg-muted text-xs",
+                      playbackSpeed === speed && "bg-primary text-white rounded-full"
                     )}
                   >
                     {speed}×
@@ -296,29 +330,25 @@ export function PlaybackTimelineBar({
             )}
           </div>
 
-          {/* REVERSE SPEED */}
           <div className="relative">
-            <AppTooltip label="Reverse Speed" side="top">
-              <Button
-                size="icon"
-                variant="ghost"
-                className={cn(playbackSpeed < 0 && "bg-primary text-white")}
-                onClick={() => setReverseSpeedOpen((v) => !v)}
-              >
-                <Rewind className="h-3.5 w-3.5" />
-              </Button>
-            </AppTooltip>
+            <PlaybackControlButton
+              label="Fast Forward Speed"
+              active={playbackSpeed > 0}
+              className="rounded-full w-9"
+              onClick={() => setForwardSpeedOpen((v) => !v)}
+            >
+              <FastForward className="h-3 w-3" />
+            </PlaybackControlButton>
 
-            {reverseSpeedOpen && (
-              <div className="absolute bottom-full right-0 mb-1 bg-background border rounded shadow-md overflow-hidden z-50">
-                {[-32, -16, -8, -4, -2, -1].map((speed) => (
+            {forwardSpeedOpen && (
+              <div className="absolute bottom-full right-0 mb-1 bg-background border rounded-md shadow-md">
+                {[1, 2, 4, 8, 16, 32].map((speed) => (
                   <button
                     key={speed}
-                    onClick={() => handleReverseSpeedSelect(speed)}
+                    onClick={() => handleForwardSpeedSelect(speed)}
                     className={cn(
-                      "w-12 px-2 py-1 text-[11px] text-left hover:bg-muted",
-                      playbackSpeed === speed &&
-                        "bg-primary text-white font-bold"
+                      "block w-12 px-2 py-1 text-left hover:bg-muted text-xs",
+                      playbackSpeed === speed && "bg-primary text-white rounded"
                     )}
                   >
                     {speed}×
@@ -328,14 +358,40 @@ export function PlaybackTimelineBar({
             )}
           </div>
         </div>
+
+        {/* OTHER ACTIONS */}
+        <PlaybackControlButton label="Filter">
+          <Filter className="h-3 w-3" />
+        </PlaybackControlButton>
+        <PlaybackControlButton label="Bookmark">
+          <Bookmark className="h-3 w-3" />
+        </PlaybackControlButton>
+        <PlaybackControlButton label="Clip">
+          <Scissors className="h-3 w-3" />
+        </PlaybackControlButton>
+        <PlaybackControlButton label="More Options">
+          <MoreHorizontal className="h-3 w-3" />
+        </PlaybackControlButton>
+
+        <Button
+          size="sm"
+          className="h-7 text-xs px-3 bg-primary font-roboto font-medium rounded flex items-center gap-1"
+        >
+          <Download className="h-3 w-3" /> Export
+        </Button>
       </div>
 
-      {/* EXPAND */}
+      {/* EXPAND / COLLAPSE */}
       <AppTooltip
         label={isTimelineExpanded ? "Collapse Timeline" : "Expand Timeline"}
         side="top"
       >
-        <Button size="icon" variant="ghost" onClick={onToggleTimeline}>
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={onToggleTimeline}
+          className="text-primary-foreground h-6 w-6 rounded bg-primary hover:bg-primary/90 hover:text-white"
+        >
           <ChevronDown
             className={cn(
               "h-4 w-4 transition-transform",

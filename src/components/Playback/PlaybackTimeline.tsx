@@ -1,13 +1,7 @@
-// PlaybackTimelineMulti.tsx
-import React, { useRef, useMemo } from "react";
-import { Badge } from "@/components/ui/badge";
+import React, { useRef, useMemo, useState,useEffect } from "react";
 import { cn } from "@/lib/utils";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
+import { usePlaybackStore } from "@/Store/playbackStore";
 
 export interface SegmentHour {
   start: number;
@@ -16,20 +10,83 @@ export interface SegmentHour {
 }
 
 interface Props {
-  playheadPosition: number;
-  isExpanded: boolean;
-  onSeek: (absHour: number) => void;
-  zoomLevel: number;
   segmentsPerSlot: Record<number, SegmentHour[]>;
-  slotCount: number;
   cameraNames: Record<number, string>;
+  zoomLevel: number;
 }
 
 const CAMERA_COL_WIDTH = 160;
 
-/* ---------------- TIME LABELS ---------------- */
+/* ---------------- UTILS ---------------- */
+
+const formatHour = (hour: number) => {
+  const h = Math.floor(hour);
+  const m = Math.floor((hour - h) * 60);
+  const h12 = h % 12 || 12;
+  const period = h < 12 ? "AM" : "PM";
+  return `${h12}:${String(m).padStart(2, "0")} ${period}`;
+};
+
+const hourToViewport = (
+  hour: number,
+  viewStart: number,
+  visibleHours: number
+) => ((hour - viewStart) / visibleHours) * 100;
+
+/* -------- SMART SNAP SYSTEM -------- */
+
+const clampHourToRecordings = (
+  absHour: number,
+  slotSegments: SegmentHour[]
+): number | null => {
+
+  const recordings = slotSegments
+    .filter((s) => s.type === "recording")
+    .sort((a, b) => a.start - b.start);
+
+  if (!recordings.length) return null;
+
+  const first = recordings[0];
+  const last = recordings[recordings.length - 1];
+
+  /* before first recording */
+  if (absHour <= first.start) return first.start;
+
+  /* after last recording */
+  if (absHour >= last.end) return last.end;
+
+  /* inside recording */
+  for (const rec of recordings) {
+    if (absHour >= rec.start && absHour <= rec.end) {
+      return absHour;
+    }
+  }
+
+  /* inside gap → snap */
+  let nearestEdge = first.start;
+  let minDist = Math.abs(absHour - nearestEdge);
+
+  for (const rec of recordings) {
+
+    const startDist = Math.abs(absHour - rec.start);
+    const endDist = Math.abs(absHour - rec.end);
+
+    if (startDist < minDist) {
+      minDist = startDist;
+      nearestEdge = rec.start;
+    }
+
+    if (endDist < minDist) {
+      minDist = endDist;
+      nearestEdge = rec.end;
+    }
+  }
+
+  return nearestEdge;
+};
 
 function generateTimeLabels(zoomLevel: number, playheadHour: number) {
+
   const totalHours = 24;
   const visibleHours = totalHours / zoomLevel;
 
@@ -37,103 +94,80 @@ function generateTimeLabels(zoomLevel: number, playheadHour: number) {
   viewStart = Math.max(0, Math.min(totalHours - visibleHours, viewStart));
 
   const step =
-    visibleHours <= 1
-      ? 0.0833
-      : visibleHours <= 2
-      ? 0.1667
-      : visibleHours <= 4
-      ? 0.25
-      : visibleHours <= 8
-      ? 0.5
-      : 1;
+    visibleHours <= 1 ? 0.0833 :
+    visibleHours <= 2 ? 0.1667 :
+    visibleHours <= 4 ? 0.25 :
+    visibleHours <= 8 ? 0.5 : 1;
 
   const labels: string[] = [];
 
   for (let t = viewStart; t <= viewStart + visibleHours; t += step) {
-    const h = Math.floor(t);
-    const min = Math.floor((t - h) * 60);
-
-    const h12 = h % 12 || 12;
-    const period = h < 12 ? "AM" : "PM";
-
-    labels.push(`${h12}:${String(min).padStart(2, "0")} ${period}`);
+    labels.push(formatHour(t));
   }
 
   return { labels, viewStart, visibleHours };
 }
 
-/* ========================================================= */
+/* ---------------- SEEK ---------------- */
+
+export const handleSeek = (
+  absHour: number,
+  segmentsPerSlot: Record<number, SegmentHour[]>,
+  playback: ReturnType<typeof usePlaybackStore>,
+  slotIndex?: number
+) => {
+
+  const seekDate = new Date(playback.globalTime);
+
+  if (playback.isSync) {
+    // --- SYNC SEEK ---
+    seekDate.setHours(Math.floor(absHour));
+    seekDate.setMinutes(Math.floor((absHour % 1) * 60));
+    seekDate.setSeconds(Math.floor((absHour * 3600) % 60));
+
+    playback.seekTo(seekDate);
+    return;
+  }
+
+  // --- INDIVIDUAL SEEK ---
+  if (slotIndex === undefined) return;
+
+  const slotSegments = segmentsPerSlot[slotIndex] || [];
+  const clamped = clampHourToRecordings(absHour, slotSegments);
+
+  if (clamped === null) {
+    console.warn("No recordings available");
+    return;
+  }
+
+  seekDate.setHours(Math.floor(clamped));
+  seekDate.setMinutes(Math.floor((clamped % 1) * 60));
+  seekDate.setSeconds(Math.floor((clamped * 3600) % 60));
+
+  // Update individual camera time
+  playback.seekTo(seekDate, slotIndex);
+
+  // ALSO update globalTime to reflect this individual seek
+  playback.seekTo(seekDate);
+};
+
+/* ---------------- COMPONENT ---------------- */
 
 export function PlaybackTimeline({
-  playheadPosition,
-  isExpanded,
-  onSeek,
-  zoomLevel,
   segmentsPerSlot,
-  slotCount,
   cameraNames,
+  zoomLevel
 }: Props) {
 
+  const playback = usePlaybackStore();
+
   const trackRef = useRef<HTMLDivElement | null>(null);
+
   const dragging = useRef(false);
 
-  const { labels, viewStart, visibleHours } = useMemo(
-    () => generateTimeLabels(zoomLevel, playheadPosition),
-    [zoomLevel, playheadPosition]
-  );
-
-  /* ---------------- CONVERSIONS ---------------- */
-
-  const toViewport = (absHour: number) =>
-    ((absHour - viewStart) / visibleHours) * 100;
-
-  const viewportToAbs = (vp: number) =>
-    viewStart + (vp / 100) * visibleHours;
-
-  const getVpFromX = (x: number) => {
-    if (!trackRef.current) return null;
-
-    const r = trackRef.current.getBoundingClientRect();
-    return ((x - r.left) / r.width) * 100;
-  };
-
-  /* ---------------- SEEK ---------------- */
-
-  const seekAtViewport = (vp: number) => {
-    const abs = viewportToAbs(vp);
-    onSeek(abs);
-  };
-
-  /* ---------------- MOUSE HANDLING ---------------- */
-
-  const onMouseDown = (e: React.MouseEvent) => {
-    dragging.current = true;
-
-    const move = (me: MouseEvent) => {
-      requestAnimationFrame(() => {
-        if (!dragging.current) return;
-
-        const vp = getVpFromX(me.clientX);
-        if (vp !== null) seekAtViewport(vp);
-      });
-    };
-
-    const up = () => {
-      dragging.current = false;
-      window.removeEventListener("mousemove", move);
-      window.removeEventListener("mouseup", up);
-    };
-
-    const vp = getVpFromX(e.clientX);
-    if (vp !== null) seekAtViewport(vp);
-
-    window.addEventListener("mousemove", move);
-    window.addEventListener("mouseup", up);
-  };
-
-  /* ---------------- PLAYHEAD ---------------- */
-
-  const playheadVp = toViewport(playheadPosition);
+  const [hoverHour, setHoverHour] = useState<number | null>(null);
+  const [tooltipText, setTooltipText] = useState("");
+  const [tooltipPos, setTooltipPos] = useState(0);
 
   const nonEmptySlots = Object.entries(segmentsPerSlot)
     .filter(([_, segs]) => segs.length > 0)
@@ -141,149 +175,221 @@ export function PlaybackTimeline({
 
   const hasSegments = nonEmptySlots.length > 0;
 
+   /* ---------------- AUTO SEEK FIRST RECORDING ---------------- */
+
+  useEffect(() => {
+
+    if (!nonEmptySlots.length) return;
+
+    const slotIndex = nonEmptySlots[0];
+    const segments = segmentsPerSlot[slotIndex] || [];
+
+    const recordings = segments
+      .filter(s => s.type === "recording")
+      .sort((a,b)=>a.start-b.start);
+
+    if (!recordings.length) return;
+
+    const first = recordings[0];
+
+    const seekDate = new Date(playback.globalTime);
+
+    seekDate.setHours(Math.floor(first.start));
+    seekDate.setMinutes(Math.floor((first.start % 1) * 60));
+    seekDate.setSeconds(0);
+
+    playback.seekTo(seekDate, playback.isSync ? undefined : slotIndex);
+
+  }, [segmentsPerSlot]);
+
+  const playheadHour = useMemo(() => {
+
+    if (playback.isSync) {
+
+      const t = playback.globalTime;
+
+      return t.getHours() + t.getMinutes() / 60 + t.getSeconds() / 3600;
+
+    } else {
+
+      const firstSlot = nonEmptySlots[0];
+
+      if (firstSlot === undefined) return 0;
+
+      const t = playback.cameraTimes[firstSlot] || playback.globalTime;
+
+      return t.getHours() + t.getMinutes() / 60 + t.getSeconds() / 3600;
+    }
+
+  }, [playback.globalTime, playback.cameraTimes, playback.isSync, nonEmptySlots]);
+
+  const { labels, viewStart, visibleHours } = useMemo(
+    () => generateTimeLabels(zoomLevel, playheadHour),
+    [zoomLevel, playheadHour]
+  );
+
+  const toViewport = (hour: number) =>
+    hourToViewport(hour, viewStart, visibleHours);
+
+  const viewportToAbs = (vp: number) =>
+    viewStart + (vp / 100) * visibleHours;
+
+  /* ---------------- DRAG ---------------- */
+
+const onMouseDown = (e: React.MouseEvent, slotIndex: number) => {
+
+    dragging.current = true;
+
+    const move = (me: MouseEvent) => {
+
+      requestAnimationFrame(() => {
+
+        if (!dragging.current || !trackRef.current) return;
+
+        const rect = trackRef.current.getBoundingClientRect();
+
+        const vp = ((me.clientX - rect.left) / rect.width) * 100;
+
+        if (vp < 0 || vp > 100) return;
+
+        let absHour = viewportToAbs(vp);
+
+        const slotSegs = segmentsPerSlot[slotIndex] || [];
+
+        const recordings = slotSegs
+          .filter(s => s.type === "recording")
+          .sort((a,b)=>a.start-b.start);
+
+        const clamped = clampHourToRecordings(absHour, slotSegs);
+
+        if (clamped === null) {
+
+          setTooltipText("No recordings available");
+          setTooltipPos(vp);
+          return;
+        }
+
+        absHour = clamped;
+
+        let tooltip = formatHour(absHour);
+
+        const lastRec = recordings[recordings.length - 1];
+
+        if (lastRec && absHour >= lastRec.end) {
+          tooltip = "End of recordings";
+        }
+
+        setHoverHour(absHour);
+        setTooltipText(tooltip);
+        setTooltipPos(vp);
+
+        handleSeek(absHour, segmentsPerSlot, playback, slotIndex);
+
+      });
+    };
+
+    const up = () => {
+
+      dragging.current = false;
+
+      setHoverHour(null);
+
+      window.removeEventListener("mousemove", move);
+      window.removeEventListener("mouseup", up);
+    };
+
+    window.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", up);
+
+    move({ clientX: e.clientX } as MouseEvent);
+  };
+
   return (
-    <div
-      className="border-t overflow-hidden"
-      style={{
-        maxHeight: isExpanded ? slotCount * 26 + 50 : 0,
-      }}
-    >
-      {/* ================= TRACK ================= */}
-
+    <div className="border-t">
+      {/* HEADER */}
       <div className="flex border-b items-center">
-
-        {/* CAMERA COLUMN */}
-
-        <div
-  style={{ width: CAMERA_COL_WIDTH }}
->
-  <TooltipProvider>
-    {nonEmptySlots.map((slotIndex, index) => {
-
-      const name =
-        cameraNames?.[slotIndex] ?? `Camera ${slotIndex + 1}`;
-
-      return (
-        <Tooltip key={slotIndex}>
-          <TooltipTrigger asChild>
+        <div style={{ width: CAMERA_COL_WIDTH }}>
+          {nonEmptySlots.map((slotIndex, idx) => (
             <div
-              className={cn(
-                "mb-2 text-xs font-roboto font-medium text-slate-600 px-2 flex items-center cursor-pointer",
-                index === 0 && "pt-2"
-              )}
+              key={slotIndex}
+              className={cn("mb-2 text-xs font-medium text-slate-600 px-2 flex items-center", idx === 0 && "pt-2")}
             >
-              <span className="truncate block w-full">
-                {name}
-              </span>
+              {cameraNames[slotIndex] ?? `Camera ${slotIndex + 1}`}
             </div>
-          </TooltipTrigger>
+          ))}
+        </div>
 
-         <TooltipContent className="bg-blue-700 text-white text-[10px] px-2 py-1 rounded">
-             {name}
-          </TooltipContent>
-        </Tooltip>
-      );
-    })}
-  </TooltipProvider>
-</div>
-
-        {/* TIMELINE COLUMN */}
-
-        <div
-          ref={trackRef}
-          onMouseDown={onMouseDown}
-          className="flex-1 relative bg-muted/20 cursor-pointer flex flex-col py-1 pt-3"
-        >
+        <div ref={trackRef} className="flex-1 relative bg-muted/20 flex flex-col py-1 pt-3">
           {nonEmptySlots.map((slotIndex) => {
-
             const segments = segmentsPerSlot[slotIndex]!;
 
             return (
-              <div key={slotIndex} className="relative h-[14px] mb-2">
-
+              <div
+                key={slotIndex}
+                className="relative h-[10px] mb-2 cursor-pointer"
+                onMouseDown={(e) => onMouseDown(e, slotIndex)}
+              >
                 {segments.map((s, i) => {
-
-                  const startVp = toViewport(s.start);
-                  const endVp = toViewport(s.end);
-
-                  if (endVp < 0 || startVp > 100) return null;
-
-                  const left = Math.max(0, startVp);
-                  const right = Math.min(100, endVp);
+                  const left = Math.max(0, toViewport(s.start));
+                  const right = Math.min(100, toViewport(s.end));
                   const width = right - left;
-
                   if (width <= 0) return null;
-
                   return (
                     <div
                       key={i}
-                      className={cn(
-                        "absolute top-0 h-full rounded-sm",
-                        s.type === "recording"
-                          ? "bg-blue-400"
-                          : "bg-slate-400"
-                      )}
-                      style={{
-                        left: `${left}%`,
-                        width: `${width}%`,
-                      }}
+                      className={cn("absolute top-0 h-full rounded-sm", s.type === "recording" ? "bg-blue-400" : "bg-slate-400")}
+                      style={{ left: `${left}%`, width: `${width}%` }}
                     />
                   );
                 })}
 
+                {/* Individual playhead */}
+                {!playback.isSync && (() => {
+                  const camTime = playback.cameraTimes[slotIndex];
+                  if (!camTime) return null;
+                  const camHour = camTime.getHours() + camTime.getMinutes() / 60 + camTime.getSeconds() / 3600;
+                  const camVp = toViewport(camHour);
+                  if (camVp < 0 || camVp > 100) return null;
+
+                  return (
+                    <>
+                      <div className="absolute w-[1px] bg-primary rounded" style={{ left: `${camVp}%`, top: -4, height: 18 }} />
+                      <div className="absolute bg-blue-600 rounded-full shadow-lg" style={{ width: 7, height: 7, left: `${camVp}%`, top: -4, transform: "translate(-50%, -50%)" }} />
+                    </>
+                  );
+                })()}
               </div>
             );
           })}
 
-          {/* PLAYHEAD */}
-
-          {hasSegments && playheadVp >= 0 && playheadVp <= 100 && (
+          {/* Global playhead */}
+          {playback.isSync && hasSegments && (
             <>
-              <div
-                className="absolute w-[1px] bg-primary top-0"
-                style={{
-                  left: `${playheadVp}%`,
-                  height: "100%",
-                }}
-              />
-
-              <div
-                className="absolute w-[7px] h-2 bg-blue-600 rounded-full shadow-lg -translate-x-1/2 -translate-y-1/2 top-0"
-                style={{
-                  left: `${playheadVp}%`,
-                }}
-              />
+              <div className="absolute w-[1px] bg-primary top-0" style={{ left: `${toViewport(playheadHour)}%`, height: "100%" }} />
+              <div className="absolute w-[7px] h-2 bg-blue-600 rounded-full shadow-lg -translate-x-1/2 -translate-y-1/2 top-0" style={{ left: `${toViewport(playheadHour)}%` }} />
             </>
+          )}
+
+          {/* Tooltip */}
+          {hoverHour !== null && (
+            <div className="absolute -top-6 px-2 py-1 bg-black text-white text-xs rounded shadow-lg pointer-events-none" style={{ left: `${tooltipPos}%`, transform: "translateX(-50%)" }}>
+              {tooltipText}
+            </div>
           )}
         </div>
       </div>
 
-      {/* ================= LABELS ================= */}
-
+      {/* Labels */}
       <div className="flex h-[22px] border-t">
-
-        <div
-          style={{ width: CAMERA_COL_WIDTH }}
-          className="px-2 flex items-center gap-2 text-xs font-medium text-slate-600 bg-neutral-100"
-        >
+        <div style={{ width: CAMERA_COL_WIDTH }} className="px-2 flex items-center gap-2 text-xs font-medium text-slate-600 bg-neutral-100">
           TIME INTERVAL
-
-          <Badge
-            variant="secondary"
-            className="text-black font-medium"
-          >
-            {visibleHours >= 1
-              ? `${Math.round(visibleHours)}H`
-              : `${Math.round(visibleHours * 60)}M`}
+          <Badge variant="secondary" className="text-black font-medium">
+            {visibleHours >= 1 ? `${Math.round(visibleHours)}H` : `${Math.round(visibleHours * 60)}M`}
           </Badge>
         </div>
-
         <div className="flex-1 flex justify-between items-center text-[10px] text-slate-500 bg-neutral-100 px-1">
-          {labels.map((l, i) => (
-            <span key={i}>{l}</span>
-          ))}
+          {labels.map((l, i) => <span key={i}>{l}</span>)}
         </div>
-
       </div>
     </div>
   );
