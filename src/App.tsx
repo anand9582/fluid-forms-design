@@ -1,7 +1,7 @@
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route ,Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "./context/ThemeContext";
 import Index from "./pages/Index";
 import { LoginPage } from "@/pages/Auth/LoginPage";
@@ -34,18 +34,18 @@ const App = () => (
           <Routes>
             <Route path="/" element={<LoginPage />} />
             {/* PROTECTED ROUTES */}
-            <Route element={<ProtectedRoute />}>
-                <Route element={<AppLayout />}>
-                  <Route path="/dashboard" element={<Index />} />
-                  {/* <Route path="/" element={<AddedDevicesPage />} /> */}
-                  <Route path="/live" element={<LiveView />} />
-                   <Route path="/playback" element={<PlayBack />} />
-                  <Route path="/settings" element={<SettingsLayout />}>
-                    <Route index element={<SettingsOverview />} />
-                  </Route>
-                   <Route path="*" element={<NotFound />} />
+            {/* <Route element={<ProtectedRoute />}> */}
+            <Route element={<AppLayout />}>
+              <Route path="/dashboard" element={<Index />} />
+              {/* <Route path="/" element={<AddedDevicesPage />} /> */}
+              <Route path="/live" element={<LiveView />} />
+              <Route path="/playback" element={<PlayBack />} />
+              <Route path="/settings" element={<SettingsLayout />}>
+                <Route index element={<SettingsOverview />} />
               </Route>
+              <Route path="*" element={<NotFound />} />
             </Route>
+            {/* </Route> */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
