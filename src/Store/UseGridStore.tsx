@@ -38,7 +38,7 @@ const useGridStore = create<GridStore>((set, get) => ({
     while (updated.length < total) updated.push(null);
 
     set({ slotAssignments: updated });
-    
+
   },
 
   assignCameraToSlot: (slotIndex, cameraId) =>
@@ -51,31 +51,31 @@ const useGridStore = create<GridStore>((set, get) => ({
       };
     }),
 
-    clearSlot: (slotIndex) =>
-      set((state) => {
-        const copy = [...state.slotAssignments];
-        const removed = copy[slotIndex];
-        copy[slotIndex] = null;
-        const playing = new Set(state.playingCameraIds);
-        if (removed) playing.delete(removed);
-        return {
-          slotAssignments: copy,
-          playingCameraIds: playing,
-        };
-      }),
-    swapSlots: (from, to) =>
-      set((state) => {
-        const updated = [...state.slotAssignments];
-        const temp = updated[from];
-        updated[from] = updated[to];
-        updated[to] = temp;
-        return { slotAssignments: updated };
-      }),
+  clearSlot: (slotIndex) =>
+    set((state) => {
+      const copy = [...state.slotAssignments];
+      const removed = copy[slotIndex];
+      copy[slotIndex] = null;
+      const playing = new Set(state.playingCameraIds);
+      if (removed) playing.delete(removed);
+      return {
+        slotAssignments: copy,
+        playingCameraIds: playing,
+      };
+    }),
+  swapSlots: (from, to) =>
+    set((state) => {
+      const updated = [...state.slotAssignments];
+      const temp = updated[from];
+      updated[from] = updated[to];
+      updated[to] = temp;
+      return { slotAssignments: updated };
+    }),
 
-    setPlayingCameraIds: (updater) =>
-      set((state) => ({
-        playingCameraIds: updater(state.playingCameraIds),
-      })),
-  }));
+  setPlayingCameraIds: (updater) =>
+    set((state) => ({
+      playingCameraIds: updater(state.playingCameraIds),
+    })),
+}));
 
 export default useGridStore;

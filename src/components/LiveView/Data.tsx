@@ -75,49 +75,39 @@ export const gridLayouts: GridLayout[] = [
 
 // Sample alerts data
 export const alertsData: Alert[] = [
-  { 
-    type: "Security Alert", 
-    description: "Unattended Baggage Detected", 
-    icon: "", 
-    camera: "Cam-lobby-04, First floor desk", 
-    status: "New", 
-    statusColor: "text-primary", 
-    date: "25 Dec 2025, 12:21 AM", 
-    aiMatch: "10%", 
-    actionBy: { initials: "AH", name: "Anand H" } 
+  {
+    type: "Security Alert",
+    description: "Unattended Baggage Detected",
+    icon: "",
+    camera: "Cam-lobby-04, First floor desk",
+    status: "New",
+    statusColor: "text-primary",
+    date: "25 Dec 2025, 12:21 AM",
+    aiMatch: "10%",
+    actionBy: { initials: "AH", name: "Anand H" }
   },
-  { 
-    type: "Jerome Bell", 
-    description: "VIP Guest Arrival: Mr. Varun Gupta", 
-    icon: "", 
-    camera: "Cam-lobby-04, First floor desk", 
-    status: "Acknowledged", 
-    statusColor: "text-yellow-500", 
-    date: "26 Dec 2025, 01:45 PM", 
-    aiMatch: "20%", 
-    actionBy: { initials: "BK", name: "Bina K" } 
+  {
+    type: "Jerome Bell",
+    description: "VIP Guest Arrival: Mr. Varun Gupta",
+    icon: "",
+    camera: "Cam-lobby-04, First floor desk",
+    status: "Acknowledged",
+    statusColor: "text-yellow-500",
+    date: "26 Dec 2025, 01:45 PM",
+    aiMatch: "20%",
+    actionBy: { initials: "BK", name: "Bina K" }
   },
-  { 
-    type: "System Alert", 
-    description: "Loitering in guest corridor", 
-    icon: "", 
-    camera: "Cam-lobby-04, First floor desk", 
-    status: "Resolved", 
-    statusColor: "text-green-500", 
-    date: "27 Dec 2025, 03:30 PM", 
-    aiMatch: "50%", 
-    actionBy: { initials: "CR", name: "Carlos R" } 
+  {
+    type: "System Alert",
+    description: "Loitering in guest corridor",
+    icon: "",
+    camera: "Cam-lobby-04, First floor desk",
+    status: "Resolved",
+    statusColor: "text-green-500",
+    date: "27 Dec 2025, 03:30 PM",
+    aiMatch: "50%",
+    actionBy: { initials: "CR", name: "Carlos R" }
   },
-];
-
-// Saved views presets
-export const savedViewsData: SavedView[] = [
-  { id: 1, name: "Main entrance surveillance" },
-  { id: 2, name: "Guest room corridors monitoring" },
-  { id: 3, name: "Poolside camera setup" },
-  { id: 4, name: "Dining area surveillance" },
-  { id: 5, name: "Lobby interaction monitoring" },
-  { id: 6, name: "Spa and wellness center coverage" },
 ];
 
 // Default camera feeds for the grid
