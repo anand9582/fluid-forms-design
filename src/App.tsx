@@ -14,9 +14,7 @@ import NotFound from "./pages/NotFound";
 import LiveView from "@/pages/LiveView";
 import PlayBack from "@/pages/PlayBack";
 import { ProtectedRoute } from "@/components/Routes/ProtectedRoute";
-
 const queryClient = new QueryClient();
-
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>

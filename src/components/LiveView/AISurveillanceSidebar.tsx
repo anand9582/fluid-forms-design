@@ -18,7 +18,8 @@ import {
   AlertCircle,
   Plus,
   ScanSearch ,
-  PlayCircle
+  PlayCircle,
+  PanelRightClose
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -41,7 +42,7 @@ import {
   FaceIcons,
   FireIcons,
   CareIcons,
-  BehavioralIcons
+  BehavioralIcons,
 } from "@/components/Icons/Svg/liveViewIcons";
 
 interface ControlsSidebarProps {
@@ -54,6 +55,7 @@ interface ControlsSidebarProps {
    selectedSlotIndex: number | null;
   mainSubMap: Record<number, "main" | "sub">;
   toggleMainSub: (slotIndex: number, cameraId: string, stream: "main" | "sub") => void;
+  onCollapse?: () => void;
 }
 
 // AI Features data
@@ -71,7 +73,8 @@ const aiFeatures = [
   },
 ];
 
-export function AISurveillanceSidebar({ selectedCamera,selectedSlotIndex,mainSubMap,toggleMainSub }: ControlsSidebarProps) {
+export function AISurveillanceSidebar({ selectedCamera,selectedSlotIndex,mainSubMap,toggleMainSub,onCollapse
+ }: ControlsSidebarProps) {
   const [activeTab, setActiveTab] = useState<"controls" | "sequencing" | "playback">("controls");
   const [streamQuality, setStreamQuality] = useState("4k");
   const [features, setFeatures] = useState(aiFeatures);
@@ -164,6 +167,14 @@ const [playlist, setPlaylist] = useState<string[]>([
   // Camera selected - show controls view
   return (
     <div className="hidden lg:flex w-72 border-l border-border bg-card flex-col flex-shrink-0">
+        {/* Collapse Button */}
+      <button
+        onClick={onCollapse}
+        className="absolute left-[-20px] top-[-8px] w-10 h-10  flex items-center justify-center hover:bg-muted transition-colors"
+      >
+        <PanelRightClose size={18} className="text-muted-foreground" />
+      </button>
+
    <Tabs
   value={activeTab}
   onValueChange={(v) => setActiveTab(v as any)}

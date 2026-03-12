@@ -189,14 +189,15 @@ export function PlaybackCameraSlot({
   const showLoader = !!cameraId && !errorMessage && (!isVideoReady || isCameraLoading(index) || slotSeeking);
 
   return (
-    <div
+     <div
       ref={containerRef}
       onClick={onSelect}
       onDoubleClick={toggleFullscreen}
       className={cn(
-        "relative w-full h-full overflow-hidden border cursor-pointer select-none bg-black",
-        selected && "ring-2 ring-primary",
-        isOver && "border-primary"
+        "group relative w-full h-full cursor-pointer overflow-hidden",
+        "border-2", 
+        selected && "border-blue-400", 
+        isOver && "border-green-400"
       )}
     >
       {/* VIDEO */}
@@ -208,13 +209,12 @@ export function PlaybackCameraSlot({
           autoPlay
           playsInline
           preload="auto"
-          controls
         />
       )}
 
       {/* LOADING SPINNER */}
       {showLoader && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-50">
+        <div className="absolute inset-0 flex items-center justify-center  z-50">
           <div className="flex flex-col items-center gap-2 text-muted-foreground">
             <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             <span className="text-xs">Loading…</span>
@@ -224,9 +224,9 @@ export function PlaybackCameraSlot({
 
       {/* DROP PLACEHOLDER */}
       {!cameraId && !errorMessage && (
-        <div className="flex items-center justify-center h-full text-muted-foreground gap-2">
-          <Devices className="h-4 w-4" />
-          <span className="text-sm">Drop Camera</span>
+        <div className="flex items-center justify-center h-full text-gray-400 gap-2 text-muted-foreground">
+           <Devices className="h-4 w-4" />
+            <span className="text-sm font-medium">Drop Camera</span>
         </div>
       )}
 

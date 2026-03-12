@@ -381,17 +381,12 @@ export function PlaybackTimelineBar({
         </Button>
       </div>
 
-      {/* EXPAND / COLLAPSE */}
+       {/* EXPAND */}
       <AppTooltip
         label={isTimelineExpanded ? "Collapse Timeline" : "Expand Timeline"}
         side="top"
       >
-        <Button
-          size="icon"
-          variant="ghost"
-          onClick={onToggleTimeline}
-          className="text-primary-foreground h-6 w-6 rounded bg-primary hover:bg-primary/90 hover:text-white"
-        >
+        <Button size="icon" variant="ghost" onClick={onToggleTimeline} className="text-primary-foreground h-6 w-6 rounded bg-primary hover:bg-primary/90 hover:text-white">
           <ChevronDown
             className={cn(
               "h-4 w-4 transition-transform",

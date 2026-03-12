@@ -13,6 +13,9 @@ interface Props {
   segmentsPerSlot: Record<number, SegmentHour[]>;
   cameraNames: Record<number, string>;
   zoomLevel: number;
+    isExpanded: boolean;
+  onSeek,
+  slotCount: number;
 }
 
 const CAMERA_COL_WIDTH = 160;
@@ -152,7 +155,9 @@ export const handleSeek = (
 export function PlaybackTimeline({
   segmentsPerSlot,
   cameraNames,
-  zoomLevel
+  zoomLevel,
+    isExpanded,
+    slotCount,
 }: Props) {
 
   const playback = usePlaybackStore();
@@ -301,7 +306,12 @@ const onMouseDown = (e: React.MouseEvent, slotIndex: number) => {
   };
 
   return (
-    <div className="border-t">
+     <div
+      className="border-t  overflow-hidden"
+      style={{
+        maxHeight: isExpanded ? slotCount * 26 + 50 : 0,
+      }}
+    >
       {/* HEADER */}
       <div className="flex border-b items-center">
         <div style={{ width: CAMERA_COL_WIDTH }}>
