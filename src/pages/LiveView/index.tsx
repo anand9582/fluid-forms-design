@@ -25,15 +25,10 @@ export default function LiveView() {
   const [showCameraList, setShowCameraList] = useState(true);
   const [showAISidebar, setShowAISidebar] = useState(false);
   const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(0);
-
+  const [selectedLayout, setSelectedLayout] = useState<string>("grid"); 
   const [mainSubMap, setMainSubMap] = useState<Record<number, "main" | "sub">>(
     {}
   );
-
-  const instanceRef = useRef<Record<number, string | null>>({});
-  const instanceMeta = useRef<
-    Record<string, { type: "main" | "sub"; cameraId: string }>
-  >({});
 
   const cameras = SidebarCameraStore((state) => state.cameras);
 
@@ -129,6 +124,8 @@ export default function LiveView() {
         showCameraList={showCameraList}
         onToggleCameraList={() => setShowCameraList(!showCameraList)}
         gridStore={useGridStore()}
+        selectedLayout={selectedLayout}
+        onLayoutChange={(layout) => setSelectedLayout(layout)}
       />
 
       <div className="flex flex-1 gap-3 min-h-0 overflow-hidden">

@@ -27,30 +27,30 @@ export const useGridController = () => {
         }
     }, []);
 
-  const handleRefresh = useCallback(
-    (slotIndex: number, cameraId: string | null) => {
-      if (!cameraId) return;
+ const handleRefresh = useCallback(
+  (slotIndex: number) => {
+    const cameraId = slotAssignments[slotIndex] ?? null;
+    if (!cameraId) return;
 
-      const video = document.querySelector(
-        `#video-slot-${slotIndex}`
-      ) as HTMLVideoElement | null;
+    const video = document.querySelector(
+      `#video-slot-${slotIndex}`
+    ) as HTMLVideoElement | null;
 
-      if (!video) {
-        toast({ title: "Video element not found", variant: "destructive" });
-        return;
-      }
+    if (!video) {
+      toast({ title: "Video element not found", variant: "destructive" });
+      return;
+    }
 
-      //Close existing streams of this slot
-      closeSlotConnections(slotIndex);
+    // Close existing streams of this slot
+    closeSlotConnections(slotIndex);
 
-      // Re-play same camera in same slot
-      setTimeout(() => {
-        play(cameraId, video, "sub", slotIndex);
-      }, 100);
-    },
-    [play, closeSlotConnections]
-  );
-
+    // Re-play same camera in same slot
+    setTimeout(() => {
+      play(cameraId, video, "sub", slotIndex);
+    }, 100);
+  },
+  [play, closeSlotConnections, slotAssignments]
+);
 
 
   // Snapshot

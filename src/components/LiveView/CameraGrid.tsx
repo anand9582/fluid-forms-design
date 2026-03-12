@@ -24,6 +24,8 @@ interface CameraGridProps {
   clearSlot?: (slotIndex: number) => void;
   handleSnapshot?: (slotIndex: number) => void;
   handleRefresh?: (slotIndex: number) => void;
+ toggleMainSub?: (slotIndex: number, cameraId: string, nextType: "main" | "sub") => void; 
+  mainSubMap?: Record<number, "main" | "sub">; 
 }
 
 export function CameraGrid({
@@ -198,7 +200,7 @@ function CameraGridSlot({
                 <button className="p-1 bg-black rounded text-white/90" title="Refresh Stream"
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleRefresh(index, slot.id);
+                       handleRefresh?.(index);
                     }}
                   >
                    <RefershIcons size={12} />
