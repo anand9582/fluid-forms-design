@@ -14,20 +14,33 @@ export function CameraTree({ devices, onCameraClick = () => {} }: Props) {
   const [openBuildings, setOpenBuildings] = useState<Record<string, boolean>>(
     {}
   );
-  const [openFloors, setOpenFloors] = useState<Record<string, boolean>>({});
 
-  // Build → Floor → Cameras
+  // Build Building → Cameras tree
   const tree = useMemo(() => {
-    const result: Record<string, Record<string, Device[]>> = {};
+    const result: Record<
+      string,
+      { cameras: Device[]; total: number; offline: number }
+    > = {};
 
     devices.forEach((d) => {
-      const building = d.groupName;
-      const floor = "Floor 1 (Lobby)";
+      const building = d.groupName || "Unknown";
 
-      if (!result[building]) result[building] = {};
-      if (!result[building][floor]) result[building][floor] = [];
+      if (!result[building]) {
+        result[building] = {
+          cameras: [],
+          total: 0,
+          offline: 0,
+        };
+      }
 
-      result[building][floor].push(d);
+      result[building].cameras.push(d);
+      result[building].total++;
+
+      const isOnline = d.streams?.some((s) => s.status === "ONLINE");
+
+      if (!isOnline) {
+        result[building].offline++;
+      }
     });
 
     return result;
@@ -35,72 +48,56 @@ export function CameraTree({ devices, onCameraClick = () => {} }: Props) {
 
   return (
     <div className="ml-1 mt-2 space-y-1">
-      {Object.entries(tree).map(([building, floors]) => {
+      {Object.entries(tree).map(([building, data]) => {
         const isBuildingOpen = openBuildings[building] ?? true;
 
         return (
           <div key={building}>
+            {/* Building Header */}
             <button
               onClick={() =>
-                setOpenBuildings((p) => ({
-                  ...p,
+                setOpenBuildings((prev) => ({
+                  ...prev,
                   [building]: !isBuildingOpen,
                 }))
               }
-              className="flex items-center gap-2 px-2 py-1 w-full hover:bg-muted rounded-md"
+              className="flex items-center justify-between w-full px-2 py-1 rounded-md hover:bg-muted"
             >
-              {isBuildingOpen ? (
-                <ChevronDown size={16} />
-              ) : (
-                <ChevronRight size={16} />
-              )}
-              <span className="font-medium text-sm">
-                {building}
-              </span>
+              <div className="flex items-center gap-2 min-w-0">
+                {isBuildingOpen ? (
+                  <ChevronDown size={16} />
+                ) : (
+                  <ChevronRight size={16} />
+                )}
+
+                <span className="font-semibold text-sm truncate max-w-[150px] font-roboto capitalize">
+                  {building}
+                </span>
+              </div>
+
+              <div className="flex gap-2">
+                <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded">
+                  {data.total}
+                </span>
+
+                <span className="bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded">
+                  {data.offline}
+                </span>
+              </div>
             </button>
 
-            {isBuildingOpen &&
-              Object.entries(floors).map(([floor, cameras]) => {
-                const floorKey = `${building}-${floor}`;
-                const isFloorOpen = openFloors[floorKey] ?? true;
-
-                return (
-                  <div key={floorKey} className="ml-4">
-                    {/* Floor */}
-                    <button
-                      onClick={() =>
-                        setOpenFloors((p) => ({
-                          ...p,
-                          [floorKey]: !isFloorOpen,
-                        }))
-                      }
-                      className="flex items-center gap-2 px-2 py-1 w-full hover:bg-muted rounded-md"
-                    >
-                      {isFloorOpen ? (
-                        <ChevronDown size={14} />
-                      ) : (
-                        <ChevronRight size={14} />
-                      )}
-                      <span className="text-sm text-muted-foreground">
-                        {floor}
-                      </span>
-                    </button>
-
-                    {/* Cameras */}
-                    {isFloorOpen && (
-                      <div className="ml-5 space-y-1">
-                        {cameras.map((camera) => (
-                          <CameraTreeItem
-                            key={camera.cameraId}
-                            camera={camera}
-                            onCameraClick={onCameraClick}
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+            {/* Cameras */}
+            {isBuildingOpen && (
+              <div className="ml-4 pl-2 border-l border-slate-200 space-y-1">
+                {data.cameras.map((camera) => (
+                  <CameraTreeItem
+                    key={camera.cameraId}
+                    camera={camera}
+                    onCameraClick={onCameraClick}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         );
       })}
