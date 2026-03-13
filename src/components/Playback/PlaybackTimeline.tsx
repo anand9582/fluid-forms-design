@@ -2,6 +2,7 @@ import React, { useRef, useMemo, useState,useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { usePlaybackStore } from "@/Store/playbackStore";
+import { AppTooltip } from "@/components/ui/AppTooltip"; 
 
 export interface SegmentHour {
   start: number;
@@ -307,24 +308,30 @@ const onMouseDown = (e: React.MouseEvent, slotIndex: number) => {
 
   return (
      <div
-      className="border-t  overflow-hidden"
+      className="border-t"
       style={{
         maxHeight: isExpanded ? slotCount * 26 + 50 : 0,
       }}
     >
       {/* HEADER */}
       <div className="flex border-b items-center">
-        <div style={{ width: CAMERA_COL_WIDTH }}>
-          {nonEmptySlots.map((slotIndex, idx) => (
-            <div
-              key={slotIndex}
-              className={cn("mb-2 text-xs font-medium text-slate-600 px-2 flex items-center", idx === 0 && "pt-2")}
-            >
-              {cameraNames[slotIndex] ?? `Camera ${slotIndex + 1}`}
-            </div>
-          ))}
-        </div>
-
+       <div style={{ width: CAMERA_COL_WIDTH }} className="mr-3 min-w-0">
+            {nonEmptySlots.map((slotIndex, idx) => {
+              const camName = cameraNames[slotIndex] ?? `Camera ${slotIndex + 1}`;
+              return (
+                <AppTooltip key={slotIndex} label={camName} side="top">
+                  <div
+                    className={cn(
+                      "mb-2 text-xs font-roboto font-regular text-slate-900 px-2 flex items-center truncate overflow-hidden whitespace-nowrap",
+                      idx === 0 && "pt-2"
+                    )}
+                  >
+                    {camName}
+                  </div>
+                </AppTooltip>
+              );
+            })}
+          </div>
         <div ref={trackRef} className="flex-1 relative bg-muted/20 flex flex-col py-1 pt-3">
           {nonEmptySlots.map((slotIndex) => {
             const segments = segmentsPerSlot[slotIndex]!;
@@ -387,13 +394,13 @@ const onMouseDown = (e: React.MouseEvent, slotIndex: number) => {
 
       {/* Labels */}
       <div className="flex h-[22px] border-t">
-        <div style={{ width: CAMERA_COL_WIDTH }} className="px-2 flex items-center gap-2 text-xs font-medium text-slate-600 bg-neutral-100">
+        <div style={{ width: CAMERA_COL_WIDTH }} className="px-2 flex items-center gap-2 font-roboto text-xs font-medium text-slate-600 bg-neutral-100">
           TIME INTERVAL
-          <Badge variant="secondary" className="text-black font-medium">
+          <Badge variant="secondary" className="font-roboto text-black font-bold">
             {visibleHours >= 1 ? `${Math.round(visibleHours)}H` : `${Math.round(visibleHours * 60)}M`}
           </Badge>
         </div>
-        <div className="flex-1 flex justify-between items-center text-[10px] text-slate-500 bg-neutral-100 px-1">
+        <div className="flex-1 flex justify-between items-center text-[10px] font-roboto font-medium text-slate-500 bg-neutral-100 px-1">
           {labels.map((l, i) => <span key={i}>{l}</span>)}
         </div>
       </div>

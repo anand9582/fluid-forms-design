@@ -9,10 +9,8 @@ interface GridStore {
   layout: GridLayout;
   slotAssignments: (string | null)[];
   playingCameraIds: Set<string>;
-
   setLayout: (rows: number, cols: number) => void;
   resizeSlots: () => void;
-
   assignCameraToSlot: (slotIndex: number, cameraId: string) => void;
   clearSlot: (slotIndex: number) => void;
   swapSlots: (from: number, to: number) => void;

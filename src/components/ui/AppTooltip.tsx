@@ -24,8 +24,8 @@ export function AppTooltip({
         <RadixTrigger asChild>{children}</RadixTrigger>
         <RadixContent
           side={side}
-          sideOffset={2} // arrow ke paas tooltip
-          className="z-50 rounded-md bg-black px-2 py-1 text-[11px] text-white shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95"
+          sideOffset={2}
+          className="z-50 rounded bg-black px-2 py-1 text-[11px] text-white shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95"
         >
           {label}
           <TooltipArrow className="fill-black" />

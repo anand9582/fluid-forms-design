@@ -49,6 +49,8 @@ export default function Index() {
   const [isTimelineExpanded, setIsTimelineExpanded] = useState(true);
   const [segmentsPerSlot, setSegmentsPerSlot] = useState<Record<number, SegmentHour[]>>({});
   const [rawSegmentsPerSlot, setRawSegmentsPerSlot] = useState<Record<number, RawSegment[]>>({});
+  const [showCameraList, setShowCameraList] = useState(true);
+  const [selectedLayout, setSelectedLayout] = useState<string>("grid"); 
 
   /* =========================================================
     DAY RANGE HELPERS
@@ -279,18 +281,21 @@ export default function Index() {
     <div className="flex flex-col h-full bg-background overflow-hidden">
       <Sidebar />
       <div className="ml-[80px] shrink-0">
+       
         <LiveViewToolbar
-          showCameraList
-          selectedLayout="2x2"
-          onLayoutChange={() => {}}
-          onToggleCameraList={() => {}}
+          showCameraList={showCameraList}
+          onToggleCameraList={() => setShowCameraList(!showCameraList)}
+          selectedLayout={selectedLayout}
+          onLayoutChange={(layout) => setSelectedLayout(layout)}
           gridStore={gridStore}
           showCustomGridBuilder={false}
         />
       </div>
 
       <div className="flex flex-1 ml-[80px] gap-3 p-3 overflow-hidden">
-        <CameraTreeSidebar isVisible />
+           <CameraTreeSidebar
+            isVisible={showCameraList}
+          />
         <PlaybackCameraGrid
           selectedSlot={selectedSlot}
           onSlotSelect={setSelectedSlot}

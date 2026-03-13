@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Filter, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,24 +7,55 @@ import { alertsData } from "@/components/LiveView/Data";
 import useGridStore from "@/Store/UseGridStore";
 
 export function LiveAlertsBar() {
-    const { layout } = useGridStore();
+  const { layout, selectedGrid } = useGridStore();
+
   const [alertsExpanded, setAlertsExpanded] = useState(false);
   const [autoSequence, setAutoSequence] = useState(false);
- const layoutLabel = `${layout.rows}x${layout.cols}`;
-  return (
-    <div className="fixed bottom-0 left-0 right-0 z-50">
 
-      {/* AUTO-SEQUENCE BAR (ALWAYS FIXED ABOVE ALERTS) */}
-      <div className="flex justify-center pb-2">
+  const [showAutoSequenceBar, setShowAutoSequenceBar] = useState(true);
+  const hideTimer = useRef<NodeJS.Timeout | null>(null);
+  const AUTO_HIDE_DELAY = 3000; // 3 seconds
+
+  // Function to show bar and auto-hide after delay
+  const triggerAutoSequenceBar = () => {
+    setShowAutoSequenceBar(true);
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+    hideTimer.current = setTimeout(() => setShowAutoSequenceBar(false), AUTO_HIDE_DELAY);
+  };
+
+  // Show initially on mount
+  useEffect(() => {
+    triggerAutoSequenceBar();
+    return () => {
+      if (hideTimer.current) clearTimeout(hideTimer.current);
+    };
+  }, []);
+
+  // Re-show whenever selectedGrid changes
+  useEffect(() => {
+    if (selectedGrid !== null) {
+      triggerAutoSequenceBar();
+    }
+  }, [selectedGrid]);
+
+  return (
+    <div className="fixed bottom-0 left-0 right-0 z-50 flex flex-col items-center">
+
+      {/* AUTO-SEQUENCE BAR WITH FADE + SLIDE */}
+      <div
+        className={cn(
+          "flex justify-center transition-all duration-500 ease-in-out",
+          showAutoSequenceBar
+            ? "opacity-100 translate-y-0"
+            : "opacity-0 -translate-y-6 pointer-events-none"
+        )}
+      >
         <div className="flex items-center gap-3 bg-white text-xs px-4 py-2 rounded-full border border-border shadow-sm">
           <span className="font-roboto font-medium">Layout:</span>
-
-        <span className="font-roboto font-medium text-primary">
-    {layout.rows}x{layout.cols}
-  </span>
-
+          <span className="font-roboto font-medium text-primary">
+            {layout.rows}x{layout.cols}
+          </span>
           <span className="text-muted-foreground/40">|</span>
-
           <span className="font-roboto font-medium">Auto-Sequence:</span>
           <button
             onClick={() => setAutoSequence(!autoSequence)}
@@ -39,8 +70,7 @@ export function LiveAlertsBar() {
       </div>
 
       {/* 🔻 LIVE ALERTS CONTAINER */}
-      <div className="bg-card border-t border-border">
-
+      <div className="bg-card border-t border-border w-full mt-1">
         {/* HEADER */}
         <div className="flex items-center justify-between px-4 py-2 bg-[#E2E8F0]">
           <div className="flex items-center gap-4">
@@ -112,7 +142,6 @@ export function LiveAlertsBar() {
             </div>
           </div>
         </div>
-
       </div>
     </div>
   );

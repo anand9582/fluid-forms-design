@@ -76,6 +76,7 @@ export function LiveViewToolbar({
           <span className="text-sm font-roboto font-medium">{showCameraList ? "Hide" : "Show"} Camera List</span>
         </Button>
         
+        
         {/* Saved Views Dropdown */}
         <DropdownMenu open={viewsDropdownOpen} onOpenChange={setViewsDropdownOpen} >
           <DropdownMenuTrigger asChild>
@@ -216,7 +217,7 @@ export function LiveViewToolbar({
       </div>
 
       {/* Custom Grid Builder modal */}
-      {showCustomGridBuilder && (
+          {showCustomGridBuilder && (
             <CustomGridBuilder
               open={showGridBuilder}
               onClose={() => setShowGridBuilder(false)}

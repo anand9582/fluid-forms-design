@@ -1,14 +1,9 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useMemo, useRef, useEffect } from "react";
 import { useDrop, useDrag } from "react-dnd";
 import { Camera, X } from "lucide-react";
 import useGridStore from "@/Store/UseGridStore";
 import { cn } from "@/lib/utils";
-import {
-  Devices,
-  RefershIcons,
-  Minimize,
-  VioceIcons,
-} from "@/components/Icons/Svg/liveViewIcons";
+import { Devices, RefershIcons, Minimize, VioceIcons } from "@/components/Icons/Svg/liveViewIcons";
 
 export interface CameraSlot {
   id: string;
@@ -24,7 +19,7 @@ interface CameraGridProps {
   clearSlot?: (slotIndex: number) => void;
   handleSnapshot?: (slotIndex: number) => void;
   handleRefresh?: (slotIndex: number) => void;
- toggleMainSub?: (slotIndex: number, cameraId: string, nextType: "main" | "sub") => void; 
+  toggleMainSub?: (slotIndex: number, cameraId: string, nextType: "main" | "sub") => void; 
   mainSubMap?: Record<number, "main" | "sub">; 
 }
 
@@ -49,15 +44,15 @@ export function CameraGrid({
   }, [cameraSlots, totalSlots]);
 
   return (
-     <div className="flex-1 flex flex-col bg-muted/20">
-      <div className="flex-1">
+    <div className="flex-1 flex flex-col bg-muted/20 min-h-0">
+      <div className="flex-1 min-h-0">
         <div
-            className="grid h-full"
-            style={{
-              gridTemplateColumns: `repeat(${layout.cols}, 1fr)`,
-              gridTemplateRows: `repeat(${layout.rows}, 1fr)`,
-            }}
-          >
+          className="grid h-full w-full"
+          style={{
+            gridTemplateColumns: `repeat(${layout.cols}, minmax(0, 1fr))`,
+            gridTemplateRows: `repeat(${layout.rows}, minmax(0, 1fr))`,
+          }}
+        >
           {displaySlots.map((slot, index) => (
             <CameraGridSlot
               key={index}
@@ -103,34 +98,25 @@ function CameraGridSlot({
   const assignCameraToSlot = useGridStore((s) => s.assignCameraToSlot);
   const swapSlots = useGridStore((s) => s.swapSlots);
 
-  /* DRAG FROM GRID */
+  // DRAG
   const [{ isDragging }, dragRef] = useDrag({
     type: "GRID_SLOT",
     item: { fromIndex: index },
     canDrag: !!slot,
-    collect: (monitor) => ({
-      isDragging: monitor.isDragging(),
-    }),
+    collect: (monitor) => ({ isDragging: monitor.isDragging() }),
   });
 
-
-  /* DROP (SIDEBAR + GRID) */
+  // DROP
   const [{ isOver }, dropRef] = useDrop({
     accept: ["SIDEBAR_CAMERA", "GRID_SLOT"],
     drop: (item: any) => {
-      if (item.cameraId) {
-        assignCameraToSlot(index, item.cameraId);
-      }
-
-      if (typeof item.fromIndex === "number" && item.fromIndex !== index) {
+      if (item.cameraId) assignCameraToSlot(index, item.cameraId);
+      if (typeof item.fromIndex === "number" && item.fromIndex !== index)
         swapSlots(item.fromIndex, index);
-      }
     },
-    collect: (monitor) => ({
-      isOver: monitor.isOver(),
-    }),
+    collect: (monitor) => ({ isOver: monitor.isOver() }),
   });
- // 🔹 connect drag + drop to containerRef
+
   useEffect(() => {
     if (!containerRef.current) return;
     dragRef(containerRef.current);
@@ -147,18 +133,12 @@ function CameraGridSlot({
     }
   }, [slot, play]);
 
-    /* ---------------- FULLSCREEN ---------------- */
+  // FULLSCREEN
   const handleFullscreenToggle = () => {
     const element = containerRef.current;
     if (!element) return;
-
-    if (document.fullscreenElement) {
-      document.exitFullscreen();
-    } else {
-      element.requestFullscreen().catch((err) => {
-        console.error("Failed to enter fullscreen:", err);
-      });
-    }
+    if (document.fullscreenElement) document.exitFullscreen();
+    else element.requestFullscreen().catch(console.error);
   };
 
   return (
@@ -167,7 +147,7 @@ function CameraGridSlot({
       onDoubleClick={handleFullscreenToggle}
       onClick={() => onSelect(index)}
       className={cn(
-        "group  relative border w-full h-full cursor-pointer",
+        "group relative border w-full h-full cursor-pointer overflow-hidden",
         isSelected && "ring-2 ring-blue-400",
         isOver && "ring-2 ring-green-400",
         isDragging && "opacity-40"
@@ -177,60 +157,70 @@ function CameraGridSlot({
         <>
           <video
             ref={videoRef}
-            id={`video-slot-${index}`} 
-            className="w-full h-full object-cover"
+            id={`video-slot-${index}`}
+            className="w-full h-full object-cover aspect-video"
             autoPlay
             muted
             playsInline
           />
-
-          <div className="absolute top-1  left-1 flex justify-between  text-white text-xs px-2">
-              <span>{slot.name}</span>
+          <div className="absolute top-1 left-1 flex justify-between text-white text-xs px-2">
+            <span>{slot.name}</span>
           </div>
+
           <div
-                className={cn(
-                  "absolute bottom-1 left-1/2 -translate-x-1/2 z-10",
-                  "px-2 py-1 flex gap-1",
-                  "opacity-0 translate-y-4",
-                  "group-hover:opacity-100 group-hover:translate-y-0",
-                  "transition-all duration-300 ease-out",
-                  "pointer-events-none group-hover:pointer-events-auto"
-                )}
-              >
-                <button className="p-1 bg-black rounded text-white/90" title="Refresh Stream"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                       handleRefresh?.(index);
-                    }}
-                  >
-                   <RefershIcons size={12} />
-                </button>
-                <button className="p-1 bg-black rounded text-white/90">
-                  <VioceIcons size={12} />
-                </button>
-                <button className="p-1 bg-black rounded text-white/90"
-                  onClick={(e) => {
-                      e.stopPropagation();
-                      handleSnapshot?.(index);
-                  }}>
-                  <Camera size={16} />
-                </button>
-                <button className="p-1 bg-black rounded text-white/90" onClick={handleFullscreenToggle}>
-                  <Minimize size={14} />
-                </button>
-                <button className="p-1 bg-black rounded text-white/90"  
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    clearSlot(index);
-                  }}>
-                  <X size={16} />
-                </button>
-              </div>
+            className={cn(
+              "absolute bottom-1 left-1/2 -translate-x-1/2 z-10 px-2 py-1 flex gap-1",
+              "opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0",
+              "transition-all duration-300 ease-out pointer-events-none group-hover:pointer-events-auto"
+            )}
+          >
+            <button
+              className="p-1 bg-black rounded text-white/90"
+              title="Refresh Stream"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleRefresh?.(index);
+              }}
+            >
+              <RefershIcons size={12} />
+            </button>
+
+            <button className="p-1 bg-black rounded text-white/90">
+              <VioceIcons size={12} />
+            </button>
+
+            <button
+              className="p-1 bg-black rounded text-white/90"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSnapshot?.(index);
+              }}
+            >
+              <Camera size={16} />
+            </button>
+
+            <button
+              className="p-1 bg-black rounded text-white/90"
+              onClick={handleFullscreenToggle}
+            >
+              <Minimize size={14} />
+            </button>
+
+            <button
+              className="p-1 bg-black rounded text-white/90"
+              onClick={(e) => {
+                e.stopPropagation();
+                clearSlot?.(index);
+              }}
+            >
+              <X size={16} />
+            </button>
+          </div>
         </>
       ) : (
-        <div className="flex items-center justify-center h-full text-gray-400 gap-2 text-muted-foreground">
-           <Devices className="h-4 w-4" />
-            <span className="text-sm font-medium">Drop Camera</span>
+        <div className="flex items-center justify-center h-full text-gray-400  text-muted-foreground">
+          <Devices className="h-4 w-4 mr-2" />
+          <span className="text-sm font-medium">Drop Camera</span>
         </div>
       )}
     </div>

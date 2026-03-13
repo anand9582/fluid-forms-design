@@ -170,7 +170,7 @@ const [playlist, setPlaylist] = useState<string[]>([
         {/* Collapse Button */}
       <button
         onClick={onCollapse}
-        className="absolute left-[-20px] top-[-8px] w-10 h-10  flex items-center justify-center hover:bg-muted transition-colors"
+        className="absolute left-[-20px] top-[-8px] w-10 h-10  flex items-center justify-center  transition-colors"
       >
         <PanelRightClose size={18} className="text-muted-foreground" />
       </button>
