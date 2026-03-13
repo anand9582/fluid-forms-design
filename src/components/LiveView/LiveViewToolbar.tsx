@@ -248,6 +248,12 @@ export function LiveViewToolbar({
               onConfirm={handleCustomGridConfirm}
             />
           )}
+          {mode === "live" && (
+  <SaveViewDialog
+    open={showSaveViewDialog}
+    onOpenChange={setShowSaveViewDialog}
+  />
+)}
 </div>
   );
 }
