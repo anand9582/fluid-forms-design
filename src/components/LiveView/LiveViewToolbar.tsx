@@ -24,11 +24,13 @@ import { cn } from "@/lib/utils";
 import useGridStore from "@/Store/UseGridStore";
 import { API_VAISHALI_URL, API_URLS, getAuthHeaders } from "@/components/Config/api";
 import { Devices, Squaredot, Tablecells } from "@/components/Icons/Svg/liveViewIcons";
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
+import { toast } from "sonner";
 
 interface GridStore {
   layout: { rows: number; cols: number };
   setLayout: (rows: number, cols: number) => void;
+  assignCameraToSlot: (slotIndex: number, cameraId: string) => void;
 }
 
 interface LiveViewToolbarProps {
@@ -53,6 +55,7 @@ export function LiveViewToolbar({
   const currentGridLabel = `${layout.rows}×${layout.cols}`;
   const [savedViews, setSavedViews] = useState<{ id: number, name: string }[]>([]);
   const [selectedView, setSelectedView] = useState(currentGridLabel);
+  const [activeViewId, setActiveViewId] = useState<number | null>(null);
   const [viewsDropdownOpen, setViewsDropdownOpen] = useState(false);
   const [showGridBuilder, setShowGridBuilder] = useState(false);
   const [showSaveViewDialog, setShowSaveViewDialog] = useState(false);
@@ -66,24 +69,31 @@ export function LiveViewToolbar({
     }
   }, [layout.rows, layout.cols, currentGridLabel, selectedView]);
 
+  const fetchViews = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_VAISHALI_URL}${API_URLS.get_all_views}`, {
+        headers: getAuthHeaders(),
+      });
+      if (response.ok) {
+        const json = await response.json();
+        const views = json?.data?.map((v: any) => ({
+          id: v.id,
+          name: v.viewName,
+          cellMapping: v.cellMapping,
+          // Extract layout from cellMapping or use a default if not present
+          // Based on the user provided data, layout isn't explicit but we can infer from cellMapping keys
+        })) || [];
+        setSavedViews(views);
+      }
+    } catch (error) {
+      console.error("Error fetching views:", error);
+    }
+  }, []);
+
   // Fetch saved views from API
   useEffect(() => {
-    const fetchViews = async () => {
-      try {
-        const response = await fetch(`${API_VAISHALI_URL}/get-all-views`, {
-          headers: getAuthHeaders(),
-        });
-        if (response.ok) {
-          const data = await response.json();
-          // Map data to {id, name} if needed
-          setSavedViews(data || []);
-        }
-      } catch (error) {
-        console.error("Error fetching views:", error);
-      }
-    };
     fetchViews();
-  }, []);
+  }, [fetchViews]);
 
   const handleCustomGridConfirm = (layoutStr: string) => {
     const [rows, cols] = layoutStr.split("x").map(Number);
@@ -92,9 +102,54 @@ export function LiveViewToolbar({
   };
 
 
-  const deleteView = (id: number, e: React.MouseEvent) => {
+  const deleteView = async (id: number, e: React.MouseEvent) => {
     e.stopPropagation();
-    setSavedViews(prev => prev.filter(v => v.id !== id));
+    try {
+      const response = await fetch(`${API_VAISHALI_URL}${API_URLS.delete_view_by_id}/${id}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      });
+      if (response.ok) {
+        toast.success("View deleted successfully");
+        fetchViews();
+      } else {
+        toast.error("Failed to delete view");
+      }
+    } catch (error) {
+      console.error("Error deleting view:", error);
+      toast.error("Error deleting view");
+    }
+  };
+
+  const handleApplyView = (view: any) => {
+    setSelectedView(view.name);
+    setActiveViewId(view.id);
+    setViewsDropdownOpen(false);
+
+    // If view has cellMapping, apply it
+    if (view.cellMapping) {
+      // Determine layout based on cellMapping indices
+      const indices = Object.keys(view.cellMapping).map(Number);
+      const maxIndex = Math.max(...indices, -1);
+
+      let rows = 2, cols = 2;
+      if (maxIndex >= 16) { rows = 5; cols = 5; }
+      else if (maxIndex >= 9) { rows = 4; cols = 4; }
+      else if (maxIndex >= 4) { rows = 3; cols = 3; }
+      else if (maxIndex >= 1) { rows = 2; cols = 2; }
+      else { rows = 1; cols = 1; }
+
+      setLayout(rows, cols);
+
+      // Apply camera assignments
+      Object.entries(view.cellMapping).forEach(([slotIdx, cameraId]) => {
+        const idx = Number(slotIdx);
+        if (!isNaN(idx) && cameraId !== null) {
+          setLayout(rows, cols); // Ensure slots are available
+          gridStore.assignCameraToSlot(idx, String(cameraId));
+        }
+      });
+    }
   };
 
   return (
@@ -138,10 +193,7 @@ export function LiveViewToolbar({
                     "flex items-center justify-between px-3 py-2.5 cursor-pointer hover:bg-accent transition-colors bg-white",
                     selectedView === view.name && "bg-accent"
                   )}
-                  onClick={() => {
-                    setSelectedView(view.name);
-                    setViewsDropdownOpen(false);
-                  }}
+                  onClick={() => handleApplyView(view)}
                 >
                   <span className="text-sm text-foreground">{view.name}</span>
                   <Button
@@ -259,6 +311,9 @@ export function LiveViewToolbar({
       <SaveViewDialog
         open={showSaveViewDialog}
         onOpenChange={setShowSaveViewDialog}
+        onSuccess={fetchViews}
+        activeViewId={activeViewId}
+        currentName={selectedView}
       />
 
       {/* Custom Grid Builder modal */}
