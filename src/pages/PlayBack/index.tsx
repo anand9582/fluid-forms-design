@@ -289,7 +289,7 @@ export default function Index() {
           onLayoutChange={(layout) => setSelectedLayout(layout)}
           gridStore={gridStore}
           showCustomGridBuilder={false}
-         mode="playback"
+          mode="playback"
         />
       </div>
 

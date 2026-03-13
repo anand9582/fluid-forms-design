@@ -229,19 +229,25 @@ export function LiveViewToolbar({
     </div>
   </div>
 
-  {/* RIGHT (Save View) */}
-  <div className="flex items-center gap-2">
-   {mode === "live" && (
-      <Button
-        className="gap-2 h-[36px] px-4 bg-primary text-primary-foreground hover:bg-primary/90"
-        onClick={() => setShowSaveViewDialog(true)}
-      >
-        <Save className="h-4 w-4" />
-        <span className="text-sm">Save View</span>
-      </Button>
-    )}
-  </div>
+      <div className="flex items-center gap-2">
+      {mode === "live" && (
+          <Button
+            className="gap-2 h-[36px] px-4 bg-primary text-primary-foreground hover:bg-primary/90"
+            onClick={() => setShowSaveViewDialog(true)}
+          >
+            <Save className="h-4 w-4" />
+            <span className="text-sm">Save View</span>
+          </Button>
+        )}
+      </div>
 
+       {mode === "live" && (
+            <CustomGridBuilder
+              open={showGridBuilder}
+              onClose={() => setShowGridBuilder(false)}
+              onConfirm={handleCustomGridConfirm}
+            />
+          )}
 </div>
   );
 }

@@ -168,6 +168,7 @@ export default function LiveView() {
           selectedLayout={selectedLayout}
           onLayoutChange={(layout) => setSelectedLayout(layout)}
           enableSaveView={true}
+          mode="live"
         />
 
       <div className="flex flex-1 gap-3 min-h-0 overflow-hidden">
