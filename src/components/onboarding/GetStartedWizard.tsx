@@ -15,7 +15,7 @@ const steps = [
     description:
       "Connect a camera or device so Omni View can start streaming.You can use vendor devices or use quick add.",
     hint: "Auto-discover cameras from your server to speed things up.",
-    primaryAction: "Add device",
+    primaryAction: "Add device dd",
     secondaryAction: "Skip for now",
   },
   {

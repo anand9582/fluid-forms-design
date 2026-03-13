@@ -3,7 +3,7 @@ import { Video } from "lucide-react";
 import { useDrag } from "react-dnd";
 import { Device } from "@/components/LiveView/DeviceTypes";
 import { getEmptyImage } from "react-dnd-html5-backend";
-
+import { AppTooltip } from "@/components/ui/AppTooltip";
 interface Props {
   camera: Device;
   onCameraClick: (cameraId: string) => void;
@@ -13,11 +13,9 @@ export function CameraTreeItem({ camera, onCameraClick }: Props) {
   const isOnline =
     camera.streams?.some((s) => s.status === "ONLINE") ?? false;
 
-  // DRAG
   const [{ isDragging }, dragRef, preview] = useDrag(() => ({
     type: "SIDEBAR_CAMERA",
 
-    // 👇 timeline ko camera name bhi milega
     item: {
       cameraId: camera.cameraId,
       cameraName: camera.name,
@@ -28,7 +26,6 @@ export function CameraTreeItem({ camera, onCameraClick }: Props) {
     }),
   }));
 
-  // 👇 default drag preview hide karega (name show nahi hoga)
   useEffect(() => {
     preview(getEmptyImage(), { captureDraggingState: true });
   }, [preview]);
@@ -46,7 +43,11 @@ export function CameraTreeItem({ camera, onCameraClick }: Props) {
     >
       <div className="flex items-center gap-2">
         <Video size={16} className="text-blue-600" />
-        <span className="text-sm">{camera.name}</span>
+        <AppTooltip label={camera.name}>
+          <span className="text-[12px] font-roboto font-medium truncate max-w-[160px]">
+            {camera.name}
+          </span>
+        </AppTooltip>
       </div>
 
       <span

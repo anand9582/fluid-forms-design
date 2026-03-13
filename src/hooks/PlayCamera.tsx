@@ -51,16 +51,18 @@ export const usePlayCamera = (addDebugLog: (msg: string) => void) => {
         ".loading-spinner"
       ) as HTMLElement;
 
-      if (!loadingDiv && parent) {
-        loadingDiv = document.createElement("div");
-        loadingDiv.className =
-          "loading-spinner absolute inset-0 flex items-center justify-center bg-black/40 text-white z-10";
-        loadingDiv.innerHTML = `
-          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-          <div class="loading-text text-sm">Trying to connect...</div>
-        `;
-        parent.appendChild(loadingDiv);
-      }
+     if (!loadingDiv && parent) {
+          loadingDiv = document.createElement("div");
+          loadingDiv.className =
+            "loading-spinner absolute inset-0 flex flex-col items-center justify-center  z-10";
+
+          loadingDiv.innerHTML = `
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 border-t-transparent mb-2"></div>
+            <div class="loading-text text-blue-500 text-sm">Trying to connect...</div>
+          `;
+
+          parent.appendChild(loadingDiv);
+        }
 
       if (loadingDiv) loadingDiv.style.display = "flex";
 

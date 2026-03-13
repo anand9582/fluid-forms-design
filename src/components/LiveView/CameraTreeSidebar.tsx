@@ -32,7 +32,7 @@ useEffect(() => {
   }, [cameras, search]);
 
   const offlineCount = filtered.filter(
-    (d) => !d.streams?.some((s) => s.status === "ONLINE")
+     (d) => !d.streams?.some((s) => s.status === "ONLINE")
   ).length;
 
   return (
@@ -61,36 +61,7 @@ useEffect(() => {
         />
       </div>
 
-      {/* PROPERTY */}
       <div>
-        <button
-          onClick={() => setOpenProperty(!openProperty)}
-          className="flex items-center justify-between w-full px-2 py-2 rounded-md hover:bg-muted"
-        >
-          <div className="flex items-center gap-2 text-sm font-medium">
-            {openProperty ? (
-              <ChevronDown size={16} />
-            ) : (
-              <ChevronRight size={16} />
-            )}
-            <span className="text-xs font-medium uppercase tracking-wide text-slate-400 font-roboto">
-              Property
-            </span>
-            <span>Grand Hotel</span>
-          </div>
-
-          {/* Badges */}
-          <div className="flex gap-2">
-            <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded">
-              {filtered.length}
-            </span>
-            <span className="bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded">
-              {offlineCount}
-            </span>
-          </div>
-        </button>
-
-        {/* Tree */}
         {openProperty && (
           <CameraTree
             devices={filtered}
