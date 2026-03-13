@@ -19,9 +19,12 @@ import useGridStore from "@/Store/UseGridStore";
 interface SaveViewDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
+    onSuccess?: () => void;
+    activeViewId?: number | null;
+    currentName?: string;
 }
 
-export function SaveViewDialog({ open, onOpenChange }: SaveViewDialogProps) {
+export function SaveViewDialog({ open, onOpenChange, onSuccess, activeViewId, currentName }: SaveViewDialogProps) {
     const { layout, slotAssignments } = useGridStore();
     const currentGridLabel = `${layout.rows}×${layout.cols} View`;
     const [viewName, setViewName] = useState("");
@@ -29,9 +32,9 @@ export function SaveViewDialog({ open, onOpenChange }: SaveViewDialogProps) {
 
     useEffect(() => {
         if (open) {
-            setViewName(currentGridLabel);
+            setViewName(currentName || currentGridLabel);
         }
-    }, [open, currentGridLabel]);
+    }, [open, currentGridLabel, currentName]);
 
     const handleSave = async () => {
         if (!viewName.trim()) {
@@ -54,22 +57,29 @@ export function SaveViewDialog({ open, onOpenChange }: SaveViewDialogProps) {
                 cellMapping: cellMapping,
             };
 
-            const response = await fetch(`${API_VAISHALI_URL}${API_URLS.create_view}`, {
-                method: "POST",
+            const url = activeViewId
+                ? `${API_VAISHALI_URL}${API_URLS.update_view}${activeViewId}`
+                : `${API_VAISHALI_URL}${API_URLS.create_view}`;
+
+            const method = activeViewId ? "PUT" : "POST";
+
+            const response = await fetch(url, {
+                method: method,
                 headers: getAuthHeaders(),
                 body: JSON.stringify(payload),
             });
 
             if (!response.ok) {
-                throw new Error("Failed to save view");
+                throw new Error(`Failed to ${activeViewId ? 'update' : 'save'} view`);
             }
 
-            toast.success("View saved successfully");
+            toast.success(`View ${activeViewId ? 'updated' : 'saved'} successfully`);
             onOpenChange(false);
             setViewName("");
+            if (onSuccess) onSuccess();
         } catch (error) {
-            console.error("Error saving view:", error);
-            toast.error("Error saving view. Please try again.");
+            console.error(`Error ${activeViewId ? 'updating' : 'saving'} view:`, error);
+            toast.error(`Error ${activeViewId ? 'updating' : 'saving'} view. Please try again.`);
         } finally {
             setIsLoading(false);
         }
@@ -80,9 +90,13 @@ export function SaveViewDialog({ open, onOpenChange }: SaveViewDialogProps) {
             <DialogContent className="sm:max-w-[425px] p-6 gap-6 rounded-2xl border-none shadow-2xl">
                 <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <div className="space-y-1">
-                        <DialogTitle className="text-2xl font-bold font-plus-jakarta">Save View</DialogTitle>
+                        <DialogTitle className="text-2xl font-bold font-plus-jakarta">
+                            {activeViewId ? "Update View" : "Save View"}
+                        </DialogTitle>
                         <DialogDescription className="text-[#64748B] text-sm leading-relaxed">
-                            Save the current grid and camera arrangement for faster monitoring.
+                            {activeViewId
+                                ? "Update the existing view with the current grid and camera arrangement."
+                                : "Save the current grid and camera arrangement for faster monitoring."}
                         </DialogDescription>
                     </div>
                     {/* <DialogClose asChild>
@@ -121,7 +135,7 @@ export function SaveViewDialog({ open, onOpenChange }: SaveViewDialogProps) {
                         disabled={isLoading}
                         className="h-12 px-8 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-semibold shadow-lg shadow-blue-200 transition-all duration-200 active:scale-95"
                     >
-                        {isLoading ? "Saving..." : "Save View"}
+                        {isLoading ? "Saving..." : (activeViewId ? "Update View" : "Save View")}
                     </Button>
                 </DialogFooter>
             </DialogContent>

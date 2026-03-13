@@ -18,9 +18,10 @@ export const API_URLS = {
   create_retention_policy: "/retention-policies/create-retention-policy",
   get_retention_policies: "/retention-policies/get-all-retention-policies",
   create_view: "/createView",
-  update_view: "/updateViewById/6",
-  get_view_by_id: "/getViewById/6",
-  delete_view_by_id: "/deleteViewById/6",
+  update_view: "/updateViewById/",
+  get_all_views: "/getAllViews",
+  get_view_by_id: "/getViewById",
+  delete_view_by_id: "/deleteViewById",
 };
 
 export const getAuthHeaders = () => {
