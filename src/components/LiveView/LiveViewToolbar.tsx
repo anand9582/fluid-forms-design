@@ -312,15 +312,6 @@ export function LiveViewToolbar({
         />
       )}
     </div>
-       {
-    mode === "live" && (
-      <CustomGridBuilder
-        open={showGridBuilder}
-        onClose={() => setShowGridBuilder(false)}
-        onConfirm={handleCustomGridConfirm}
-      />
-    )
-  }
-</div >
+
   );
 }
