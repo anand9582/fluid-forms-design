@@ -249,11 +249,11 @@ export function LiveViewToolbar({
             />
           )}
           {mode === "live" && (
-  <SaveViewDialog
-    open={showSaveViewDialog}
-    onOpenChange={setShowSaveViewDialog}
-  />
-)}
+          <SaveViewDialog
+            open={showSaveViewDialog}
+            onOpenChange={setShowSaveViewDialog}
+          />
+        )}
 </div>
   );
 }
