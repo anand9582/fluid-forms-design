@@ -14,7 +14,6 @@ import OtherStreamTabs from "@/components/settings/configure-devices/pages/Other
 import ArchivingTabs from "@/components/settings/configure-devices/pages/ArchivingTabs";
 import DeviceAlertTabs from "@/components/settings/configure-devices/pages/DeviceAlertTabs";
 import { CameraTreeSidebar } from "@/components/LiveView/CameraTreeSidebar";
-import { dummyCameraData } from "@/components/LiveView/DummyTreeData"; 
 import { useCameraTree  } from "@/hooks/TreeSidebar";
 
 import {

@@ -24,8 +24,8 @@ export function AppLayout() {
       className={cn(
         "bg-white flex flex-col",
         isPlayback
-          ? "h-screen overflow-hidden"   // ✅ ONLY playback
-          : "min-h-screen"               // ✅ all other pages
+          ? "h-screen overflow-hidden"  
+          : "min-h-screen"              
       )}
     >
       {/* HEADER */}

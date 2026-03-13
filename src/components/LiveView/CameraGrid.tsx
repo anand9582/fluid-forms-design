@@ -24,6 +24,8 @@ interface CameraGridProps {
   clearSlot?: (slotIndex: number) => void;
   handleSnapshot?: (slotIndex: number) => void;
   handleRefresh?: (slotIndex: number) => void;
+  toggleMainSub?: (slotIndex: number, cameraId: string, nextType: "main" | "sub") => void;
+  mainSubMap?: Record<number, "main" | "sub">;
 }
 
 export function CameraGrid({

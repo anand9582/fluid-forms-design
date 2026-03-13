@@ -18,7 +18,8 @@
 //   getVideoSrc: (cameraId: string) => string;
 //   isCameraLoading: (cameraId: string) => boolean;
 //   rawSegmentsPerSlot: Record<number, RawSegment[]>;
-//   errorMessage?: string;
+//   errorMessage?: string; // slot error
+//   isSeeking?: boolean;
 // }
 
 // export function PlaybackCameraSlot({
@@ -31,6 +32,7 @@
 //   isCameraLoading,
 //   rawSegmentsPerSlot = {},
 //   errorMessage,
+//   isSeeking = false,
 // }: Props) {
 //   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -45,7 +47,6 @@
 //   const segments = rawSegmentsPerSlot?.[index] || [];
 //   const src = cameraId ? getVideoSrc(cameraId) : "";
 
-//   // ✅ HLS + playback hook with video ready state
 //   const { videoRef, isVideoReady } = useHlsWithStore({
 //     src,
 //     cameraId,
@@ -57,14 +58,15 @@
 //   const toggleFullscreen = () => {
 //     const el = containerRef.current;
 //     if (!el) return;
-
 //     if (document.fullscreenElement) {
 //       document.exitFullscreen();
 //     } else {
 //       el.requestFullscreen().catch(() => {});
 //     }
 //   };
-
+ 
+//   const showLoader = !!cameraId && !errorMessage && (!isVideoReady || isCameraLoading(cameraId) || isSeeking);
+  
 //   return (
 //     <div
 //       ref={containerRef}
@@ -85,12 +87,12 @@
 //           autoPlay
 //           playsInline
 //           preload="auto"
-//           controls={false}
+//           controls
 //         />
 //       )}
 
 //       {/* LOADING SPINNER */}
-//       {cameraId && (!isVideoReady || isCameraLoading(cameraId)) && (
+//       {showLoader && (
 //         <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-50">
 //           <div className="flex flex-col items-center gap-2 text-muted-foreground">
 //             <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -124,6 +126,7 @@ import { useDrop } from "react-dnd";
 import { Devices } from "@/components/Icons/Svg/liveViewIcons";
 import { cn } from "@/lib/utils";
 import { useHlsWithStore } from "@/hooks/useHlsWithStore";
+import { usePlaybackStore } from "@/Store/playbackStore";
 
 interface RawSegment {
   startTime: Date;
@@ -137,10 +140,9 @@ interface Props {
   onSelect: () => void;
   onCameraDrop: (cameraId: string, slotIndex: number) => void;
   getVideoSrc: (cameraId: string) => string;
-  isCameraLoading: (cameraId: string) => boolean;
+  isCameraLoading: (slotIndex: number) => boolean;
   rawSegmentsPerSlot: Record<number, RawSegment[]>;
-  errorMessage?: string;
-  isSeeking?: boolean; // optional prop from store
+  errorMessage?: string; // slot error
 }
 
 export function PlaybackCameraSlot({
@@ -153,22 +155,20 @@ export function PlaybackCameraSlot({
   isCameraLoading,
   rawSegmentsPerSlot = {},
   errorMessage,
-  isSeeking = false,
 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const playback = usePlaybackStore();
 
   const [{ isOver }, dropRef] = useDrop({
     accept: "SIDEBAR_CAMERA",
     drop: (item: { cameraId: string }) => onCameraDrop(item.cameraId, index),
     collect: (monitor) => ({ isOver: monitor.isOver({ shallow: true }) }),
   });
-
   dropRef(containerRef);
 
-  const segments = rawSegmentsPerSlot?.[index] || [];
-  const src = cameraId ? getVideoSrc(cameraId) : "";
+  const segments = rawSegmentsPerSlot[index] || [];
+  const src = cameraId ? getVideoSrc(index) : "";
 
-  // ✅ HLS + playback hook with video ready state
   const { videoRef, isVideoReady } = useHlsWithStore({
     src,
     cameraId,
@@ -180,31 +180,24 @@ export function PlaybackCameraSlot({
   const toggleFullscreen = () => {
     const el = containerRef.current;
     if (!el) return;
-
-    if (document.fullscreenElement) {
-      document.exitFullscreen();
-    } else {
-      el.requestFullscreen().catch(() => {});
-    }
+    if (document.fullscreenElement) document.exitFullscreen();
+    else el.requestFullscreen().catch(() => {});
   };
 
-  // ---------------- SPINNER LOGIC ----------------
-  // show loader when:
-  //  camera assigned but HLS not ready
-  //  camera still loading
-  //  user is seeking on timeline
-  const showLoader =
-    !!cameraId && (!isVideoReady || isCameraLoading(cameraId) || isSeeking);
+  // 🔹 Loader logic: slot-specific, independent, sync with playback store
+  const slotSeeking = playback.slotSeeking[index] ?? false;
+  const showLoader = !!cameraId && !errorMessage && (!isVideoReady || isCameraLoading(index) || slotSeeking);
 
   return (
-    <div
+     <div
       ref={containerRef}
       onClick={onSelect}
       onDoubleClick={toggleFullscreen}
       className={cn(
-        "relative w-full h-full overflow-hidden border cursor-pointer select-none bg-black",
-        selected && "ring-2 ring-primary",
-        isOver && "border-primary"
+        "group relative w-full h-full cursor-pointer overflow-hidden",
+        "border-2", 
+        selected && "border-blue-400", 
+        isOver && "border-green-400"
       )}
     >
       {/* VIDEO */}
@@ -216,25 +209,24 @@ export function PlaybackCameraSlot({
           autoPlay
           playsInline
           preload="auto"
-          controls={true}
         />
       )}
 
       {/* LOADING SPINNER */}
       {showLoader && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-50">
+        <div className="absolute inset-0 flex items-center justify-center  z-50">
           <div className="flex flex-col items-center gap-2 text-muted-foreground">
             <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-            <span className="text-xs">Loading stream…</span>
+            <span className="text-xs">Loading…</span>
           </div>
         </div>
       )}
 
       {/* DROP PLACEHOLDER */}
       {!cameraId && !errorMessage && (
-        <div className="flex items-center justify-center h-full text-muted-foreground gap-2">
-          <Devices className="h-4 w-4" />
-          <span className="text-sm">Drop Camera</span>
+        <div className="flex items-center justify-center h-full text-gray-400 gap-2 text-muted-foreground">
+           <Devices className="h-4 w-4" />
+            <span className="text-sm font-medium">Drop Camera</span>
         </div>
       )}
 

@@ -18,7 +18,6 @@ import AlertPage from "./pages/alert";
 import HealthPage from "./pages/health";
 
 const queryClient = new QueryClient();
-
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
