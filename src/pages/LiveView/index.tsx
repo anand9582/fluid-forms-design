@@ -161,14 +161,14 @@ export default function LiveView() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)]">
-      <LiveViewToolbar
-        showCameraList={showCameraList}
-        onToggleCameraList={() => setShowCameraList(!showCameraList)}
-        gridStore={useGridStore()}
-        selectedLayout={selectedLayout}
-        onLayoutChange={(layout) => setSelectedLayout(layout)}
-        enableSaveView={true}
-      />
+        <LiveViewToolbar
+          showCameraList={showCameraList}
+          onToggleCameraList={() => setShowCameraList(!showCameraList)}
+          gridStore={useGridStore()}
+          selectedLayout={selectedLayout}
+          onLayoutChange={(layout) => setSelectedLayout(layout)}
+          enableSaveView={true}
+        />
 
       <div className="flex flex-1 gap-3 min-h-0 overflow-hidden">
         <div className="flex gap-3 py-3 pl-3 flex-1">

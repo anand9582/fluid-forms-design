@@ -15,7 +15,7 @@ export function CameraTree({ devices, onCameraClick = () => {} }: Props) {
     {}
   );
 
-  // Build Building → Cameras tree
+  // Build tree by groupName
   const tree = useMemo(() => {
     const result: Record<
       string,
@@ -53,7 +53,6 @@ export function CameraTree({ devices, onCameraClick = () => {} }: Props) {
 
         return (
           <div key={building}>
-            {/* Building Header */}
             <button
               onClick={() =>
                 setOpenBuildings((prev) => ({
@@ -61,7 +60,8 @@ export function CameraTree({ devices, onCameraClick = () => {} }: Props) {
                   [building]: !isBuildingOpen,
                 }))
               }
-              className="flex items-center justify-between w-full px-2 py-1 rounded-md hover:bg-muted"
+              className={`flex items-center justify-between w-full px-2 py-1 rounded-md
+              hover:bg-muted ${isBuildingOpen ? "bg-muted" : ""}`}
             >
               <div className="flex items-center gap-2 min-w-0">
                 {isBuildingOpen ? (
@@ -70,8 +70,8 @@ export function CameraTree({ devices, onCameraClick = () => {} }: Props) {
                   <ChevronRight size={16} />
                 )}
 
-                <span className="font-semibold text-sm truncate max-w-[150px] font-roboto capitalize">
-                  {building}
+                <span className="font-roboto capitalize font-semibold text-sm truncate max-w-[150px]">
+                   {building}
                 </span>
               </div>
 
@@ -86,9 +86,8 @@ export function CameraTree({ devices, onCameraClick = () => {} }: Props) {
               </div>
             </button>
 
-            {/* Cameras */}
             {isBuildingOpen && (
-              <div className="ml-4 pl-2 border-l border-slate-200 space-y-1">
+              <div className="ml-4 mt-2 pl-3 border-l border-slate-200 space-y-1">
                 {data.cameras.map((camera) => (
                   <CameraTreeItem
                     key={camera.cameraId}
