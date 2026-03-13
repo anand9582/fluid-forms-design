@@ -4,28 +4,28 @@ import { usePlayCamera } from "@/hooks/PlayCamera";
 import useGridStore from "@/Store/UseGridStore";
 
 export const useGridController = () => {
-    const {
-      layout,
-      slotAssignments,
-      resizeSlots,
-    } = useGridStore();
+  const {
+    layout,
+    slotAssignments,
+    resizeSlots,
+  } = useGridStore();
 
   const gridRef = useRef<HTMLDivElement>(null);
   const { play, closeConnection, closeSlotConnections, getActiveConnectionCount } = usePlayCamera(console.log);
-   
-   
+
+
   useEffect(() => {
     resizeSlots();
   }, [layout.rows, layout.cols, resizeSlots]);
 
   // Fullscreen
-    const handleFullScreenToggle = useCallback(() => {
-        if (!document.fullscreenElement) {
-          gridRef.current?.requestFullscreen();
-        } else {
-          document.exitFullscreen();
-        }
-    }, []);
+  const handleFullScreenToggle = useCallback(() => {
+    if (!document.fullscreenElement) {
+      gridRef.current?.requestFullscreen();
+    } else {
+      document.exitFullscreen();
+    }
+  }, []);
 
  const handleRefresh = useCallback(
   (slotIndex: number) => {

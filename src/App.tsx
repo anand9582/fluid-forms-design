@@ -14,6 +14,9 @@ import NotFound from "./pages/NotFound";
 import LiveView from "@/pages/LiveView";
 import PlayBack from "@/pages/PlayBack";
 import { ProtectedRoute } from "@/components/Routes/ProtectedRoute";
+import AlertPage from "./pages/alert";
+import HealthPage from "./pages/health";
+
 const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -37,6 +40,8 @@ const App = () => (
               <Route path="/dashboard" element={<Index />} />
               {/* <Route path="/" element={<AddedDevicesPage />} /> */}
               <Route path="/live" element={<LiveView />} />
+              <Route path="/alerts" element={<AlertPage />} />
+              <Route path="/health" element={<HealthPage />} />
               <Route path="/playback" element={<PlayBack />} />
               <Route path="/settings" element={<SettingsLayout />}>
                 <Route index element={<SettingsOverview />} />

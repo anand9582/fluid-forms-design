@@ -1,7 +1,7 @@
 import { useCallback, useRef } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { APISERVERURL, API_URLS } from "@/components/Config/api";
-import { useStreamStore , CameraStream } from "@/Store/useStreamStore";
+import { useStreamStore, CameraStream } from "@/Store/useStreamStore";
 
 export const usePlayCamera = (addDebugLog: (msg: string) => void) => {
   const {
@@ -21,9 +21,9 @@ export const usePlayCamera = (addDebugLog: (msg: string) => void) => {
   (window as any).__activeRtcMap__ = activeConnections;
 
   const logActiveConnections = useCallback(() => {
-     const list =
-     streams.map((s) => `${s.cameraId}-${s.streamType}`).join(", ") || "None";
-     addDebugLog(`Active RTC Connections: ${list}`);
+    const list =
+      streams.map((s) => `${s.cameraId}-${s.streamType}`).join(", ") || "None";
+    addDebugLog(`Active RTC Connections: ${list}`);
   }, [streams, addDebugLog]);
 
   // ------------------------------
@@ -81,7 +81,7 @@ export const usePlayCamera = (addDebugLog: (msg: string) => void) => {
         };
 
         videoElement.addEventListener("canplay", onCanPlay);
-        videoElement.play().catch(() => {});
+        videoElement.play().catch(() => { });
       };
 
       pc.onconnectionstatechange = () =>
@@ -96,13 +96,13 @@ export const usePlayCamera = (addDebugLog: (msg: string) => void) => {
 
       try {
         pc.addTransceiver("video", { direction: "recvonly" });
-      } catch {}
+      } catch { }
       try {
         pc.addTransceiver("audio", { direction: "recvonly" });
-      } catch {}
+      } catch { }
       try {
         pc.createDataChannel("keepalive");
-      } catch {}
+      } catch { }
 
       pc.createOffer()
         .then((offer) => pc.setLocalDescription(offer))
@@ -147,7 +147,7 @@ export const usePlayCamera = (addDebugLog: (msg: string) => void) => {
 
           try {
             pc.close();
-          } catch {}
+          } catch { }
 
           allPeerConnections.current =
             allPeerConnections.current.filter((p) => p !== pc);
@@ -174,10 +174,10 @@ export const usePlayCamera = (addDebugLog: (msg: string) => void) => {
 
       try {
         pc.getSenders().forEach((s) => s.track?.stop());
-      } catch {}
+      } catch { }
       try {
         pc.close();
-      } catch {}
+      } catch { }
 
       removeStreamByInstanceId(instanceId);
 

@@ -4,6 +4,7 @@ export { LiveViewToolbar } from "@/components/LiveView/LiveViewToolbar";
 export { CameraGrid } from "@/components/LiveView/CameraGrid";
 export { AISurveillanceSidebar } from "@/components/LiveView/AISurveillanceSidebar";
 export { LiveAlertsBar } from "@/components/LiveView/LiveAlertsBar";
+export { SaveViewDialog } from "@/components/LiveView/SaveViewDialog";
 
 // Types
 export type {
@@ -16,7 +17,7 @@ export type {
   SavedView,
   Alert,
   CameraSlot,
-} from "@/components/LiveView/types";
+} from "@/components/LiveView/Types";
 
 // Data
 export {
@@ -24,6 +25,5 @@ export {
   defaultAIFeatures,
   gridLayouts,
   alertsData,
-  savedViewsData,
   baseCameraFeeds,
 } from "@/components/LiveView/Data";
