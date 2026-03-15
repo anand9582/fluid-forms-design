@@ -36,8 +36,6 @@ const ConfigureDevicesPage = () => {
   const { setActiveRoute, setActiveItem } = useSettingsStore();
    const [activeTab, setActiveTab] = useState("network");
   const [showSidebar, setShowSidebar] = useState(true);
-  const hook = useCameraTree(dummyCameraData);
-
 
 
   const openAddDevicePage = () => {
@@ -64,8 +62,6 @@ const ConfigureDevicesPage = () => {
       <div className="flex gap-6 min-h-[600px]">
               <CameraTreeSidebar
             isVisible={showSidebar}      
-            data={dummyCameraData}      
-            hook={hook}                   
             onCameraClick={(camera) => { 
               setSelectedCamera({
                 id: camera.id,
