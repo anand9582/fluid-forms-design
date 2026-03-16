@@ -1,34 +1,45 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { sidebarItems } from "@/components/settings/SidebarConfigs/Sidebar-config";
-import { useSettingsStore } from "@/Store/UseSettingsStore";
 
-export function SettingsSidebar({ onNavigate }: { onNavigate: (route: string, id: string) => void }) {
-  const { activeItem, setActiveItem, setActiveRoute } = useSettingsStore();
+export function SettingsSidebar() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
-  // Expand parent items if their child is active
+  const activeRoute = location.pathname;
+
+  // Auto expand parent when child route active
   useEffect(() => {
     sidebarItems.forEach((item) => {
-      if (item.subItems?.some((sub) => sub.id === activeItem)) {
-          setExpandedItems((prev) => (prev.includes(item.id) ? prev : [...prev, item.id]));
-        }
+      if (item.subItems?.some((sub) => activeRoute.startsWith(sub.route))) {
+        setExpandedItems((prev) =>
+          prev.includes(item.id) ? prev : [...prev, item.id]
+        );
+      }
     });
-  }, [activeItem]);
+  }, [activeRoute]);
 
   const toggleExpand = (id: string) => {
-      setExpandedItems((prev) =>
-         prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-      );
-   };
+    setExpandedItems((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
 
   return (
     <aside className="w-56 shrink-0 border rounded-md bg-white">
       <ScrollArea className="h-full p-2">
         <div className="space-y-1">
+
           {sidebarItems.map((item) =>
             item.subItems ? (
               <Collapsible
@@ -40,9 +51,13 @@ export function SettingsSidebar({ onNavigate }: { onNavigate: (route: string, id
                   <button className="w-full flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg hover:bg-muted">
                     {item.icon}
                     <span className="flex-1 text-left">{item.label}</span>
+
                     <ChevronDown
                       size={16}
-                      className={cn("transition-transform", expandedItems.includes(item.id) && "rotate-180")}
+                      className={cn(
+                        "transition-transform",
+                        expandedItems.includes(item.id) && "rotate-180"
+                      )}
                     />
                   </button>
                 </CollapsibleTrigger>
@@ -51,14 +66,11 @@ export function SettingsSidebar({ onNavigate }: { onNavigate: (route: string, id
                   {item.subItems.map((sub) => (
                     <button
                       key={sub.id}
-                      onClick={() => {
-                        setActiveItem(sub.id);    
-                        setActiveRoute(sub.route); 
-                        onNavigate(sub.route, sub.id);
-                      }}
+                      onClick={() => navigate(sub.route)}
                       className={cn(
                         "w-full px-3 py-2 text-sm rounded-lg text-left hover:bg-muted",
-                        activeItem === sub.id && "bg-[#E2E8F0] text-black"
+                        activeRoute === sub.route &&
+                          "bg-[#E2E8F0] text-black"
                       )}
                     >
                       {sub.label}
@@ -69,14 +81,11 @@ export function SettingsSidebar({ onNavigate }: { onNavigate: (route: string, id
             ) : (
               <button
                 key={item.id}
-                onClick={() => {
-                  setActiveItem(item.id);
-                  setActiveRoute(item.route);
-                  onNavigate(item.route, item.id);
-                }}
+                onClick={() => navigate(item.route!)}
                 className={cn(
                   "w-full flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg hover:bg-muted",
-                  activeItem === item.id && "bg-[#E2E8F0] text-[#404040]"
+                  activeRoute === item.route &&
+                    "bg-[#E2E8F0] text-[#404040]"
                 )}
               >
                 {item.icon}
@@ -84,6 +93,7 @@ export function SettingsSidebar({ onNavigate }: { onNavigate: (route: string, id
               </button>
             )
           )}
+
         </div>
       </ScrollArea>
     </aside>

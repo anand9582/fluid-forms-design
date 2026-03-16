@@ -322,7 +322,7 @@ const onMouseDown = (e: React.MouseEvent, slotIndex: number) => {
                 <AppTooltip key={slotIndex} label={camName} side="top">
                   <div
                     className={cn(
-                      "mb-2 text-xs font-roboto font-regular text-slate-900 px-2 flex items-center truncate overflow-hidden whitespace-nowrap",
+                      "mb-2 text-xs font-roboto font-medium text-slate-900 px-2 flex items-center truncate overflow-hidden whitespace-nowrap",
                       idx === 0 && "pt-2"
                     )}
                   >

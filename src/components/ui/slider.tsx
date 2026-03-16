@@ -5,7 +5,8 @@ import { cn } from "@/lib/utils";
 interface SliderProps
   extends React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root> {
   trackHeight?: number;
-  thumbSize?: number; 
+  thumbSize?: number;
+  thumbClassName?: string; // 👈 new prop
 }
 
 const Slider = React.forwardRef<
@@ -15,8 +16,9 @@ const Slider = React.forwardRef<
   (
     {
       className,
-      trackHeight = 3,   
-      thumbSize = 16,   
+      trackHeight = 3,
+      thumbSize = 16,
+      thumbClassName,
       ...props
     },
     ref
@@ -29,7 +31,6 @@ const Slider = React.forwardRef<
       )}
       {...props}
     >
-      {/* TRACK */}
       <SliderPrimitive.Track
         className="relative w-full grow overflow-hidden rounded-full bg-neutral-200"
         style={{ height: `${trackHeight}px` }}
@@ -37,12 +38,12 @@ const Slider = React.forwardRef<
         <SliderPrimitive.Range className="absolute h-full bg-blue-700" />
       </SliderPrimitive.Track>
 
-      {/* THUMB */}
       <SliderPrimitive.Thumb
         className={cn(
           "block rounded-full bg-blue-600 border-2 border-white shadow-md",
           "transition-transform focus-visible:outline-none",
-          "focus-visible:ring-2 focus-visible:ring-blue-500"
+          "focus-visible:ring-2 focus-visible:ring-blue-500",
+          thumbClassName
         )}
         style={{
           width: `${thumbSize}px`,

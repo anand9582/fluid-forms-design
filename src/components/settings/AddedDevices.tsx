@@ -29,6 +29,7 @@ import {
 import { cn } from "@/lib/utils";
 import { TotalDeviceIcons} from "@/components/Icons/Svg/AddedDevicesIcons";
 import { API_BASE_URL2, API_URLS ,getAuthHeaders } from "@/components/Config/api";
+import { useNavigate } from "react-router-dom";
 
 interface Device {
   id: number;
@@ -58,6 +59,7 @@ export function AddDevicesPage() {
   const [rowSelection, setRowSelection] = useState({});
   const [filterOpen, setFilterOpen] = useState(false);
   const { setActiveRoute, setActiveItem } = useSettingsStore();
+const navigate = useNavigate();
 
   // Fetch devices from API
     useEffect(() => {
@@ -115,7 +117,7 @@ export function AddDevicesPage() {
 
   const openAddDevicePage = () => {
     setActiveItem("add-devices");
-    setActiveRoute("/settings/devices/adddevices");
+    navigate("/settings/devices/adddevices");
   };
 
   const applyFilters = () => {

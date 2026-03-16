@@ -6,16 +6,20 @@ import { ThemeProvider } from "./context/ThemeContext";
 import Index from "./pages/Index";
 import { LoginPage } from "@/pages/Auth/LoginPage";
 import SettingsOverview from "@/components/settings/SettingsOverview";
-// import ManageUsers from "@/components/settings/ManageUsers";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { SettingsLayout } from "@/components/layout/SettingsLayout";
-// import { AddedDevicesPage } from "@/components/settings/Added-Devices/AddedDevicesPage";
+
 import NotFound from "./pages/NotFound";
 import LiveView from "@/pages/LiveView";
 import PlayBack from "@/pages/PlayBack";
 import { ProtectedRoute } from "@/components/Routes/ProtectedRoute";
 import AlertPage from "./pages/alert";
 import HealthPage from "./pages/health";
+import { AddDevicesPage } from "@/components/settings/AddedDevices";
+import { ManageUsersTabs  } from "@/components/settings/ManageUsersTabs/ManageUsersPages";
+import ConfigureDevicesPage from "@/components/settings/configure-devices/ConfigureDevicesPage";
+import { AddedDevicesPage } from "@/components/settings/Added-Devices/AddedDevicesPage";
+import StorageIndex from "@/components/settings/StorageIndex";
 
 const queryClient = new QueryClient();
 const App = () => (
@@ -44,8 +48,16 @@ const App = () => (
               <Route path="/health" element={<HealthPage />} />
               <Route path="/playback" element={<PlayBack />} />
               <Route path="/settings" element={<SettingsLayout />}>
-                <Route index element={<SettingsOverview />} />
+                <Route element={<SettingsOverview />}>
+                  <Route index element={<Navigate to="users" replace />} />
+                  <Route path="users" element={<ManageUsersTabs />} />
+                  <Route path="devices/add" element={<AddDevicesPage />} />
+                   <Route path="devices/adddevices" element={<AddedDevicesPage />} />
+                  <Route path="devices/configure" element={<ConfigureDevicesPage />} />
+                    <Route path="/settings/storage" element={<StorageIndex />} />
+                </Route>
               </Route>
+
               <Route path="*" element={<NotFound />} />
             </Route>
             {/* </Route> */}

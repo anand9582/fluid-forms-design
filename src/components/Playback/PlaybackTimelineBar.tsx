@@ -34,7 +34,7 @@ import { AppTooltip } from "@/components/ui/AppTooltip";
 import { PlaybackControlButton } from "@/components/Common/PlaybackControlButton";
 import { cn } from "@/lib/utils";
 import { formatPlaybackTimestamp } from "@/hooks/use-playback";
-
+import { Slider } from "@/components/ui/slider";
 interface Props {
   isTimelineExpanded: boolean;
   onToggleTimeline: () => void;
@@ -217,70 +217,75 @@ export function PlaybackTimelineBar({
       </div>
 
       {/* SYNC SWITCH */}
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div className="flex items-center gap-1.5 ml-1">
-              <Switch
-                checked={isSync}
-                onCheckedChange={(v) => setSynced(v)}
-                className="data-[state=checked]:bg-primary h-4 w-7"
-              />
-              <span className="text-[11px] text-foreground font-medium">
-                Synced
-              </span>
-            </div>
-          </TooltipTrigger>
-          <TooltipContent side="top">
-            <p>
-              {isSync
-                ? "All cameras seek together"
-                : "Seek selected camera only"}
-            </p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+     <TooltipProvider>
+  <Tooltip>
+    <TooltipTrigger asChild>
+      <div className="ml-1 flex items-center gap-2 rounded-md bg-muted px-2 py-1">
+        <Switch
+          checked={isSync}
+          onCheckedChange={(v) => setSynced(v)}
+          className="h-4 w-7 data-[state=checked]:bg-primary"
+        />
+
+        <span className="text-[11px] font-medium text-foreground">
+          Synced
+        </span>
+      </div>
+    </TooltipTrigger>
+
+    <TooltipContent side="top">
+      <p>
+        {isSync
+          ? "All cameras seek together"
+          : "Seek selected camera only"}
+      </p>
+    </TooltipContent>
+  </Tooltip>
+</TooltipProvider>
 
       <div className="flex-1" />
 
       {/* ZOOM CONTROLS */}
-      <div className="flex items-center gap-2 bg-timelinebg rounded text-slate-600">
-        <AppTooltip label="Zoom Out" side="top">
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-6 w-6"
-            onClick={() => onZoomChange(Math.max(1, zoomLevel - 1))}
-          >
-            <Mountain className="h-3 w-3" />
-          </Button>
-        </AppTooltip>
+     <div className="flex items-center gap-2 bg-timelinebg rounded text-slate-600">
 
-        <div
-          className="w-16 h-[3px] bg-border rounded relative cursor-pointer"
-          onClick={(e) => {
-            const r = e.currentTarget.getBoundingClientRect();
-            const pct = (e.clientX - r.left) / r.width;
-            onZoomChange(Math.round(1 + pct * 9));
-          }}
-        >
-          <div
-            className="absolute h-full bg-primary rounded"
-            style={{ width: `${zoomPercent}%` }}
-          />
-        </div>
+  {/* Zoom Out */}
+  <AppTooltip label="Zoom Out" side="top">
+    <Button
+      size="sm"
+      variant="ghost"
+      className="h-6 w-6 p-0 [&_svg]:h-3 [&_svg]:w-3"
+      onClick={() => onZoomChange(Math.max(1, zoomLevel - 1))}
+    >
+      <Mountain />
+    </Button>
+  </AppTooltip>
 
-        <AppTooltip label="Zoom In" side="top">
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-6 w-6"
-            onClick={() => onZoomChange(Math.min(10, zoomLevel + 1))}
-          >
-            <Mountain className="h-3 w-3" />
-          </Button>
-        </AppTooltip>
-      </div>
+  {/* Slider */}
+  <Slider
+    value={[zoomLevel]}
+    min={1}
+    max={10}
+    step={1}
+    trackHeight={3}
+    thumbSize={10}
+    className="w-16"
+    onValueChange={(v) => onZoomChange(v[0])}
+    thumbClassName="bg-white border-blue-600"
+  />
+
+  {/* Zoom In */}
+  <AppTooltip label="Zoom In" side="top">
+    <Button
+      size="sm"
+      variant="ghost"
+      className="h-6 w-6 p-0 [&_svg]:h-4 [&_svg]:w-4"
+      onClick={() => onZoomChange(Math.min(10, zoomLevel + 1))}
+    >
+      <Mountain />
+    </Button>
+  </AppTooltip>
+
+</div>
 
       {/* PLAYBACK CONTROLS */}
       <div className="flex items-center gap-3 bg-muted/60 px-1 rounded">
