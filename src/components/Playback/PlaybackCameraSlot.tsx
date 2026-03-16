@@ -184,7 +184,6 @@ export function PlaybackCameraSlot({
     else el.requestFullscreen().catch(() => {});
   };
 
-  // 🔹 Loader logic: slot-specific, independent, sync with playback store
   const slotSeeking = playback.slotSeeking[index] ?? false;
   const showLoader = !!cameraId && !errorMessage && (!isVideoReady || isCameraLoading(index) || slotSeeking);
 
@@ -214,12 +213,17 @@ export function PlaybackCameraSlot({
 
       {/* LOADING SPINNER */}
       {showLoader && (
-        <div className="absolute inset-0 flex items-center justify-center  z-50">
-          <div className="flex flex-col items-center gap-2 text-muted-foreground">
-            <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-            <span className="text-xs">Loading…</span>
-          </div>
+       <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[1px] transition-opacity duration-200">
+      <div className="flex flex-col items-center gap-1.5">
+        <div className="relative h-8 w-8">
+          <div className="absolute inset-0 rounded-full border-2 border-white/20" />
+          <div className="absolute inset-0 rounded-full border-2 border-t-white border-r-transparent border-b-transparent border-l-transparent animate-spin" />
         </div>
+        <span className="text-[10px] text-white/80 font-medium tracking-wide">
+          Connecting
+        </span>
+      </div>
+    </div>
       )}
 
       {/* DROP PLACEHOLDER */}

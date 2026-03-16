@@ -11,9 +11,23 @@ export function AppLayout() {
   const noPaddingRoutes = ["/settings", "/live", "/playback"];
   const noSidebarRoutes = ["/playback"];
 
-  const isNoPaddingPage = noPaddingRoutes.some((path) =>
+  const knownRoutes = [
+    "/dashboard",
+    "/live",
+    "/alerts",
+    "/health",
+    "/playback",
+    "/settings",
+  ];
+
+  const isNotFound = !knownRoutes.some((path) =>
     location.pathname.startsWith(path)
   );
+
+  const isNoPaddingPage =
+    noPaddingRoutes.some((path) =>
+      location.pathname.startsWith(path)
+    ) || isNotFound;
 
   const showSidebar = !noSidebarRoutes.some((path) =>
     location.pathname.startsWith(path)
@@ -23,15 +37,11 @@ export function AppLayout() {
     <div
       className={cn(
         "bg-white flex flex-col",
-        isPlayback
-          ? "h-screen overflow-hidden"  
-          : "min-h-screen"              
+        isPlayback ? "h-screen overflow-hidden" : "min-h-screen"
       )}
     >
-      {/* HEADER */}
       <Header />
 
-      {/* BODY */}
       <div
         className={cn(
           "flex flex-1",
@@ -43,15 +53,13 @@ export function AppLayout() {
         <div
           className={cn(
             "flex-1",
-            showSidebar && "ml-[80px]",
+           showSidebar && "md:ml-[80px]",
             isPlayback && "min-h-0 overflow-hidden"
           )}
         >
           <main
             className={cn(
-              isPlayback
-                ? "h-full min-h-0 overflow-hidden"
-                : "",
+              isPlayback ? "h-full min-h-0 overflow-hidden" : "",
               isNoPaddingPage ? "" : "p-2 sm:p-3 lg:p-4"
             )}
           >

@@ -91,7 +91,7 @@ export const usePlaybackStore = create<PlaybackStore>((set, get) => {
 
     slotSeeking: {},
 
-    isSync: true,
+    isSync: false,
 
     isPlaying: false,
 

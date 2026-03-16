@@ -273,9 +273,42 @@ export default function Index() {
   /* =========================================================
     GRID RESIZE
   ========================================================= */
-  useEffect(() => {
-    resizeSlots();
-  }, [layout.rows, layout.cols]);
+useEffect(() => {
+  resizeSlots();
+  const totalSlots = layout.rows * layout.cols;
+  setSegmentsPerSlot(prev => {
+    const cleaned: typeof prev = {};
+    Object.entries(prev).forEach(([slot, seg]) => {
+      if (Number(slot) < totalSlots) cleaned[Number(slot)] = seg;
+    });
+    return cleaned;
+  });
+
+  setRawSegmentsPerSlot(prev => {
+    const cleaned: typeof prev = {};
+    Object.entries(prev).forEach(([slot, seg]) => {
+      if (Number(slot) < totalSlots) cleaned[Number(slot)] = seg;
+    });
+    return cleaned;
+  });
+
+  setSlotErrors(prev => {
+    const cleaned: typeof prev = {};
+    Object.entries(prev).forEach(([slot, err]) => {
+      if (Number(slot) < totalSlots) cleaned[Number(slot)] = err;
+    });
+    return cleaned;
+  });
+
+  setLoadingSlots(prev => {
+    const cleaned = new Set<number>();
+    prev.forEach(slot => {
+      if (slot < totalSlots) cleaned.add(slot);
+    });
+    return cleaned;
+  });
+
+}, [layout.rows, layout.cols]);
 
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">

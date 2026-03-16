@@ -38,7 +38,7 @@ useEffect(() => {
   return (
     <aside
       className={cn(
-        "w-72 bg-white border rounded-xl p-3 flex flex-col h-full",
+        "w-72 bg-white border rounded-xl p-3 flex flex-col",
         !isVisible && "hidden"
       )}
     >
