@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { API_MANISH_URL, API_URLS, getAuthHeaders } from "@/components/Config/api";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,59 +28,136 @@ import {
   EyeOff,
   FolderOpen,
   Database,
-  Globe 
+  Globe
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const storageTypes = [
+  { id: "fixed", label: "Fixed", icon: Database },
   { id: "local-nas", label: "Local NAS", icon: Server },
-  { id: "fixed", label: "Fixed", icon: Database  },
-  { id: "cloud", label: "Cloud", icon: Cloud },
+  // { id: "cloud", label: "Cloud", icon: Cloud },
 ];
 
-export function AddNewStorage() {
+export function AddNewStorage({ onClose }: { onClose?: () => void }) {
   const [showPassword, setShowPassword] = useState(false);
   const [isDefault, setIsDefault] = useState(false);
-  const [selectedDrive, setSelectedDrive] = useState("drive-d");
+  const [selectedDrive, setSelectedDrive] = useState<string | null>(null);
+  const [drives, setDrives] = useState<any[]>([]);
+  const [isLoadingDrives, setIsLoadingDrives] = useState(false);
+  const [storageName, setStorageName] = useState("");
+  const [maxCapacity, setMaxCapacity] = useState("10000");
+  const [isSaving, setIsSaving] = useState(false);
+  const [storageType, setStorageType] = useState("fixed");
+
+  const fetchDrives = useCallback(async () => {
+    setIsLoadingDrives(true);
+    try {
+      const response = await fetch(`${API_MANISH_URL}${API_URLS.get_storage_drives}`, {
+        headers: getAuthHeaders(),
+      });
+      if (response.ok) {
+        const json = await response.json();
+        // Assuming the response structure has a data field based on previous API patterns
+        const driveData = json?.data || json || [];
+        setDrives(driveData);
+        if (driveData.length > 0 && !selectedDrive) {
+          setSelectedDrive(driveData[0].path);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching drives:", error);
+    } finally {
+      setIsLoadingDrives(false);
+    }
+  }, [selectedDrive]);
+
+  useEffect(() => {
+    fetchDrives();
+  }, []);
+
+  const handleSave = async () => {
+    if (storageType === "fixed") {
+      if (!storageName.trim()) {
+        toast.error("Please enter a storage name");
+        return;
+      }
+      if (!selectedDrive) {
+        toast.error("Please select a drive");
+        return;
+      }
+
+      setIsSaving(true);
+      try {
+        const payload = {
+          name: storageName,
+          role: "PRIMARY",
+          basePath: selectedDrive,
+          maxCapacityGb: parseInt(maxCapacity),
+          isDefault: isDefault
+        };
+
+        const response = await fetch(`${API_MANISH_URL}${API_URLS.create_fixed_storage}`, {
+          method: "POST",
+          headers: getAuthHeaders(),
+          body: JSON.stringify(payload),
+        });
+
+        if (response.ok) {
+          toast.success("Storage created successfully");
+          if (onClose) onClose();
+        } else {
+          const errorData = await response.json();
+          toast.error(errorData.message || "Failed to create storage");
+        }
+      } catch (error) {
+        console.error("Error creating storage:", error);
+        toast.error("An error occurred while creating storage");
+      } finally {
+        setIsSaving(false);
+      }
+    } else {
+      toast.info("Save logic for this storage type is not implemented yet");
+    }
+  };
 
   return (
-    <Tabs defaultValue="local-nas" className="w-full">
+    <Tabs defaultValue="local-nas" value={storageType} onValueChange={setStorageType} className="w-full">
       <div className="grid grid-cols-12 lg:grid-cols-12 gap-x-6 gap-y-6">
-          {/* LEFT COLUMN */}
-          <div className="col-span-12 lg:col-span-5 space-y-5">
-              <div className="space-y-5">
+        {/* LEFT COLUMN */}
+        <div className="col-span-12 lg:col-span-5 space-y-5">
+          <div className="space-y-5">
             {/* Storage Type */}
             <div className="space-y-2">
               <Label className="font-roboto font-medium">Storage type</Label>
               <TabsList className="items-center justify-center rounded-md gap-3 text-muted-foreground grid grid-cols-3 w-full h-auto  bg-white">
-                  {storageTypes.map((type) => {
-                    const Icon = type.icon;
-                    return (
-                      <TabsTrigger
-                            key={type.id}
-                            value={type.id}
-                            className={cn(
-                              "flex flex-col items-center gap-2 rounded-md border py-5 transition-all",
-                              "text-black",
-                              "data-[state=active]:border-primary",
-                              "data-[state=active]:bg-white",
-                              "data-[state=active]:text-primary"
-                            )}
-                          >
-                            <Icon
-                              className={cn(
-                                "h-5 w-5 transition-colors",
-                                "data-[state=active]:text-primary"
-                              )}
-                                strokeWidth={1.25}
-                            />
+                {storageTypes.map((type) => {
+                  const Icon = type.icon;
+                  return (
+                    <TabsTrigger
+                      key={type.id}
+                      value={type.id}
+                      className={cn(
+                        "flex flex-col items-center gap-2 rounded-md border py-5 transition-all",
+                        "text-black",
+                        "data-[state=active]:border-primary",
+                        "data-[state=active]:bg-white",
+                        "data-[state=active]:text-primary"
+                      )}
+                    >
+                      <Icon
+                        className={cn(
+                          "h-5 w-5 transition-colors",
+                          "data-[state=active]:text-primary"
+                        )}
+                        strokeWidth={1.25}
+                      />
 
-                            <span className="text-xs font-roboto font-medium">
-                              {type.label}
-                            </span>
-                          </TabsTrigger>
-                    );
-                  })}
+                      <span className="text-xs font-roboto font-medium">
+                        {type.label}
+                      </span>
+                    </TabsTrigger>
+                  );
+                })}
               </TabsList>
             </div>
 
@@ -93,7 +172,12 @@ export function AddNewStorage() {
                   <Switch checked={isDefault} onCheckedChange={setIsDefault} />
                 </div>
               </div>
-              <Input className="text-muted-foreground" placeholder="e.g. Building A - Main Archive" />
+              <Input
+                className="text-muted-foreground"
+                placeholder="e.g. Building A - Main Archive"
+                value={storageName}
+                onChange={(e) => setStorageName(e.target.value)}
+              />
             </div>
 
             {/* Description */}
@@ -105,106 +189,98 @@ export function AddNewStorage() {
             {/* Capacity */}
             <div className="space-y-2">
               <Label className="font-roboto font-medium">Max Capacity (GB)</Label>
-              <Input  type="number" defaultValue="10000" />
+              <Input
+                type="number"
+                value={maxCapacity}
+                onChange={(e) => setMaxCapacity(e.target.value)}
+              />
               <p className="font-roboto font-medium text-xs text-muted-foreground">
                 Approx 9.8 TB usable space
               </p>
             </div>
-              </div>
           </div>
-          {/* RIGHT COLUMN (Tabs Content) */}
-         <div className="col-span-12 lg:col-span-7">
-              <TabsContent value="local-nas" className="space-y-5 mt-0">
-                <div className="space-y-2">
-                  <Label className="font-roboto font-medium text-sm">Network Path</Label>
-                  <div className="relative">
-                    <FolderOpen className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input className="pl-9" defaultValue="/" />
-                  </div>
-                </div>
+        </div>
+        {/* RIGHT COLUMN (Tabs Content) */}
+        <div className="col-span-12 lg:col-span-7">
+          <TabsContent value="local-nas" className="space-y-5 mt-0">
+            <div className="space-y-2">
+              <Label className="font-roboto font-medium text-sm">Network Path</Label>
+              <div className="relative">
+                <FolderOpen className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input className="pl-9" defaultValue="/" />
+              </div>
+            </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                      <Label className="font-roboto font-medium text-sm">IP Address</Label>
-                      <Input defaultValue="192.168.1.100" />
-                  </div>
-                  <div className="space-y-1">
-                    <Label  className="font-roboto font-medium text-sm">Protocol</Label>
-                    <Select defaultValue="smb">
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="smb">SMB(windows Share)</SelectItem>
-                        <SelectItem value="nfs">NFS</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label className="font-roboto font-medium text-sm">IP Address</Label>
+                <Input defaultValue="192.168.1.100" />
+              </div>
+              <div className="space-y-1">
+                <Label className="font-roboto font-medium text-sm">Protocol</Label>
+                <Select defaultValue="smb">
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="smb">SMB(windows Share)</SelectItem>
+                    <SelectItem value="nfs">NFS</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                    <Label className="font-roboto text-sm font-medium text-foreground">Username</Label>
-                    <Input defaultValue="Admin" />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="font-roboto text-sm font-medium text-foreground">Password</Label>
-                    <div className="relative">
-                      <Input type={showPassword ? "text" : "password"} />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
-                    </div>
-                  </div>
-               </div>
-
-               <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-sm font-roboto   font-medium text-foreground">
-                    <Wifi className="h-4 w-4" />
-                    Connectivity Test
-                  </div>
-                  <Button variant="link" size="sm" className="text-primary p-0 h-auto">
-                    Run Test
-                  </Button>
-                </div>
-                <div className="rounded-md bg-slate-200 border h-[81px] flex items-center justify-center text-center">
-                    <p className="text-sm text-slate-600">Configure settings and run a test to verify connection.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label className="font-roboto text-sm font-medium text-foreground">Username</Label>
+                <Input defaultValue="Admin" />
+              </div>
+              <div className="space-y-1">
+                <Label className="font-roboto text-sm font-medium text-foreground">Password</Label>
+                <div className="relative">
+                  <Input type={showPassword ? "text" : "password"} />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
                 </div>
               </div>
-              </TabsContent>
+            </div>
 
-              {/* FIXED */}
-              <TabsContent value="fixed" className="space-y-3">
-                <Label>Available Drives</Label>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm font-roboto   font-medium text-foreground">
+                  <Wifi className="h-4 w-4" />
+                  Connectivity Test
+                </div>
+                <Button variant="link" size="sm" className="text-primary p-0 h-auto">
+                  Run Test
+                </Button>
+              </div>
+              <div className="rounded-md bg-slate-200 border h-[81px] flex items-center justify-center text-center">
+                <p className="text-sm text-slate-600">Configure settings and run a test to verify connection.</p>
+              </div>
+            </div>
+          </TabsContent>
 
-                {[
-                  {
-                    id: "drive-d",
-                    name: "Drive D : Data Partition",
-                    info: "1.8 TB available of 2.0 TB",
-                  },
-                  {
-                    id: "drive-e",
-                    name: "Drive E :  Archive Drive",
-                    info: "3.9 TB available of 4.0 TB",
-                  },
-                   {
-                    id: "drive-f",
-                    name: "Drive F :  External SSD",
-                    info: "240 GB available of 1.0 TB",
-                  },
-                ].map((drive) => (
+          <TabsContent value="fixed" className="space-y-3">
+            <Label>Available Drives</Label>
+
+            {isLoadingDrives ? (
+              <div className="py-10 text-center text-sm text-muted-foreground">Loading drives...</div>
+            ) : drives.length === 0 ? (
+              <div className="py-10 text-center text-sm text-muted-foreground">No drives found.</div>
+            ) : (
+              drives.map((drive) => (
                 <button
-                  key={drive.id}
-                  onClick={() => setSelectedDrive(drive.id)}
+                  key={drive.path}
+                  onClick={() => setSelectedDrive(drive.path)}
                   className={cn(
                     "w-full flex items-center gap-4 px-4 py-3 rounded-xl border transition-all text-left",
-                    selectedDrive === drive.id
+                    selectedDrive === drive.path
                       ? "border-blue-400"
                       : "border-border hover:border-primary/40"
                   )}
@@ -212,69 +288,69 @@ export function AddNewStorage() {
                   <div
                     className={cn(
                       "w-8 h-8 flex items-center justify-center rounded-sm shrink-0",
-                      selectedDrive === drive.id
+                      selectedDrive === drive.path
                         ? "bg-primary/5 text-primary"
                         : "bg-muted text-muted-foreground"
                     )}
                   >
-                     <HardDrive className="h-4 w-4" strokeWidth={2} />
+                    <HardDrive className="h-4 w-4" strokeWidth={2} />
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <p className="text-sm  font-roboto font-medium text-foreground">
-                      {drive.name}
+                      Drive {drive.path}
                     </p>
                     <p className="text-xs font-roboto  font-normal  text-neutral-500">
-                      {drive.info}
+                      {drive.freeSpace} available of {drive.totalSpace}
                     </p>
                   </div>
 
                   <div
                     className={cn(
                       "h-4 w-4 rounded-full border shrink-0 flex items-center justify-center",
-                      selectedDrive === drive.id
+                      selectedDrive === drive.path
                         ? "border-primary"
                         : "border-muted-foreground/30"
                     )}
                   >
-                    {selectedDrive === drive.id && (
+                    {selectedDrive === drive.path && (
                       <div className="h-2 w-2 rounded-full bg-primary" />
                     )}
                   </div>
                 </button>
+              ))
+            )}
+          </TabsContent>
 
-                ))}
-              </TabsContent>
-
-              <TabsContent value="cloud" className="space-y-5">
-                  <div className="space-y-5">
-                {/* Provider + Region */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-sm font-roboto font-medium text-foreground">Provider</Label>
-                    <Select defaultValue="aws">
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="aws">AWS</SelectItem>
-                        <SelectItem value="azure">Azure</SelectItem>
-                        <SelectItem value="gcs">GCS</SelectItem>
-                        <SelectItem value="minio">MinIO</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-sm font-roboto font-medium text-foreground">Region</Label>
-                    <Input defaultValue="us-east-1" />
-                  </div>
+          <TabsContent value="cloud" className="space-y-5">
+            <div className="space-y-5">
+              {/* Provider + Region */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-sm font-roboto font-medium text-foreground">Provider</Label>
+                  <Select defaultValue="aws">
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="aws">AWS</SelectItem>
+                      <SelectItem value="azure">Azure</SelectItem>
+                      <SelectItem value="gcs">GCS</SelectItem>
+                      <SelectItem value="minio">MinIO</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-roboto font-medium text-foreground">Region</Label>
+                  <Input defaultValue="us-east-1" />
+                </div>
               </div>
 
               {/* Bucket Name */}
               <div className="space-y-2">
                 <Label className="text-sm font-roboto font-medium text-foreground">Bucket Name</Label>
                 <div className="relative">
-                  <Globe  className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input className="pl-9" defaultValue="VMS-recordings-archive-01" />
                 </div>
               </div>
@@ -311,13 +387,21 @@ export function AddNewStorage() {
                     Run Test
                   </Button>
                 </div>
-                 <div className="rounded-md bg-slate-200 border h-[81px] flex items-center justify-center text-center">
-                    <p className="text-sm text-slate-600">Configure settings and run a test to verify connection.</p>
+                <div className="rounded-md bg-slate-200 border h-[81px] flex items-center justify-center text-center">
+                  <p className="text-sm text-slate-600">Configure settings and run a test to verify connection.</p>
                 </div>
               </div>
             </div>
-              </TabsContent>
-          </div>
+          </TabsContent>
+        </div>
+      </div>
+      <div className="flex justify-end gap-3 mt-8 pt-6 border-t">
+        <Button variant="outline" onClick={onClose} disabled={isSaving}>
+          Cancel
+        </Button>
+        <Button onClick={handleSave} disabled={isSaving}>
+          {isSaving ? "Saving..." : "Save Storage"}
+        </Button>
       </div>
     </Tabs>
   );

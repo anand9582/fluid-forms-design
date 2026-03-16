@@ -11,9 +11,9 @@ export const StorageTabs = [
     label: "Retention Policies",
     icon: <PlusCircle size={16} />,
   },
-  {
-    id: "FailoverRedundancy",
-    label: "Failover and Redundancy",
-    icon: <Upload size={16} />,
-  },
+  // {
+  //   id: "FailoverRedundancy",
+  //   label: "Failover and Redundancy",
+  //   icon: <Upload size={16} />,
+  // },
 ];

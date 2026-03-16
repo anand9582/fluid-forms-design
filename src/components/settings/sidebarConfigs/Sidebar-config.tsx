@@ -46,22 +46,22 @@ export const sidebarItems: SidebarItem[] = [
     icon: <HardDrive size={18} />,
     route: "/settings/storage",
   },
-  {
-    id: "api-sdk",
-    label: "API & SDK",
-    icon: <Apisdk size={18} />,
-    route: "/settings/api",
-  },
-  {
-    id: "video-analytics",
-    label: "Video Analytics",
-    icon: <BarChart3 size={18} />,
-    route: "/settings/analytics",
-  },
-  {
-    id: "licensing",
-    label: "Licensing",
-    icon: <Key size={18} />,
-    route: "/settings/licensing",
-  },
+  // {
+  //   id: "api-sdk",
+  //   label: "API & SDK",
+  //   icon: <Apisdk size={18} />,
+  //   route: "/settings/api",
+  // },
+  // {
+  //   id: "video-analytics",
+  //   label: "Video Analytics",
+  //   icon: <BarChart3 size={18} />,
+  //   route: "/settings/analytics",
+  // },
+  // {
+  //   id: "licensing",
+  //   label: "Licensing",
+  //   icon: <Key size={18} />,
+  //   route: "/settings/licensing",
+  // },
 ];

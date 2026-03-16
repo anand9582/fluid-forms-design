@@ -16,7 +16,7 @@ export function StorageListView({
 }) {
   const [units, setUnits] = useState<StorageUnit[]>([]);
   const [filter, setFilter] = useState<"primary" | "secondary">("primary");
- const [newStorageOpen, setNewStorageOpen] = useState(false);
+  const [newStorageOpen, setNewStorageOpen] = useState(false);
 
   useEffect(() => {
     getStorageUnits().then(setUnits);
@@ -32,38 +32,38 @@ export function StorageListView({
       {/* ===== Header + Filters + Add Button ===== */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-            <h3 className="text-base sm:text-lg font-semibold text-black">
-              Connected Storage Units
-            </h3>
-            <span className="text-xs bg-gray-200 font-roboto font-medium text-neutral-700 px-3 py-1 rounded-full">
-                {filteredUnits.length}
-                 Devices Total
-            </span>
+          <h3 className="text-base sm:text-lg font-semibold text-black">
+            Connected Storage Units
+          </h3>
+          <span className="text-xs bg-gray-200 font-roboto font-medium text-neutral-700 px-3 py-1 rounded-full">
+            {filteredUnits.length}
+            Devices Total
+          </span>
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
           <div className="flex rounded-lg overflow-hidden bg-gray-100 p-1">
-              <button
-                onClick={() => setFilter("primary")}
-                className={cn(
-                  "px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-roboto font-medium rounded-md transition-all",
-                  filter === "primary"
-                    ? "bg-white text-primary shadow-md"
-                    : "bg-transparent  text-gray-500 hover:text-gray-700"
-                )}
-              >
+            <button
+              onClick={() => setFilter("primary")}
+              className={cn(
+                "px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-roboto font-medium rounded-md transition-all",
+                filter === "primary"
+                  ? "bg-white text-primary shadow-md"
+                  : "bg-transparent  text-gray-500 hover:text-gray-700"
+              )}
+            >
               Primary
             </button>
 
             <button
-                onClick={() => setFilter("secondary")}
-                className={cn(
-                  "px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-roboto font-medium rounded-md transition-all",
-                  filter === "secondary"
-                    ? "bg-white text-primary shadow-md"
-                    : "bg-transparent text-black hover:text-gray-700"
-                )}
-              >
+              onClick={() => setFilter("secondary")}
+              className={cn(
+                "px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-roboto font-medium rounded-md transition-all",
+                filter === "secondary"
+                  ? "bg-white text-primary shadow-md"
+                  : "bg-transparent text-black hover:text-gray-700"
+              )}
+            >
               Secondary
             </button>
           </div>
@@ -73,7 +73,7 @@ export function StorageListView({
           <Button
             size="sm"
             className="gap-1.5 sm:gap-2 text-xs sm:text-sm"
-           onClick={() => setNewStorageOpen(true)}
+            onClick={() => setNewStorageOpen(true)}
           >
             <Plus className="h-4 w-4" />
             <span className="hidden sm:inline">Add storage unit</span>
@@ -84,31 +84,36 @@ export function StorageListView({
 
       {/* ===== Storage Cards ===== */}
       <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
-         {filteredUnits.map((unit, index) => (
-            <StorageUnitCard
-              key={unit.id}
-              unit={unit}
-              index={index}  
-              onManage={onManage}
-            />
-          ))}
+        {filteredUnits.map((unit, index) => (
+          <StorageUnitCard
+            key={unit.id}
+            unit={unit}
+            index={index}
+            onManage={onManage}
+          />
+        ))}
       </div>
-        <DynamicFilterDrawer
-            open={newStorageOpen}
-            onOpenChange={setNewStorageOpen}
-            title="Add New Storage"
-            description="Configure storage endpoints for video retention."
-            applyLabel="Save Storage"
-            width="xl"
-            onApply={() => {
-              console.log("Save Storage clicked");
-              setNewStorageOpen(false);
-            }}
-          >
-           <AddNewStorage />
+      <DynamicFilterDrawer
+        open={newStorageOpen}
+        onOpenChange={setNewStorageOpen}
+        title="Add New Storage"
+        description="Configure storage endpoints for video retention."
+        applyLabel="Save Storage"
+        width="xl"
+        onApply={() => {
+          console.log("Save Storage clicked");
+          setNewStorageOpen(false);
+        }}
+      >
+        <AddNewStorage
+          onClose={() => {
+            setNewStorageOpen(false);
+            getStorageUnits().then(setUnits);
+          }}
+        />
       </DynamicFilterDrawer>
 
-     
+
     </div>
   );
 }
