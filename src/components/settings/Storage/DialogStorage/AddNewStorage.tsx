@@ -34,11 +34,11 @@ import { cn } from "@/lib/utils";
 
 const storageTypes = [
   { id: "fixed", label: "Fixed", icon: Database },
-  { id: "local-nas", label: "Local NAS", icon: Server },
+  { id: "local-nas", label: "NAS", icon: Server },
   // { id: "cloud", label: "Cloud", icon: Cloud },
 ];
 
-export function AddNewStorage({ onClose }: { onClose?: () => void }) {
+export function AddNewStorage({ onClose, role = "PRIMARY", editData }: { onClose?: () => void, role?: string, editData?: any }) {
   const [showPassword, setShowPassword] = useState(false);
   const [isDefault, setIsDefault] = useState(false);
   const [selectedDrive, setSelectedDrive] = useState<string | null>(null);
@@ -48,6 +48,13 @@ export function AddNewStorage({ onClose }: { onClose?: () => void }) {
   const [maxCapacity, setMaxCapacity] = useState("10000");
   const [isSaving, setIsSaving] = useState(false);
   const [storageType, setStorageType] = useState("fixed");
+
+  // NAS State
+  const [nasShareName, setNasShareName] = useState("");
+  const [nasIpAddress, setNasIpAddress] = useState("");
+  const [nasDriveLetter, setNasDriveLetter] = useState("A");
+  const [nasUsername, setNasUsername] = useState("");
+  const [nasPassword, setNasPassword] = useState("");
 
   const fetchDrives = useCallback(async () => {
     setIsLoadingDrives(true);
@@ -73,7 +80,28 @@ export function AddNewStorage({ onClose }: { onClose?: () => void }) {
 
   useEffect(() => {
     fetchDrives();
-  }, []);
+  }, [fetchDrives]);
+
+  useEffect(() => {
+    if (editData) {
+      setStorageName(editData.name || "");
+      setIsDefault(!!editData.isDefault);
+      setMaxCapacity(editData.maxCapacityGb ? String(editData.maxCapacityGb) : "10000");
+
+      const typeStr = editData.type === "FIXED" ? "fixed" : "local-nas";
+      setStorageType(typeStr);
+
+      if (typeStr === "fixed") {
+        setSelectedDrive(editData.basePath || "");
+      } else if (typeStr === "local-nas") {
+        setNasIpAddress(editData.ip || "");
+        setNasShareName(editData.shareName || "");
+        setNasDriveLetter(editData.driveLetter ? editData.driveLetter.replace(":", "") : "A");
+        setNasUsername(editData.username || "");
+        setNasPassword(editData.password || "");
+      }
+    }
+  }, [editData]);
 
   const handleSave = async () => {
     if (storageType === "fixed") {
@@ -90,20 +118,26 @@ export function AddNewStorage({ onClose }: { onClose?: () => void }) {
       try {
         const payload = {
           name: storageName,
-          role: "PRIMARY",
+          role: role,
           basePath: selectedDrive,
           maxCapacityGb: parseInt(maxCapacity),
           isDefault: isDefault
         };
 
-        const response = await fetch(`${API_MANISH_URL}${API_URLS.create_fixed_storage}`, {
-          method: "POST",
+        const url = editData
+          ? `${API_MANISH_URL}${role === "PRIMARY" ? API_URLS.update_primary_storage_by_id : API_URLS.update_secondary_storage_by_id}/${editData.id}`
+          : `${API_MANISH_URL}${API_URLS.create_fixed_storage}`;
+
+        const method = editData ? "PUT" : "POST";
+
+        const response = await fetch(url, {
+          method: method,
           headers: getAuthHeaders(),
           body: JSON.stringify(payload),
         });
 
         if (response.ok) {
-          toast.success("Storage created successfully");
+          toast.success(editData ? "Storage updated successfully" : "Storage created successfully");
           if (onClose) onClose();
         } else {
           const errorData = await response.json();
@@ -115,8 +149,61 @@ export function AddNewStorage({ onClose }: { onClose?: () => void }) {
       } finally {
         setIsSaving(false);
       }
-    } else {
-      toast.info("Save logic for this storage type is not implemented yet");
+    } else if (storageType === "local-nas") {
+      if (!storageName.trim()) {
+        toast.error("Please enter a storage name");
+        return;
+      }
+      if (!nasIpAddress.trim() || !nasShareName.trim() || !nasUsername.trim() || !nasPassword.trim()) {
+        toast.error("Please fill all required NAS fields");
+        return;
+      }
+
+      setIsSaving(true);
+      try {
+        const payload = {
+          name: storageName,
+          ip: nasIpAddress,
+          role: role,
+          shareName: nasShareName,
+          driveLetter: `${nasDriveLetter}:`,
+          username: nasUsername,
+          password: nasPassword,
+          maxCapacityGb: parseInt(maxCapacity) || 0,
+          isDefault: isDefault
+        };
+
+        const url = editData
+          ? `${API_MANISH_URL}${role === "PRIMARY" ? API_URLS.update_primary_storage_by_id : API_URLS.update_secondary_storage_by_id}/${editData.id}`
+          : `${API_MANISH_URL}${API_URLS.create_nas_storage}`;
+
+        const method = editData ? "PUT" : "POST";
+
+        const response = await fetch(url, {
+          method: method,
+          headers: getAuthHeaders(),
+          body: JSON.stringify(payload),
+        });
+
+        if (response.ok) {
+          toast.success(editData ? "NAS Storage updated successfully" : "NAS Storage created successfully");
+          if (onClose) onClose();
+        } else {
+          let errorMessage = "Failed to create NAS storage";
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.message || errorMessage;
+          } catch (e) {
+            console.error(e);
+          }
+          toast.error(errorMessage);
+        }
+      } catch (error) {
+        console.error("Error creating NAS storage:", error);
+        toast.error("An error occurred while creating NAS storage");
+      } finally {
+        setIsSaving(false);
+      }
     }
   };
 
@@ -173,7 +260,7 @@ export function AddNewStorage({ onClose }: { onClose?: () => void }) {
                 </div>
               </div>
               <Input
-                className="text-muted-foreground"
+                className=""
                 placeholder="e.g. Building A - Main Archive"
                 value={storageName}
                 onChange={(e) => setStorageName(e.target.value)}
@@ -204,27 +291,51 @@ export function AddNewStorage({ onClose }: { onClose?: () => void }) {
         <div className="col-span-12 lg:col-span-7">
           <TabsContent value="local-nas" className="space-y-5 mt-0">
             <div className="space-y-2">
-              <Label className="font-roboto font-medium text-sm">Network Path</Label>
+              <Label className="font-roboto font-medium text-sm">Share Name</Label>
               <div className="relative">
                 <FolderOpen className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input className="pl-9" defaultValue="/" />
+                <Input className="pl-9" value={nasShareName} onChange={(e) => setNasShareName(e.target.value)} placeholder="e.g. TestNAS" />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <Label className="font-roboto font-medium text-sm">IP Address</Label>
-                <Input defaultValue="192.168.1.100" />
+                <Input value={nasIpAddress} onChange={(e) => setNasIpAddress(e.target.value)} placeholder="192.168.1.100" />
               </div>
               <div className="space-y-1">
-                <Label className="font-roboto font-medium text-sm">Protocol</Label>
-                <Select defaultValue="smb">
+                <Label className="font-roboto font-medium text-sm">Drive</Label>
+                <Select value={nasDriveLetter} onValueChange={setNasDriveLetter}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="smb">SMB(windows Share)</SelectItem>
-                    <SelectItem value="nfs">NFS</SelectItem>
+                    <SelectItem value="A">A</SelectItem>
+                    <SelectItem value="B">B</SelectItem>
+                    <SelectItem value="C">C</SelectItem>
+                    <SelectItem value="D">D</SelectItem>
+                    <SelectItem value="E">E</SelectItem>
+                    <SelectItem value="F">F</SelectItem>
+                    <SelectItem value="G">G</SelectItem>
+                    <SelectItem value="H">H</SelectItem>
+                    <SelectItem value="I">I</SelectItem>
+                    <SelectItem value="J">J</SelectItem>
+                    <SelectItem value="K">K</SelectItem>
+                    <SelectItem value="L">L</SelectItem>
+                    <SelectItem value="M">M</SelectItem>
+                    <SelectItem value="N">N</SelectItem>
+                    <SelectItem value="O">O</SelectItem>
+                    <SelectItem value="P">P</SelectItem>
+                    <SelectItem value="Q">Q</SelectItem>
+                    <SelectItem value="R">R</SelectItem>
+                    <SelectItem value="S">S</SelectItem>
+                    <SelectItem value="T">T</SelectItem>
+                    <SelectItem value="U">U</SelectItem>
+                    <SelectItem value="V">V</SelectItem>
+                    <SelectItem value="W">W</SelectItem>
+                    <SelectItem value="X">X</SelectItem>
+                    <SelectItem value="Y">Y</SelectItem>
+                    <SelectItem value="Z">Z</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -233,12 +344,12 @@ export function AddNewStorage({ onClose }: { onClose?: () => void }) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
                 <Label className="font-roboto text-sm font-medium text-foreground">Username</Label>
-                <Input defaultValue="Admin" />
+                <Input value={nasUsername} onChange={(e) => setNasUsername(e.target.value)} placeholder="Admin" />
               </div>
               <div className="space-y-1">
                 <Label className="font-roboto text-sm font-medium text-foreground">Password</Label>
                 <div className="relative">
-                  <Input type={showPassword ? "text" : "password"} />
+                  <Input type={showPassword ? "text" : "password"} value={nasPassword} onChange={(e) => setNasPassword(e.target.value)} />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
@@ -250,7 +361,7 @@ export function AddNewStorage({ onClose }: { onClose?: () => void }) {
               </div>
             </div>
 
-            <div className="space-y-3">
+            {/* <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm font-roboto   font-medium text-foreground">
                   <Wifi className="h-4 w-4" />
@@ -263,7 +374,7 @@ export function AddNewStorage({ onClose }: { onClose?: () => void }) {
               <div className="rounded-md bg-slate-200 border h-[81px] flex items-center justify-center text-center">
                 <p className="text-sm text-slate-600">Configure settings and run a test to verify connection.</p>
               </div>
-            </div>
+            </div> */}
           </TabsContent>
 
           <TabsContent value="fixed" className="space-y-3">

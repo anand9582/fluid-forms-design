@@ -13,21 +13,21 @@ const cameras = [
 export function LiveMonitor() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const { play,handleSnapshot} = useGridController();
+  const { play, handleSnapshot } = useGridController();
 
-useEffect(() => {
-  const currentCamera = cameras[currentIndex];
-  if (!currentCamera) return;
+  useEffect(() => {
+    const currentCamera = cameras[currentIndex];
+    if (!currentCamera) return;
 
-  if (videoRef.current) {
-    try {
-      play(currentCamera.id, videoRef.current);
-      console.log("✅ play() called for camera:", currentCamera.id);
-    } catch (err) {
-      console.error("Video play failed:", err);
+    if (videoRef.current) {
+      try {
+        play(currentCamera.id, videoRef.current);
+        console.log("✅ play() called for camera:", currentCamera.id);
+      } catch (err) {
+        console.error("Video play failed:", err);
+      }
     }
-  }
-}, [currentIndex, play]);
+  }, [currentIndex, play]);
 
   const handlePrev = () => setCurrentIndex((prev) => (prev === 0 ? cameras.length - 1 : prev - 1));
   const handleNext = () => setCurrentIndex((prev) => (prev === cameras.length - 1 ? 0 : prev + 1));

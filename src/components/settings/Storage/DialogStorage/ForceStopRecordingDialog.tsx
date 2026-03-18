@@ -16,17 +16,17 @@ export function ForceStopRecordingDialog({
   deviceName,
   onConfirm,
 
- fullWidthActions = false,
+  fullWidthActions = false,
 }: Props) {
   return (
     <ConfirmDialog
       open={open}
       onConfirm={onConfirm}
-      confirmLabel="Stop Recording"  
-       fullWidthActions={fullWidthActions} 
+      confirmLabel="Stop Recording"
+      fullWidthActions={fullWidthActions}
       onOpenChange={onOpenChange}
-     confirmVariant="destructive"
-      size="md"  
+      confirmVariant="destructive"
+      size="md"
     >
       <div className="flex flex-col items-center text-center px-6 ">
         {/* ICON */}

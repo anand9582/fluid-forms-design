@@ -36,7 +36,8 @@ export async function getStorageUnits(): Promise<StorageUnit[]> {
         hardDiscs: item.type === "FIXED" ? 1 : 4, // Placeholder for hardDiscs count
         used: used,
         total: total,
-        category: (item.role === "PRIMARY" || item.isDefault) ? "primary" : "secondary"
+        category: (item.role === "PRIMARY" || item.isDefault) ? "primary" : "secondary",
+        rawData: item
       };
     });
   } catch (error) {

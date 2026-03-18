@@ -24,7 +24,15 @@ export const API_URLS = {
   delete_view_by_id: "/deleteViewById",
   get_storage_drives: "/storage/drives",
   create_fixed_storage: "/storage/create-fixed-storage",
+  create_nas_storage: "/storage/create-nas-storage",
   get_all_storages: "/storage/get-all-storages",
+  get_storage_by_id: "/storage/get-storage-by-storage-id",
+  delete_storage_by_id: "/storage/delete-storage-by-storage-id",
+  update_primary_storage_by_id: "/storage/update-primary-storage-by-external-device-id",
+  update_secondary_storage_by_id: "/storage/update-secondary-storage-by-external-device-id",
+  get_devices_by_storage_id: "/storage/get-devices-by-storage-id",
+  stop_recording: "/storage/stop-recording",
+  move_devices: "/storage/move-devices",
 };
 
 export const getAuthHeaders = () => {
