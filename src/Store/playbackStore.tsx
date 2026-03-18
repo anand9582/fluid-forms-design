@@ -5,7 +5,7 @@ export interface Segment {
   endTime: Date;
 }
 
-interface PlaybackStore {
+export interface PlaybackStore {
   globalTime: Date;
   cameraTimes: Record<number, Date>;
   slotSeeking: Record<number, boolean>;
@@ -14,6 +14,9 @@ interface PlaybackStore {
   isPlaying: boolean;
   isSeeking: boolean;
   playbackSpeed: number;
+
+  lastSeekTime: Date | null;
+  setLastSeekTime: (date: Date) => void;
 
   play: () => void;
   pause: () => void;
@@ -32,10 +35,7 @@ interface PlaybackStore {
 type TimerMap = Record<number, ReturnType<typeof setTimeout>>;
 
 export const usePlaybackStore = create<PlaybackStore>((set, get) => {
-
   const slotTimers: TimerMap = {};
-
-  /* ---------------- TIMER HELPERS ---------------- */
 
   const clearSlotTimer = (slotIndex: number) => {
     if (slotTimers[slotIndex]) {
@@ -45,64 +45,52 @@ export const usePlaybackStore = create<PlaybackStore>((set, get) => {
   };
 
   const startSlotSeeking = (slotIndex: number) => {
-
     clearSlotTimer(slotIndex);
 
     set((state) => ({
       slotSeeking: {
         ...state.slotSeeking,
-        [slotIndex]: true
-      }
+        [slotIndex]: true,
+      },
     }));
 
-    /* fallback safety timer (3s) */
-
     slotTimers[slotIndex] = setTimeout(() => {
-
       set((state) => ({
         slotSeeking: {
           ...state.slotSeeking,
-          [slotIndex]: false
-        }
+          [slotIndex]: false,
+        },
       }));
 
       delete slotTimers[slotIndex];
-
     }, 3000);
   };
 
   const stopSlotSeeking = (slotIndex: number) => {
-
     clearSlotTimer(slotIndex);
 
     set((state) => ({
       slotSeeking: {
         ...state.slotSeeking,
-        [slotIndex]: false
-      }
+        [slotIndex]: false,
+      },
     }));
   };
 
   return {
-
     globalTime: new Date(),
-
     cameraTimes: {},
-
     slotSeeking: {},
 
     isSync: false,
-
     isPlaying: false,
-
     isSeeking: false,
-
     playbackSpeed: 1,
 
-    /* ---------------- PLAYBACK ---------------- */
+    lastSeekTime: null,
+    setLastSeekTime: (date) => set({ lastSeekTime: date }),
 
     play: () => set({ isPlaying: true }),
-
     pause: () => set({ isPlaying: false }),
 
     stop: () =>
@@ -111,49 +99,31 @@ export const usePlaybackStore = create<PlaybackStore>((set, get) => {
         playbackSpeed: 1,
         globalTime: new Date(),
         cameraTimes: {},
-        slotSeeking: {}
+        slotSeeking: {},
+        lastSeekTime: null,
       }),
 
-    /* ---------------- SPEED ---------------- */
-
     setSpeed: (speed) => {
-
       if (speed < 0) {
-
-        set({
-          playbackSpeed: Math.max(speed, -32)
-        });
-
+        set({ playbackSpeed: Math.max(speed, -32) });
       } else {
-
         set({
-          playbackSpeed: Math.min(
-            Math.max(speed, 0.25),
-            36
-          )
+          playbackSpeed: Math.min(Math.max(speed, 0.25), 36),
         });
-
       }
-
     },
 
-    /* ---------------- SYNC MODE ---------------- */
-
     setSynced: (sync) => {
-
       const { globalTime, cameraTimes } = get();
 
       if (sync) {
-
         set({
           isSync: true,
           cameraTimes: {},
           globalTime: new Date(globalTime),
-          slotSeeking: {}
+          slotSeeking: {},
         });
-
       } else {
-
         const newTimes: Record<number, Date> = {};
 
         Object.keys(cameraTimes).forEach((slot) => {
@@ -162,128 +132,90 @@ export const usePlaybackStore = create<PlaybackStore>((set, get) => {
 
         set({
           isSync: false,
-          cameraTimes: newTimes
+          cameraTimes: newTimes,
         });
-
       }
-
     },
 
-    /* ---------------- SEEK ---------------- */
-
+    // 🔥 MAIN FIXED FUNCTION
     seekTo: (date, slotIndex) => {
-
       const { isSync } = get();
 
-      if (isSync) {
+      set({ lastSeekTime: date });
 
+      if (isSync) {
+        // SYNC mode: sab slots ek saath
         set({
           isSeeking: true,
-          slotSeeking: {}
+          slotSeeking: {}, // per-slot flags clear
+          globalTime: date,
         });
 
-        set({
-          globalTime: date
-        });
+        setTimeout(() => set({ isSeeking: false }), 80);
+      } else if (slotIndex !== undefined) {
+        // INDEPENDENT mode: sirf selected slot
+        startSlotSeeking(slotIndex); // per-slot seeking flag
 
-        setTimeout(() => {
-          set({ isSeeking: false });
-        }, 80);
-
-      } else {
-
-        if (slotIndex !== undefined) {
-
-          startSlotSeeking(slotIndex);
-
-          set((state) => ({
-            cameraTimes: {
-              ...state.cameraTimes,
-              [slotIndex]: date
-            }
-          }));
-
-        }
-
+        set((state) => ({
+          globalTime: date,
+          cameraTimes: {
+            ...state.cameraTimes,
+            [slotIndex]: date,
+          },
+        }));
       }
-
     },
 
     seekBySeconds: (sec, slotIndex) => {
-
       const { isSync, globalTime, cameraTimes } = get();
 
       if (isSync) {
+        const newDate = new Date(globalTime.getTime() + sec * 1000);
 
         set({
-          globalTime: new Date(
-            globalTime.getTime() + sec * 1000
-          )
+          globalTime: newDate,
+          lastSeekTime: newDate,
         });
-
       } else if (slotIndex !== undefined) {
+        const now = cameraTimes[slotIndex] || globalTime;
+        const newDate = new Date(now.getTime() + sec * 1000);
 
-        const now =
-          cameraTimes[slotIndex] || globalTime;
-
-        startSlotSeeking(slotIndex);
+        startSlotSeeking(slotIndex); // sirf selected slot ka loading
 
         set((state) => ({
+          globalTime: newDate,
           cameraTimes: {
             ...state.cameraTimes,
-            [slotIndex]: new Date(
-              now.getTime() + sec * 1000
-            )
-          }
+            [slotIndex]: newDate,
+          },
+          lastSeekTime: newDate,
         }));
-
       }
-
     },
 
     seekToHour: (absHour, slotIndex) => {
-
       const base = get().globalTime;
 
       const date = new Date(base);
-
       date.setHours(Math.floor(absHour));
-
       date.setMinutes(Math.floor((absHour % 1) * 60));
-
       date.setSeconds(Math.floor((absHour * 3600) % 60));
+      date.setMilliseconds(0);
 
       get().seekTo(date, slotIndex);
-
     },
 
-    /* ---------------- VIDEO FEEDBACK ---------------- */
-
     updateFromVideo: (date, slotIndex) => {
+      if (slotIndex === undefined || get().isSeeking) return;
 
-      if (get().isSeeking) return;
+      set((state) => ({
+        cameraTimes: {
+          ...state.cameraTimes,
+          [slotIndex]: date,
+        },
+      }));
 
-      const { isSync } = get();
-
-      if (isSync) {
-
-        set({ globalTime: date });
-
-      } else if (slotIndex !== undefined) {
-
-        set((state) => ({
-          cameraTimes: {
-            ...state.cameraTimes,
-            [slotIndex]: date
-          }
-        }));
-
-        stopSlotSeeking(slotIndex);
-
-      }
-
-    }
-
+      stopSlotSeeking(slotIndex); // sirf us slot ka loading false
+    },
   };
-
 });

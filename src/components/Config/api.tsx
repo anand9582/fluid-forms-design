@@ -22,6 +22,7 @@ export const API_URLS = {
   get_all_views: "/getAllViews",
   get_view_by_id: "/getViewById",
   delete_view_by_id: "/deleteViewById",
+  Bookmark: "/api/bookmarks/addBookmark",
 };
 
 export const getAuthHeaders = () => {

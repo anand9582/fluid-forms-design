@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { usePlaybackStore } from "@/Store/playbackStore";
 
 import {
@@ -33,9 +33,15 @@ import { Calendar } from "@/components/ui/calendar";
 import { AppTooltip } from "@/components/ui/AppTooltip";
 import { PlaybackControlButton } from "@/components/Common/PlaybackControlButton";
 import { cn } from "@/lib/utils";
-import { formatPlaybackTimestamp } from "@/hooks/use-playback";
+import { formatIST,toISTISOString  } from "@/components/Utils/Time";
 import { Slider } from "@/components/ui/slider";
+import axios from "axios";
+import { API_BASE_URL, API_URLS, getAuthHeaders } from "@/components/Config/api"; 
+import { PlaybackBookmarkPopover, PlaybackBookmark } from "@/components/Playback/PlaybackBookmarkPopover";
+
 interface Props {
+  cameraId?: string;
+  bookmarks: PlaybackBookmark[];
   isTimelineExpanded: boolean;
   onToggleTimeline: () => void;
   zoomLevel: number;
@@ -46,9 +52,14 @@ interface Props {
   onSkipForward: () => void;
   onStop: () => void;
   onSeekToDate: (date: Date) => void;
+  onAddBookmark: (name: string, position: number, timestamp: string, cameraId: string) => void;
+  onRemoveBookmark: (id: string, cameraId: string) => void;
+  onJumpToBookmark: (position: number) => void;
 }
 
 export function PlaybackTimelineBar({
+  cameraId,
+  bookmarks,
   isTimelineExpanded,
   onToggleTimeline,
   zoomLevel,
@@ -59,6 +70,9 @@ export function PlaybackTimelineBar({
   onSkipForward,
   onStop,
   onSeekToDate,
+  onAddBookmark,
+  onRemoveBookmark,
+  onJumpToBookmark,
 }: Props) {
   const {
     globalTime,
@@ -69,10 +83,12 @@ export function PlaybackTimelineBar({
     setSpeed,
     isSync,
     setSynced,
+    lastSeekTime
   } = usePlaybackStore();
 
   const [pickerOpen, setPickerOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(globalTime);
+  const [lastAppliedTime, setLastAppliedTime] = useState<Date | null>(null);
 
   const [forwardSpeedOpen, setForwardSpeedOpen] = useState(false);
   const [reverseSpeedOpen, setReverseSpeedOpen] = useState(false);
@@ -87,9 +103,8 @@ export function PlaybackTimelineBar({
   const [ampm, setAmpm] = useState<"AM" | "PM">(
     globalTime.getHours() >= 12 ? "PM" : "AM"
   );
-
   const zoomPercent = ((zoomLevel - 1) / 9) * 100;
-
+const pickerRef = useRef<HTMLDivElement>(null);
   const togglePlay = () => {
     if (isPlaying) pause();
     else play();
@@ -107,6 +122,19 @@ export function PlaybackTimelineBar({
     setPickerOpen(open);
   };
 
+  // Sync picker values when globalTime changes (and picker is closed)
+  useEffect(() => {
+    if (!pickerOpen) {
+      setSelectedDate(globalTime);
+      const h = globalTime.getHours();
+      setHour(String(h % 12 || 12));
+      setMinute(String(globalTime.getMinutes()).padStart(2, "0"));
+      setSecond(String(globalTime.getSeconds()).padStart(2, "0"));
+      setAmpm(h >= 12 ? "PM" : "AM");
+      setLastAppliedTime(null); // Clear after store catches up
+    }
+  }, [globalTime, pickerOpen]);
+
   const applyDateTime = () => {
     const d = new Date(selectedDate);
     let h = parseInt(hour) || 0;
@@ -116,26 +144,38 @@ export function PlaybackTimelineBar({
 
     d.setHours(h, parseInt(minute) || 0, parseInt(second) || 0, 0);
 
-    onSeekToDate(d); // store update
+    // Set immediately for instant UI feedback
+    setLastAppliedTime(d);
+    
+    // Then trigger store update (which will update globalTime)
+    onSeekToDate(d);
     setPickerOpen(false);
   };
 
   // -----------------------
-  // Instant live display while picker is open
+  // Display either lastAppliedTime (for instant feedback) or computed picker time
   // -----------------------
   const displayTime = useMemo(() => {
-    if (!pickerOpen) return globalTime;
-    const h = parseInt(hour) || 0;
-    const realHour = ampm === "PM" ? (h === 12 ? 12 : h + 12) : (h === 12 ? 0 : h);
-    return new Date(
-      selectedDate.getFullYear(),
-      selectedDate.getMonth(),
-      selectedDate.getDate(),
-      realHour,
-      parseInt(minute) || 0,
-      parseInt(second) || 0
-    );
-  }, [pickerOpen, selectedDate, hour, minute, second, ampm, globalTime]);
+    // If we just applied a time, show it immediately (don't wait for store)
+    if (lastAppliedTime) {
+      return lastAppliedTime;
+    }
+    // If picker is open, show computed time from inputs
+    if (pickerOpen) {
+      const h = parseInt(hour) || 0;
+      const realHour = ampm === "PM" ? (h === 12 ? 12 : h + 12) : (h === 12 ? 0 : h);
+      return new Date(
+        selectedDate.getFullYear(),
+        selectedDate.getMonth(),
+        selectedDate.getDate(),
+        realHour,
+        parseInt(minute) || 0,
+        parseInt(second) || 0
+      );
+    }
+    // Otherwise show globalTime from store
+    return globalTime;
+  }, [pickerOpen, selectedDate, hour, minute, second, ampm, globalTime, lastAppliedTime]);
 
   const handleForwardSpeedSelect = (speed: number) => {
     setSpeed(speed);
@@ -146,6 +186,42 @@ export function PlaybackTimelineBar({
     setSpeed(speed);
     setReverseSpeedOpen(false);
   };
+
+    // ----------------
+  // BOOKMARK HANDLER
+  // ----------------
+  const handleAddBookmark = (name: string, position: number, timestamp: string, camId: string) => {
+    if (!camId) return;
+    onAddBookmark(name, position, timestamp, camId);
+  };
+
+  const handleRemoveBookmark = (id: string, camId: string) => {
+    onRemoveBookmark(id, camId);
+  };
+
+  const handleJumpToBookmark = (position: number) => {
+    const date = new Date(position);
+    setLastAppliedTime(date);
+    onSeekToDate(date);
+    onJumpToBookmark(position);
+    play();
+  };
+
+  useEffect(() => {
+  const handleClickOutside = (event: MouseEvent) => {
+    if (pickerRef.current && !pickerRef.current.contains(event.target as Node)) {
+      setPickerOpen(false); 
+    }
+  };
+
+  if (pickerOpen) {
+    document.addEventListener("mousedown", handleClickOutside);
+  }
+
+  return () => {
+    document.removeEventListener("mousedown", handleClickOutside);
+  };
+}, [pickerOpen]);
 
   return (
     <div className="flex items-center h-9 px-2 py-3 gap-4 border-t bg-muted/30 text-[11px]">
@@ -163,56 +239,67 @@ export function PlaybackTimelineBar({
             className="flex items-center gap-1 px-2 py-[2px] rounded bg-muted"
           >
             <CalendarIcon className="h-3 w-3" />
-            <span className="font-mono">
-              {formatPlaybackTimestamp(displayTime)}
+           <span className="text-md font-roboto font-medium text-slate-900">
+              {formatIST(displayTime)}
             </span>
           </button>
         </AppTooltip>
 
         {pickerOpen && (
-          <div className="absolute bottom-full mt-2 z-50 bg-background border rounded shadow p-3">
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={(d) => d && setSelectedDate(d)}
-            />
+          
+        <div ref={pickerRef} className="absolute bottom-full mt-2 z-50 bg-background border rounded shadow p-3">
+  <Calendar
+    mode="single"
+    selected={selectedDate}
+    onSelect={(d) => d && setSelectedDate(d)}
+  />
 
-            <div className="flex items-center gap-1 mt-2">
-              <Input
-                value={hour}
-                onChange={(e) =>
-                  setHour(e.target.value.replace(/\D/g, "").slice(0, 2))
-                }
-                className="w-10 h-7 text-center"
-              />
-              :
-              <Input
-                value={minute}
-                onChange={(e) =>
-                  setMinute(e.target.value.replace(/\D/g, "").slice(0, 2))
-                }
-                className="w-10 h-7 text-center"
-              />
-              :
-              <Input
-                value={second}
-                onChange={(e) =>
-                  setSecond(e.target.value.replace(/\D/g, "").slice(0, 2))
-                }
-                className="w-10 h-7 text-center"
-              />
-              <Button size="sm" onClick={() => setAmpm("AM")}>
-                AM
-              </Button>
-              <Button size="sm" onClick={() => setAmpm("PM")}>
-                PM
-              </Button>
-            </div>
+  <div className="flex items-center gap-1 mt-2">
+    <Input
+      value={hour}
+      onChange={(e) =>
+        setHour(e.target.value.replace(/\D/g, "").slice(0, 2))
+      }
+      className="w-10 h-7 text-center"
+    />
+    :
+    <Input
+      value={minute}
+      onChange={(e) =>
+        setMinute(e.target.value.replace(/\D/g, "").slice(0, 2))
+      }
+      className="w-10 h-7 text-center"
+    />
+    :
+    <Input
+      value={second}
+      onChange={(e) =>
+        setSecond(e.target.value.replace(/\D/g, "").slice(0, 2))
+      }
+      className="w-10 h-7 text-center"
+    />
 
-            <Button size="sm" className="w-full mt-2" onClick={applyDateTime}>
-              Go to Date & Time
-            </Button>
-          </div>
+    {/* AM/PM Buttons with selected highlight */}
+    <Button
+      size="sm"
+      className={`w-12 ${ampm === "AM" ? "bg-slate-600 text-white" : "bg-muted text-gray-700"}`}
+      onClick={() => setAmpm("AM")}
+    >
+      AM
+    </Button>
+    <Button
+      size="sm"
+      className={`w-12 ${ampm === "PM" ? "bg-slate-600 text-white" : "bg-muted text-gray-700"}`}
+      onClick={() => setAmpm("PM")}
+    >
+      PM
+    </Button>
+  </div>
+
+  <Button size="sm" className="w-full mt-2 bg-slate-600" onClick={applyDateTime}>
+    Go to Date & Time
+  </Button>
+</div>
         )}
       </div>
 
@@ -368,9 +455,30 @@ export function PlaybackTimelineBar({
         <PlaybackControlButton label="Filter">
           <Filter className="h-3 w-3" />
         </PlaybackControlButton>
-        <PlaybackControlButton label="Bookmark">
-          <Bookmark className="h-3 w-3" />
-        </PlaybackControlButton>
+
+        {/* BOOKMARK POPOVER */}
+            {useMemo(() => {
+              const dateForBookmarks = lastAppliedTime || globalTime;
+              const dayStart = new Date(dateForBookmarks);
+              dayStart.setHours(0, 0, 0, 0);
+              const dayEnd = new Date(dateForBookmarks);
+              dayEnd.setHours(23, 59, 59, 999);
+              
+              return (
+                <PlaybackBookmarkPopover
+                  bookmarks={bookmarks}
+                  currentPosition={lastSeekTime ? lastSeekTime.getTime() : 0}
+                  currentTimestamp={lastSeekTime ? formatIST(lastSeekTime) : "00:00:00"}
+                  cameraId={cameraId || ""}
+                  fromDate={dayStart.toISOString()}
+                  toDate={dayEnd.toISOString()}
+                  onAddBookmark={handleAddBookmark}
+                  onRemoveBookmark={handleRemoveBookmark}
+                  onJumpToBookmark={handleJumpToBookmark}
+                />
+              );
+            }, [bookmarks, lastSeekTime, cameraId, lastAppliedTime, globalTime])}
+
         <PlaybackControlButton label="Clip">
           <Scissors className="h-3 w-3" />
         </PlaybackControlButton>

@@ -2,7 +2,9 @@ import React, { useRef, useMemo, useState,useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { usePlaybackStore } from "@/Store/playbackStore";
-import { AppTooltip } from "@/components/ui/AppTooltip"; 
+import { AppTooltip } from "@/components/ui/AppTooltip";
+import { Bookmark } from "lucide-react";
+import { PlaybackBookmark } from "@/components/Playback/PlaybackBookmarkPopover"; 
 
 export interface SegmentHour {
   start: number;
@@ -14,9 +16,11 @@ interface Props {
   segmentsPerSlot: Record<number, SegmentHour[]>;
   cameraNames: Record<number, string>;
   zoomLevel: number;
-    isExpanded: boolean;
-  onSeek,
+  isExpanded: boolean;
+  cameraIds?: Record<number, string>;
+  bookmarksPerSlot: Record<number, PlaybackBookmark[]>;
   slotCount: number;
+  timelineDate: Date;
 }
 
 const CAMERA_COL_WIDTH = 160;
@@ -114,22 +118,23 @@ function generateTimeLabels(zoomLevel: number, playheadHour: number) {
 
 /* ---------------- SEEK ---------------- */
 
-export const handleSeek = (
+const handleSeek = (
   absHour: number,
   segmentsPerSlot: Record<number, SegmentHour[]>,
-  playback: ReturnType<typeof usePlaybackStore>,
-  slotIndex?: number
+  seekTo: (date: Date, slotIndex?: number) => void,
+  isSync: boolean,
+  currentTime: Date,
+  slotIndex?: number,
+  baseDate?: Date
 ) => {
+  const seekDate = baseDate ? new Date(baseDate) : new Date(currentTime);
 
-  const seekDate = new Date(playback.globalTime);
-
-  if (playback.isSync) {
-
+  if (isSync) {
     seekDate.setHours(Math.floor(absHour));
     seekDate.setMinutes(Math.floor((absHour % 1) * 60));
     seekDate.setSeconds(Math.floor((absHour * 3600) % 60));
 
-    playback.seekTo(seekDate);
+    seekTo(seekDate);
     return;
   }
 
@@ -148,7 +153,7 @@ export const handleSeek = (
   seekDate.setMinutes(Math.floor((clamped % 1) * 60));
   seekDate.setSeconds(Math.floor((clamped * 3600) % 60));
 
-  playback.seekTo(seekDate, slotIndex);
+  seekTo(seekDate, slotIndex);
 };
 
 /* ---------------- COMPONENT ---------------- */
@@ -157,11 +162,31 @@ export function PlaybackTimeline({
   segmentsPerSlot,
   cameraNames,
   zoomLevel,
-    isExpanded,
-    slotCount,
+  isExpanded,
+  slotCount,
+  cameraIds,
+  bookmarksPerSlot,
+  timelineDate,
 }: Props) {
 
-  const playback = usePlaybackStore();
+  const isSync = usePlaybackStore((s) => s.isSync);
+  const seekTo = usePlaybackStore((s) => s.seekTo);
+  const globalTime = usePlaybackStore((s) => s.globalTime);
+  const cameraTimes = usePlaybackStore((s) => s.cameraTimes);
+
+  const dayStart = useMemo(() => {
+    const d = new Date(timelineDate);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, [timelineDate]);
+
+  const dateToHour = React.useCallback(
+    (date: Date, base: Date = dayStart) => {
+      const hour = (date.getTime() - base.getTime()) / 3600000;
+      return Math.max(0, Math.min(24, hour));
+    },
+    [dayStart]
+  );
 
   const trackRef = useRef<HTMLDivElement | null>(null);
 
@@ -171,59 +196,50 @@ export function PlaybackTimeline({
   const [tooltipText, setTooltipText] = useState("");
   const [tooltipPos, setTooltipPos] = useState(0);
 
-  const nonEmptySlots = Object.entries(segmentsPerSlot)
-    .filter(([_, segs]) => segs.length > 0)
-    .map(([slotIndex]) => Number(slotIndex));
+  const nonEmptySlots = useMemo(
+    () =>
+      Object.entries(segmentsPerSlot)
+        .filter(([_, segs]) => segs.length > 0)
+        .map(([slotIndex]) => Number(slotIndex)),
+    [segmentsPerSlot]
+  );
 
   const hasSegments = nonEmptySlots.length > 0;
 
    /* ---------------- AUTO SEEK FIRST RECORDING ---------------- */
 
   useEffect(() => {
-
     if (!nonEmptySlots.length) return;
 
     const slotIndex = nonEmptySlots[0];
     const segments = segmentsPerSlot[slotIndex] || [];
 
     const recordings = segments
-      .filter(s => s.type === "recording")
-      .sort((a,b)=>a.start-b.start);
+      .filter((s) => s.type === "recording")
+      .sort((a, b) => a.start - b.start);
 
     if (!recordings.length) return;
 
     const first = recordings[0];
 
-    const seekDate = new Date(playback.globalTime);
-
+    const seekDate = new Date(timelineDate);
     seekDate.setHours(Math.floor(first.start));
     seekDate.setMinutes(Math.floor((first.start % 1) * 60));
     seekDate.setSeconds(0);
 
-    playback.seekTo(seekDate, playback.isSync ? undefined : slotIndex);
-
-  }, [segmentsPerSlot]);
+    seekTo(seekDate, isSync ? undefined : slotIndex);
+  }, [segmentsPerSlot, nonEmptySlots, seekTo, isSync, timelineDate]);
 
   const playheadHour = useMemo(() => {
-
-    if (playback.isSync) {
-
-      const t = playback.globalTime;
-
-      return t.getHours() + t.getMinutes() / 60 + t.getSeconds() / 3600;
-
+    if (isSync) {
+      return dateToHour(globalTime);
     } else {
-
       const firstSlot = nonEmptySlots[0];
-
       if (firstSlot === undefined) return 0;
-
-      const t = playback.cameraTimes[firstSlot] || playback.globalTime;
-
-      return t.getHours() + t.getMinutes() / 60 + t.getSeconds() / 3600;
+      const t = cameraTimes[firstSlot] || globalTime;
+      return dateToHour(t);
     }
-
-  }, [playback.globalTime, playback.cameraTimes, playback.isSync, nonEmptySlots]);
+  }, [globalTime, cameraTimes, isSync, nonEmptySlots, dateToHour]);
 
   const { labels, viewStart, visibleHours } = useMemo(
     () => generateTimeLabels(zoomLevel, playheadHour),
@@ -239,9 +255,7 @@ export function PlaybackTimeline({
   /* ---------------- DRAG ---------------- */
 
 const onMouseDown = (e: React.MouseEvent, slotIndex: number) => {
-
     dragging.current = true;
-
     const move = (me: MouseEvent) => {
 
       requestAnimationFrame(() => {
@@ -285,7 +299,7 @@ const onMouseDown = (e: React.MouseEvent, slotIndex: number) => {
         setTooltipText(tooltip);
         setTooltipPos(vp);
 
-        handleSeek(absHour, segmentsPerSlot, playback, slotIndex);
+        handleSeek(absHour, segmentsPerSlot, seekTo, isSync, globalTime, slotIndex, timelineDate);
 
       });
     };
@@ -356,9 +370,57 @@ const onMouseDown = (e: React.MouseEvent, slotIndex: number) => {
                   );
                 })}
 
+                {/* Bookmarks */}
+                {bookmarksPerSlot[slotIndex]?.map((bookmark) => {
+                  const bookmarkTime = bookmark.bookmarkTime
+                    ? new Date(bookmark.bookmarkTime)
+                    : bookmark.position !== undefined
+                    ? new Date(bookmark.position)
+                    : null;
+
+                  if (!bookmarkTime) return null;
+
+                  const hour = dateToHour(bookmarkTime);
+                  const x = toViewport(hour);
+                  if (x < 0 || x > 100) return null;
+
+                  return (
+            <AppTooltip
+                label={`${bookmark.title}`}
+                side="top"
+              >
+                <div
+                  className="absolute z-[15] cursor-pointer"
+                  style={{ left: `${x}%`, top: "-4px", bottom: 0 }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSeek(
+                      hour,
+                      segmentsPerSlot,
+                      seekTo,
+                      isSync,
+                      globalTime,
+                      slotIndex,
+                      timelineDate
+                    );
+                  }}
+                >
+                  {/* Vertical line */}
+                  <div className="absolute top-0 bottom-0 w-[1.5px] bg-foreground/70 -translate-x-1/2" />
+
+                  {/* Triangle */}
+                  <div className="absolute -top-[1px] -translate-x-1/2 w-0 h-0 
+                    border-l-[4px] border-r-[4px] border-t-[6px] 
+                    border-l-transparent border-r-transparent border-t-foreground/80"
+                  />
+                </div>
+              </AppTooltip>
+                  );
+                })}
+
                 {/* Individual playhead */}
-                {!playback.isSync && (() => {
-                  const camTime = playback.cameraTimes[slotIndex];
+                {!isSync && (() => {
+                  const camTime = cameraTimes[slotIndex];
                   if (!camTime) return null;
                   const camHour = camTime.getHours() + camTime.getMinutes() / 60 + camTime.getSeconds() / 3600;
                   const camVp = toViewport(camHour);
@@ -376,7 +438,7 @@ const onMouseDown = (e: React.MouseEvent, slotIndex: number) => {
           })}
 
           {/* Global playhead */}
-          {playback.isSync && hasSegments && (
+          {isSync && hasSegments && (
             <>
               <div className="absolute w-[1px] bg-primary top-0" style={{ left: `${toViewport(playheadHour)}%`, height: "100%" }} />
               <div className="absolute w-[7px] h-2 bg-blue-600 rounded-full shadow-lg -translate-x-1/2 -translate-y-1/2 top-0" style={{ left: `${toViewport(playheadHour)}%` }} />
