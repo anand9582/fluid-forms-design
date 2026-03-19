@@ -69,8 +69,6 @@ export default function Index() {
         selectedLayout={state.selectedLayout}
         onLayoutChange={handleLayoutChange}
       />
-
-      {/* Main Content Area */}
       <PlaybackCameraGridSection
         selectedSlot={state.selectedSlot}
         onSlotSelect={setSelectedSlot}
@@ -109,7 +107,9 @@ export default function Index() {
         cameraNames={cameraNames}
         cameraIds={Object.values(state.players).map((p) => p.cameraId) || []}
         timelineDate={state.selectedDate}
+        
       />
+      
     </div>
   );
 }

@@ -283,7 +283,6 @@ export function usePlaybackLogic(
 
       if (!blobUrl) return;
 
-      // Only reset this slot's timeline to first segment
       const firstRecording = segments?.find((s) => s.type === "recording");
 
       if (firstRecording) {
@@ -294,12 +293,9 @@ export function usePlaybackLogic(
         seekDate.setHours(hour);
         seekDate.setMinutes(minutes);
         seekDate.setSeconds(0);
-
-        // Use slot-specific seek - only affects this slot
-        playback.seekTo(seekDate, slotIndex);
+        playback.seekTo(seekDate);
       }
 
-      // Start playback (affects all slots)
       playback.play();
     },
     [gridStore, selectedDate, fetchTimelineForSlot, startCamera, playback]

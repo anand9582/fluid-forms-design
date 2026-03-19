@@ -231,6 +231,7 @@ const playheadHour = useMemo(() => {
   const viewportToAbs = (vp: number) =>
     viewStart + (vp / 100) * visibleHours;
 
+  
   /* ---------------- DRAG ---------------- */
 
 const onMouseDown = (e: React.MouseEvent, slotIndex: number) => {
@@ -348,6 +349,7 @@ const onMouseDown = (e: React.MouseEvent, slotIndex: number) => {
 
                 {/* Bookmarks */}
                 {bookmarksPerSlot[slotIndex]?.map((bookmark) => {
+                  console.log(slotIndex);
                   const bookmarkTime = bookmark.bookmarkTime
                     ? new Date(bookmark.bookmarkTime)
                     : bookmark.position !== undefined

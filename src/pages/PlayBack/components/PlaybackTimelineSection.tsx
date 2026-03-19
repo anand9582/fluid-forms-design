@@ -88,7 +88,7 @@ export const PlaybackTimelineSection = React.memo(
           onSeek={onSeek}
           cameraNames={cameraNames}
           cameraIds={cameraIds}
-          bookmarksPerSlot={{}} // Will be populated by store subscription
+          bookmarksPerSlot={{}} 
           timelineDate={timelineDate}
         />
 
