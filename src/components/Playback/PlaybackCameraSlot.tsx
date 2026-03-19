@@ -16,10 +16,10 @@ interface Props {
   selected: boolean;
   onSelect: () => void;
   onCameraDrop: (cameraId: string, slotIndex: number) => void;
-  getVideoSrc: (cameraId: string) => string;
+  getVideoSrc: (slotIndex: number) => string; // ✅ FIXED
   isCameraLoading: (slotIndex: number) => boolean;
   rawSegmentsPerSlot: Record<number, RawSegment[]>;
-  errorMessage?: string; // slot error
+  errorMessage?: string;
 }
 
 export function PlaybackCameraSlot({
@@ -36,43 +36,63 @@ export function PlaybackCameraSlot({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const playback = usePlaybackStore();
 
+  /* ---------------- DROP ---------------- */
   const [{ isOver }, dropRef] = useDrop({
     accept: "SIDEBAR_CAMERA",
-    drop: (item: { cameraId: string }) => onCameraDrop(item.cameraId, index),
-    collect: (monitor) => ({ isOver: monitor.isOver({ shallow: true }) }),
+    drop: (item: { cameraId: string }) =>
+      onCameraDrop(item.cameraId, index),
+    collect: (monitor) => ({
+      isOver: monitor.isOver({ shallow: true }),
+    }),
   });
+
   dropRef(containerRef);
 
+  /* ---------------- DATA ---------------- */
   const segments = rawSegmentsPerSlot[index] || [];
   const src = cameraId ? getVideoSrc(index) : "";
 
+  /* ---------------- HLS ---------------- */
   const { videoRef, isVideoReady } = useHlsWithStore({
     src,
     cameraId,
     segments,
     slotIndex: index,
-    isMaster: true,
+    isMaster: true, 
   });
 
+  /* ---------------- FULLSCREEN ---------------- */
   const toggleFullscreen = () => {
     const el = containerRef.current;
     if (!el) return;
-    if (document.fullscreenElement) document.exitFullscreen();
-    else el.requestFullscreen().catch(() => {});
+
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else {
+      el.requestFullscreen().catch(() => {});
+    }
   };
 
+  /* ---------------- LOADING ---------------- */
   const slotSeeking = playback.slotSeeking[index] ?? false;
-  const showLoader = !!cameraId && !errorMessage && (!isVideoReady || isCameraLoading(index) || slotSeeking);
 
+  const showLoader =
+    !!cameraId &&
+    !errorMessage &&
+    (!isVideoReady ||
+      isCameraLoading(index) ||
+      slotSeeking);
+
+  /* ---------------- UI ---------------- */
   return (
-     <div
+    <div
       ref={containerRef}
       onClick={onSelect}
       onDoubleClick={toggleFullscreen}
       className={cn(
         "group relative w-full h-full cursor-pointer overflow-hidden",
-        "border-2", 
-        selected && "border-blue-400", 
+        "border-2",
+        selected && "border-blue-400",
         isOver && "border-green-400"
       )}
     >
@@ -88,32 +108,34 @@ export function PlaybackCameraSlot({
         />
       )}
 
-      {/* LOADING SPINNER */}
+      {/* LOADER */}
       {showLoader && (
-       <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[1px] transition-opacity duration-200">
-      <div className="flex flex-col items-center gap-1.5">
-        <div className="relative h-8 w-8">
-          <div className="absolute inset-0 rounded-full border-2 border-white/20" />
-          <div className="absolute inset-0 rounded-full border-2 border-t-white border-r-transparent border-b-transparent border-l-transparent animate-spin" />
+        <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[1px]">
+          <div className="flex flex-col items-center gap-1.5">
+            <div className="relative h-8 w-8">
+              <div className="absolute inset-0 rounded-full border-2 border-white/20" />
+              <div className="absolute inset-0 rounded-full border-2 border-t-white border-r-transparent border-b-transparent border-l-transparent animate-spin" />
+            </div>
+            <span className="text-[10px] text-white/80 font-medium">
+              Connecting
+            </span>
+          </div>
         </div>
-        <span className="text-[10px] text-white/80 font-medium tracking-wide">
-          Connecting
-        </span>
-      </div>
-    </div>
       )}
 
-      {/* DROP PLACEHOLDER */}
+      {/* EMPTY SLOT */}
       {!cameraId && !errorMessage && (
-        <div className="flex items-center justify-center h-full text-gray-400 gap-2 text-muted-foreground">
-           <Devices className="h-4 w-4" />
-            <span className="text-sm font-medium">Drop Camera</span>
+        <div className="flex items-center justify-center h-full text-gray-400 gap-2">
+          <Devices className="h-4 w-4" />
+          <span className="text-sm font-medium">
+            Drop Camera
+          </span>
         </div>
       )}
 
       {/* ERROR */}
       {errorMessage && (
-        <div className="flex items-center justify-center h-full text-destructive text-xs p-2 text-center">
+        <div className="flex items-center justify-center h-full text-red-500 text-xs p-2 text-center">
           {errorMessage}
         </div>
       )}

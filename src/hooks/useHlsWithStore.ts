@@ -17,12 +17,11 @@ export function useHlsWithStore({
   slotIndex,
   isMaster = false,
 }: Props) {
-
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
-
   const reverseIntervalRef = useRef<number | null>(null);
   const fastForwardIntervalRef = useRef<number | null>(null);
+  const lastUpdateRef = useRef(0);
 
   const [isVideoReady, setIsVideoReady] = useState(false);
 
@@ -36,305 +35,161 @@ export function useHlsWithStore({
     updateFromVideo,
   } = usePlaybackStore();
 
-  const currentTime =
-    isSync ? globalTime : cameraTimes[slotIndex] || globalTime;
+  const currentTime = isSync ? globalTime : cameraTimes[slotIndex] || globalTime;
 
   /* ---------------- SEGMENT OFFSETS ---------------- */
-
   const segmentOffsets = useMemo(() => {
-
     let acc = 0;
-
     return segments.map((s) => {
-
-      const duration =
-        (s.endTime.getTime() - s.startTime.getTime()) / 1000;
-
+      const duration = (s.endTime.getTime() - s.startTime.getTime()) / 1000;
       const offset = acc;
-
       acc += duration;
-
-      return {
-        ...s,
-        offset,
-        duration
-      };
-
+      return { ...s, offset, duration };
     });
-
   }, [segments]);
 
   /* ---------------- HLS INIT ---------------- */
-
   useEffect(() => {
-
     const video = videoRef.current;
-
     if (!video || !src || !cameraId) return;
 
     setIsVideoReady(false);
-
-    const hls = new Hls({
-      startLevel: 0,
-      maxBufferLength: 10,
-      enableWorker: true,
-    });
-
+    const hls = new Hls({ startLevel: 0, maxBufferLength: 10, enableWorker: true });
     hlsRef.current = hls;
 
     hls.attachMedia(video);
     hls.loadSource(src);
 
     const onCanPlay = () => setIsVideoReady(true);
-
     video.addEventListener("canplay", onCanPlay);
 
     return () => {
-
       hls.destroy();
       hlsRef.current = null;
-
       video.removeEventListener("canplay", onCanPlay);
-
       setIsVideoReady(false);
-
     };
-
   }, [src, cameraId]);
 
   /* ---------------- SEEK LOADER ---------------- */
-
   useEffect(() => {
-
     const video = videoRef.current;
     if (!video) return;
-
     if (isSeeking) setIsVideoReady(false);
-
     const onCanPlay = () => {
       if (isSeeking) setIsVideoReady(true);
     };
-
     video.addEventListener("canplay", onCanPlay);
-
-    return () =>
-      video.removeEventListener("canplay", onCanPlay);
-
+    return () => video.removeEventListener("canplay", onCanPlay);
   }, [isSeeking]);
 
   /* ---------------- PLAYBACK ENGINE ---------------- */
-
   useEffect(() => {
-
     const video = videoRef.current;
     if (!video || !segmentOffsets.length) return;
 
-    let seg = segmentOffsets.find(
-      (s) =>
-        currentTime >= s.startTime &&
-        currentTime <= s.endTime
-    );
+    // find current segment
+    let seg = segmentOffsets.find((s) => currentTime >= s.startTime && currentTime <= s.endTime);
+    if (!seg) seg = segmentOffsets[0];
+    if (!seg) return;
 
-    if (!seg) {
-      seg = segmentOffsets[0];
-      video.currentTime = seg.offset;
-      return;
-    }
+    const logicalSeconds = (currentTime.getTime() - seg.startTime.getTime()) / 1000;
+    const targetTime = seg.offset + logicalSeconds;
+    if (Math.abs(video.currentTime - targetTime) > 0.5) video.currentTime = targetTime;
 
-    const logicalSeconds =
-      (currentTime.getTime() -
-        seg.startTime.getTime()) / 1000;
-
-    const targetTime =
-      seg.offset + logicalSeconds;
-
-    if (!isFinite(targetTime) || targetTime < 0)
-      return;
-
-    if (Math.abs(video.currentTime - targetTime) > 0.5)
-      video.currentTime = targetTime;
-
-    /* CLEAR OLD INTERVALS */
-
-    if (reverseIntervalRef.current !== null) {
+    // clear intervals
+    if (reverseIntervalRef.current !== null && playbackSpeed >= 0) {
       clearInterval(reverseIntervalRef.current);
       reverseIntervalRef.current = null;
     }
-
-    if (fastForwardIntervalRef.current !== null) {
+    if (fastForwardIntervalRef.current !== null && playbackSpeed <= 16) {
       clearInterval(fastForwardIntervalRef.current);
       fastForwardIntervalRef.current = null;
     }
 
+    // pause if not playing
     if (!isPlaying) {
       video.pause();
       return;
     }
 
     /* ---------- FORWARD PLAYBACK ---------- */
-
     if (playbackSpeed >= 0) {
-
       if (playbackSpeed <= 16) {
-
         video.playbackRate = playbackSpeed;
         video.muted = playbackSpeed > 4;
         video.play().catch(() => {});
-
-      }
-
-      else {
-
+      } else {
         video.playbackRate = 16;
         video.muted = true;
-
         video.play().catch(() => {});
-
         const extra = playbackSpeed / 16;
-
-        fastForwardIntervalRef.current =
-          window.setInterval(() => {
-
-            if (!video) return;
-
-            video.currentTime +=
-              (extra - 1) * 0.5;
-
-          }, 100);
-
+        fastForwardIntervalRef.current = window.setInterval(() => {
+          if (!video) return;
+          video.currentTime += (extra - 1) * 0.5;
+        }, 100);
       }
-
     }
 
     /* ---------- REVERSE PLAYBACK ---------- */
-
     else {
-
       video.pause();
-
-      const step =
-        Math.abs(playbackSpeed) / 60;
-
-      reverseIntervalRef.current =
-        window.setInterval(() => {
-
-          if (!video) return;
-
-          video.currentTime -= step;
-
-          if (video.currentTime <= seg!.offset) {
-
-            clearInterval(
-              reverseIntervalRef.current!
-            );
-
-            reverseIntervalRef.current = null;
-
-          }
-
-        }, 33);
-
+      const step = Math.abs(playbackSpeed) / 60;
+      reverseIntervalRef.current = window.setInterval(() => {
+        if (!video) return;
+        video.currentTime -= step;
+        if (video.currentTime <= seg!.offset) {
+          clearInterval(reverseIntervalRef.current!);
+          reverseIntervalRef.current = null;
+        }
+      }, 33);
     }
-
-  }, [
-    currentTime,
-    isPlaying,
-    playbackSpeed,
-    segmentOffsets
-  ]);
+  }, [currentTime, isPlaying, playbackSpeed, segmentOffsets]);
 
   /* ---------------- VIDEO → STORE ---------------- */
-
   useEffect(() => {
-
     if (!isMaster) return;
-
     const video = videoRef.current;
     if (!video || !segmentOffsets.length) return;
 
     const firstSeg = segmentOffsets[0];
-    const lastSeg =
-      segmentOffsets[
-        segmentOffsets.length - 1
-      ];
+    const lastSeg = segmentOffsets[segmentOffsets.length - 1];
 
     const onTimeUpdate = () => {
-
       if (isSeeking) return;
-
       const current = video.currentTime;
       if (!isFinite(current)) return;
 
-      const endOfTimeline =
-        lastSeg.offset + lastSeg.duration;
+      // throttle updates
+      const now = Date.now();
+      if (now - lastUpdateRef.current < 200) return;
+      lastUpdateRef.current = now;
 
+      const endOfTimeline = lastSeg.offset + lastSeg.duration;
       if (current >= endOfTimeline - 0.2) {
-
-        video.currentTime =
-          firstSeg.offset;
-
-        updateFromVideo(
-          new Date(firstSeg.startTime),
-          slotIndex
-        );
-
+        video.currentTime = firstSeg.offset;
+        updateFromVideo(new Date(firstSeg.startTime), slotIndex);
         return;
-
       }
 
-      const seg = segmentOffsets.find(
-        (s) =>
-          current >= s.offset &&
-          current <= s.offset + s.duration
-      );
-
+      const seg = segmentOffsets.find((s) => current >= s.offset && current <= s.offset + s.duration);
       if (!seg) return;
 
-      const realTime = new Date(
-        seg.startTime.getTime() +
-          (current - seg.offset) * 1000
-      );
-
-      updateFromVideo(
-        realTime,
-        slotIndex
-      );
-
+      const realTime = new Date(seg.startTime.getTime() + (current - seg.offset) * 1000);
+      updateFromVideo(realTime, slotIndex);
     };
 
-    video.addEventListener(
-      "timeupdate",
-      onTimeUpdate
-    );
-
-    return () =>
-      video.removeEventListener(
-        "timeupdate",
-        onTimeUpdate
-      );
-
-  }, [
-    isMaster,
-    isSeeking,
-    segmentOffsets
-  ]);
+    video.addEventListener("timeupdate", onTimeUpdate);
+    return () => video.removeEventListener("timeupdate", onTimeUpdate);
+  }, [isMaster, isSeeking, segmentOffsets]);
 
   /* ---------------- CLEANUP ---------------- */
-
   useEffect(() => {
-
     return () => {
-
-      if (reverseIntervalRef.current !== null)
-        clearInterval(reverseIntervalRef.current);
-
-      if (fastForwardIntervalRef.current !== null)
-        clearInterval(fastForwardIntervalRef.current);
-
+      if (reverseIntervalRef.current !== null) clearInterval(reverseIntervalRef.current);
+      if (fastForwardIntervalRef.current !== null) clearInterval(fastForwardIntervalRef.current);
     };
-
   }, []);
 
   return { videoRef, isVideoReady };
-
 }

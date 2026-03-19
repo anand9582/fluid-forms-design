@@ -12,9 +12,9 @@ interface Props {
   onSlotSelect: (i: number | null) => void;
   getVideoSrc: (slotIndex: number) => string;
   onCameraDrop: (cameraId: string, slotIndex: number) => void;
-  isCameraLoading: (cameraId: string) => boolean;
+  isCameraLoading: (slotIndex: number) => boolean;
   rawSegmentsPerSlot: Record<number, RawSegment[]>;
-  slotErrors?: Record<number, string>; 
+  slotErrors?: Record<number, string>;
 }
 
 export function PlaybackCameraGrid({
@@ -30,7 +30,11 @@ export function PlaybackCameraGrid({
   const totalSlots = layout.rows * layout.cols;
 
   const displaySlots = useMemo(
-    () => Array.from({ length: totalSlots }, (_, i) => slotAssignments[i] || null),
+    () =>
+      Array.from(
+        { length: totalSlots },
+        (_, i) => slotAssignments[i] || null
+      ),
     [slotAssignments, totalSlots]
   );
 
@@ -49,12 +53,14 @@ export function PlaybackCameraGrid({
             index={index}
             cameraId={cameraId}
             selected={selectedSlot === index}
-            onSelect={() => onSlotSelect(selectedSlot === index ? null : index)}
+            onSelect={() =>
+              onSlotSelect(selectedSlot === index ? null : index)
+            }
             onCameraDrop={onCameraDrop}
-            getVideoSrc={() => getVideoSrc(index)}
+            getVideoSrc={getVideoSrc} 
             isCameraLoading={isCameraLoading}
             rawSegmentsPerSlot={rawSegmentsPerSlot}
-            errorMessage={slotErrors[index]} 
+            errorMessage={slotErrors[index]}
           />
         ))}
       </div>

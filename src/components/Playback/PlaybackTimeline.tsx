@@ -208,38 +208,17 @@ export function PlaybackTimeline({
 
    /* ---------------- AUTO SEEK FIRST RECORDING ---------------- */
 
-  useEffect(() => {
-    if (!nonEmptySlots.length) return;
-
-    const slotIndex = nonEmptySlots[0];
-    const segments = segmentsPerSlot[slotIndex] || [];
-
-    const recordings = segments
-      .filter((s) => s.type === "recording")
-      .sort((a, b) => a.start - b.start);
-
-    if (!recordings.length) return;
-
-    const first = recordings[0];
-
-    const seekDate = new Date(timelineDate);
-    seekDate.setHours(Math.floor(first.start));
-    seekDate.setMinutes(Math.floor((first.start % 1) * 60));
-    seekDate.setSeconds(0);
-
-    seekTo(seekDate, isSync ? undefined : slotIndex);
-  }, [segmentsPerSlot, nonEmptySlots, seekTo, isSync, timelineDate]);
-
-  const playheadHour = useMemo(() => {
-    if (isSync) {
-      return dateToHour(globalTime);
-    } else {
-      const firstSlot = nonEmptySlots[0];
-      if (firstSlot === undefined) return 0;
-      const t = cameraTimes[firstSlot] || globalTime;
+const playheadHour = useMemo(() => {
+  if (isSync) {
+    return dateToHour(globalTime);
+  } else {
+    const hours = nonEmptySlots.map((slotIndex) => {
+      const t = cameraTimes[slotIndex] || globalTime;
       return dateToHour(t);
-    }
-  }, [globalTime, cameraTimes, isSync, nonEmptySlots, dateToHour]);
+    });
+    return hours[0] ?? 0; 
+  }
+}, [globalTime, cameraTimes, isSync, nonEmptySlots, dateToHour]);
 
   const { labels, viewStart, visibleHours } = useMemo(
     () => generateTimeLabels(zoomLevel, playheadHour),
@@ -305,11 +284,8 @@ const onMouseDown = (e: React.MouseEvent, slotIndex: number) => {
     };
 
     const up = () => {
-
       dragging.current = false;
-
       setHoverHour(null);
-
       window.removeEventListener("mousemove", move);
       window.removeEventListener("mouseup", up);
     };
