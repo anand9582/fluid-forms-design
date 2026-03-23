@@ -146,11 +146,13 @@ export function PlaybackTimelineBar({
 
   const handleForwardSpeedSelect = (speed: number) => {
     setSpeed(speed);
+    if (!isPlaying) play();
     setForwardSpeedOpen(false);
   };
 
   const handleReverseSpeedSelect = (speed: number) => {
     setSpeed(speed);
+    if (!isPlaying) play();
     setReverseSpeedOpen(false);
   };
 

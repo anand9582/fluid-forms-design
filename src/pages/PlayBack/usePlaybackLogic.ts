@@ -1,8 +1,3 @@
-/**
- * Custom hook for playback logic
- * Handles all data fetching, state management, and API interactions
- */
-
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { usePlaybackStore } from "@/Store/playbackStore";
 import usePlaybackGridStore from "@/Store/UsePlaybackGridStore";
@@ -273,41 +268,48 @@ export function usePlaybackLogic(
   );
 
   // Handle camera drop
-const handleCameraDrop = async (cameraId: string, slotIndex: number) => {
-  gridStore.assignCameraToSlot(slotIndex, cameraId);
-  setSelectedSlot(slotIndex);
+  const handleCameraDrop = async (cameraId: string, slotIndex: number) => {
+    gridStore.assignCameraToSlot(slotIndex, cameraId);
+    setSelectedSlot(slotIndex);
 
-  const segments = await fetchTimelineForSlot(slotIndex, cameraId);
+    const segments = await fetchTimelineForSlot(slotIndex, cameraId);
 
-  const blobUrl = await startCamera(cameraId, slotIndex);
-  if (!blobUrl) return;
+    const blobUrl = await startCamera(cameraId, slotIndex);
+    if (!blobUrl) return;
 
-  setPlayers((prev) => [
-    ...prev.filter((p) => p.slotIndex !== slotIndex),
-    {
-      slotIndex,
-      cameraId,
-      blobUrl,
-      sessionId: "",
-      date: selectedDate,
-    },
-  ]);
+    // Check if there are already other playing cameras
+    const isFirstCamera = players.length === 0;
 
-  const firstRecording = segments?.find((s) => s.type === "recording");
-  if (firstRecording) {
-    const seekDate = new Date(selectedDate);
-    const hour = Math.floor(firstRecording.start);
-    const minutes = Math.floor((firstRecording.start % 1) * 60);
+    setPlayers((prev) => [
+      ...prev.filter((p) => p.slotIndex !== slotIndex),
+      {
+        slotIndex,
+        cameraId,
+        blobUrl,
+        sessionId: "",
+        date: selectedDate,
+      },
+    ]);
 
-    seekDate.setHours(hour);
-    seekDate.setMinutes(minutes);
-    seekDate.setSeconds(0);
+    const firstRecording = segments?.find((s) => s.type === "recording");
+    if (firstRecording) {
+      if (isFirstCamera || !playback.isSync) {
+        const seekDate = new Date(selectedDate);
+        const hour = Math.floor(firstRecording.start);
+        const minutes = Math.floor((firstRecording.start % 1) * 60);
 
-    playback.seekTo(seekDate, slotIndex);
-  }
+        seekDate.setHours(hour);
+        seekDate.setMinutes(minutes);
+        seekDate.setSeconds(0);
 
-  playback.play(); 
-};
+        playback.seekTo(seekDate, slotIndex);
+      }
+    }
+
+    if (!playback.isPlaying) {
+      playback.play();
+    }
+  };
 
   // Handle seek
   const handleSeek = useCallback(
@@ -469,51 +471,51 @@ const handleCameraDrop = async (cameraId: string, slotIndex: number) => {
     };
   }, [resetGrid, resetPlayback]);
 
-  useEffect(() => {
-    const reloadAllSlots = async () => {
-      if (!selectedDate) return;
+  // useEffect(() => {
+  //   const reloadAllSlots = async () => {
+  //     if (!selectedDate) return;
 
-      const newPlayers: Player[] = [];
+  //     const newPlayers: Player[] = [];
 
-      for (let slotIndex = 0; slotIndex < slotAssignments.length; slotIndex++) {
-        const cameraId = slotAssignments[slotIndex];
-        if (!cameraId) continue;
+  //     for (let slotIndex = 0; slotIndex < slotAssignments.length; slotIndex++) {
+  //       const cameraId = slotAssignments[slotIndex];
+  //       if (!cameraId) continue;
 
-        console.log("🔄 Reloading slot", slotIndex, "for date", selectedDate);
+  //       console.log("🔄 Reloading slot", slotIndex, "for date", selectedDate);
 
-        const segments = await fetchTimelineForSlot(slotIndex, cameraId);
-        const blobUrl = await startCamera(cameraId, slotIndex);
-        if (!blobUrl) continue;
+  //       const segments = await fetchTimelineForSlot(slotIndex, cameraId);
+  //       const blobUrl = await startCamera(cameraId, slotIndex);
+  //       if (!blobUrl) continue;
 
-        const firstRecording = segments?.find((s) => s.type === "recording");
+  //       const firstRecording = segments?.find((s) => s.type === "recording");
 
-        if (firstRecording) {
-          const seekDate = new Date(selectedDate);
-          const hour = Math.floor(firstRecording.start);
-          const minutes = Math.floor((firstRecording.start % 1) * 60);
+  //       if (firstRecording) {
+  //         const seekDate = new Date(selectedDate);
+  //         const hour = Math.floor(firstRecording.start);
+  //         const minutes = Math.floor((firstRecording.start % 1) * 60);
 
-          seekDate.setHours(hour);
-          seekDate.setMinutes(minutes);
-          seekDate.setSeconds(0);
+  //         seekDate.setHours(hour);
+  //         seekDate.setMinutes(minutes);
+  //         seekDate.setSeconds(0);
 
-          playback.seekTo(seekDate, slotIndex);
-        }
+  //         playback.seekTo(seekDate, slotIndex);
+  //       }
 
-        newPlayers.push({
-          slotIndex,
-          cameraId,
-          blobUrl,
-          sessionId: "",
-          date: selectedDate,
-        });
-      }
+  //       newPlayers.push({
+  //         slotIndex,
+  //         cameraId,
+  //         blobUrl,
+  //         sessionId: "",
+  //         date: selectedDate,
+  //       });
+  //     }
 
-      setPlayers(newPlayers);
-      playback.play();
-    };
+  //     setPlayers(newPlayers);
+  //     playback.play();
+  //   };
 
-    reloadAllSlots();
-  }, [selectedDate, slotAssignments]);
+  //   reloadAllSlots();
+  // }, [selectedDate, slotAssignments]);
 
   // Fetch bookmarks when slot changes
   useEffect(() => {

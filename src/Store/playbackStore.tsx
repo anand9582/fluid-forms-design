@@ -196,10 +196,11 @@ export const usePlaybackStore = create<PlaybackStore>((set, get) => {
     setSegments: (segments, dayStart) => set({ segmentsPerSlot: segments, dayStart }),
 
     seekTo: (date, slotIndex) => {
-      set({ lastSeekTime: date, isSeeking: true });
+      const isSync = get().isSync;
 
-      if (get().isSync) set({ globalTime: date });
-      else if (slotIndex !== undefined) {
+      if (isSync) {
+        set({ lastSeekTime: date, isSeeking: true, globalTime: date });
+      } else if (slotIndex !== undefined) {
         startSlotSeeking(slotIndex);
         set((state) => ({
           cameraTimes: { ...state.cameraTimes, [slotIndex]: date },
@@ -220,14 +221,19 @@ export const usePlaybackStore = create<PlaybackStore>((set, get) => {
       const { isSync, globalTime, cameraTimes } = get();
       const base = isSync ? globalTime : (slotIndex !== undefined ? cameraTimes[slotIndex] : globalTime);
       const newDate = new Date(base.getTime() + sec * 1000);
-      if (!isSync && slotIndex !== undefined) startSlotSeeking(slotIndex);
 
-      set({
-        globalTime: newDate,
-        cameraTimes: slotIndex !== undefined ? { ...cameraTimes, [slotIndex]: newDate } : cameraTimes,
-        lastSeekTime: newDate,
-        isSeeking: true,
-      });
+      if (isSync) {
+        set({
+          globalTime: newDate,
+          lastSeekTime: newDate,
+          isSeeking: true,
+        });
+      } else if (slotIndex !== undefined) {
+        startSlotSeeking(slotIndex);
+        set({
+          cameraTimes: { ...cameraTimes, [slotIndex]: newDate },
+        });
+      }
 
       if (seekingTimer) window.clearTimeout(seekingTimer);
       seekingTimer = window.setTimeout(() => {

@@ -10,7 +10,6 @@ import { PlaybackTimelineSection } from "./components/PlaybackTimelineSection";
 export default function Index() {
   const playback = usePlaybackStore();
 
-  // Custom hook handles all playback logic
   const {
     state,
     setSelectedDate,
@@ -48,14 +47,6 @@ export default function Index() {
     [state.selectedSlot, handleTimelineAddBookmark]
   );
 
-  // ---------------- DEBUG: log bookmarks ----------------
-  console.log("📌 All bookmarks per slot:", state.bookmarksPerSlot);
-  console.log(
-    "📌 Bookmarks for selected slot:",
-    state.selectedSlot !== null
-      ? state.bookmarksPerSlot[state.selectedSlot]
-      : []
-  );
 
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">

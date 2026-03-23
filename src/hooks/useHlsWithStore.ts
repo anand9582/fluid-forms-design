@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Hls from "hls.js";
-import { Segment, usePlaybackStore } from "@/Store/playbackStore";
+import { usePlaybackStore } from "@/Store/playbackStore";
+
+export interface Segment {
+  startTime: Date;
+  endTime: Date;
+}
 
 interface Props {
   src: string;
@@ -15,10 +20,11 @@ export function useHlsWithStore({ src, cameraId, segments, slotIndex }: Props) {
   const hlsRef = useRef<Hls | null>(null);
   const [isVideoReady, setIsVideoReady] = useState(false);
 
-  const { globalTime, cameraTimes, isSync, isPlaying, playbackSpeed, isSeeking } =
+  const { globalTime, cameraTimes, isSync, isPlaying, playbackSpeed, isSeeking, slotSeeking } =
     usePlaybackStore();
 
   const currentTime = isSync ? globalTime : cameraTimes[slotIndex] || globalTime;
+  const isCurrentSlotSeeking = isSync ? isSeeking : (slotSeeking[slotIndex] || isSeeking);
 
   // ---------------- SEGMENT OFFSETS ----------------
   const segmentOffsets = useMemo(() => {
@@ -63,15 +69,15 @@ export function useHlsWithStore({ src, cameraId, segments, slotIndex }: Props) {
     const video = videoRef.current;
     if (!video) return;
 
-    if (isSeeking) setIsVideoReady(false);
+    if (isCurrentSlotSeeking) setIsVideoReady(false);
 
     const onCanPlay = () => {
-      if (isSeeking) setIsVideoReady(true);
+      if (isCurrentSlotSeeking) setIsVideoReady(true);
     };
 
     video.addEventListener("canplay", onCanPlay);
     return () => video.removeEventListener("canplay", onCanPlay);
-  }, [isSeeking]);
+  }, [isCurrentSlotSeeking]);
 
   // ---------------- PLAY / PAUSE SYNC ----------------
   useEffect(() => {
@@ -79,7 +85,7 @@ export function useHlsWithStore({ src, cameraId, segments, slotIndex }: Props) {
     if (!video) return;
 
     if (isPlaying) {
-      video.play().catch(() => {});
+      video.play().catch(() => { });
     } else {
       video.pause();
     }
@@ -113,7 +119,7 @@ export function useHlsWithStore({ src, cameraId, segments, slotIndex }: Props) {
       video.playbackRate = Math.min(Math.max(playbackSpeed, 0.25), 8);
       video.muted = Math.abs(playbackSpeed) > 2;
       if (isPlaying) {
-        video.play().catch(() => {});
+        video.play().catch(() => { });
       } else {
         video.pause();
       }

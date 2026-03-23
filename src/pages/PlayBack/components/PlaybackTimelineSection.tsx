@@ -89,8 +89,8 @@ export const PlaybackTimelineSection = React.memo(
           cameraNames={cameraNames}
           cameraIds={cameraIds}
           bookmarksPerSlot={{
-    [slotCount > 0 ? slotCount - 1 : 0]: bookmarks || []
-  }}
+            [slotCount > 0 ? slotCount - 1 : 0]: bookmarks || []
+          }}
           timelineDate={timelineDate}
         />
 
