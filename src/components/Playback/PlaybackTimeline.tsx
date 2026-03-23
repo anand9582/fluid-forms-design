@@ -300,9 +300,7 @@ const onMouseDown = (e: React.MouseEvent, slotIndex: number) => {
   return (
      <div
       className="border-t"
-      style={{
-        maxHeight: isExpanded ? slotCount * 26 + 50 : 0,
-      }}
+     
     >
       {/* HEADER */}
       <div className="flex border-b items-center">

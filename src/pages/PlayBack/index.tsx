@@ -1,8 +1,3 @@
-/**
- * PlayBack Page - Main Component
- * Modular page structure with clean separation of concerns
- */
-
 import React, { useCallback } from "react";
 import { getAuthHeaders } from "@/components/Config/api";
 import { usePlaybackStore } from "@/Store/playbackStore";
@@ -12,10 +7,6 @@ import { PlaybackToolbar } from "./components/PlaybackToolbar";
 import { PlaybackCameraGridSection } from "./components/PlaybackCameraGridSection";
 import { PlaybackTimelineSection } from "./components/PlaybackTimelineSection";
 
-/**
- * Main PlayBack Page Component
- * Orchestrates all sub-components and manages playback logic
- */
 export default function Index() {
   const playback = usePlaybackStore();
 
@@ -57,6 +48,15 @@ export default function Index() {
     [state.selectedSlot, handleTimelineAddBookmark]
   );
 
+  // ---------------- DEBUG: log bookmarks ----------------
+  console.log("📌 All bookmarks per slot:", state.bookmarksPerSlot);
+  console.log(
+    "📌 Bookmarks for selected slot:",
+    state.selectedSlot !== null
+      ? state.bookmarksPerSlot[state.selectedSlot]
+      : []
+  );
+
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
       {/* Navigation Sidebar */}
@@ -69,6 +69,8 @@ export default function Index() {
         selectedLayout={state.selectedLayout}
         onLayoutChange={handleLayoutChange}
       />
+
+      {/* Camera Grid Section */}
       <PlaybackCameraGridSection
         selectedSlot={state.selectedSlot}
         onSlotSelect={setSelectedSlot}
@@ -82,12 +84,14 @@ export default function Index() {
 
       {/* Timeline & Controls */}
       <PlaybackTimelineSection
-        cameraId={state.players.find(
-          (p) =>
-            p.slotIndex === state.selectedSlot &&
-            p.date.toDateString() === state.selectedDate.toDateString()
-        )?.cameraId}
-        bookmarks={state.bookmarksPerSlot[state.selectedSlot!] || []}
+        cameraId={
+          state.players.find(
+            (p) =>
+              p.slotIndex === state.selectedSlot &&
+              p.date.toDateString() === state.selectedDate.toDateString()
+          )?.cameraId
+        }
+        bookmarks={state.selectedSlot !== null ? state.bookmarksPerSlot[state.selectedSlot] || [] : []}
         isTimelineExpanded={state.isTimelineExpanded}
         onToggleTimeline={() => setTimelineExpanded(!state.isTimelineExpanded)}
         zoomLevel={state.zoomLevel}
@@ -107,9 +111,7 @@ export default function Index() {
         cameraNames={cameraNames}
         cameraIds={Object.values(state.players).map((p) => p.cameraId) || []}
         timelineDate={state.selectedDate}
-        
       />
-      
     </div>
   );
 }

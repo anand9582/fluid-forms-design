@@ -65,7 +65,6 @@ export function PlaybackBookmarkPopover({
 
   //  Helper: jump handler
   const handleJumpClick = (bm: PlaybackBookmark) => {
-  console.log("👉 Bookmark clicked:", bm);
 
   const position = getBookmarkPosition(bm);
   console.log("⏱ Raw position:", position);

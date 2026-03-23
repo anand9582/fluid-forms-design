@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useMemo } from "react";
 import { usePlaybackStore } from "@/Store/playbackStore";
 
 import {
@@ -41,7 +41,6 @@ import { PlaybackBookmarkPopover, PlaybackBookmark } from "@/components/Playback
 
 interface Props {
   cameraId?: string;
-  bookmarks: PlaybackBookmark[];
   isTimelineExpanded: boolean;
   onToggleTimeline: () => void;
   zoomLevel: number;
@@ -52,14 +51,10 @@ interface Props {
   onSkipForward: () => void;
   onStop: () => void;
   onSeekToDate: (date: Date) => void;
-  onAddBookmark: (name: string, position: number, timestamp: string, cameraId: string) => void;
-  onRemoveBookmark: (id: string, cameraId: string) => void;
-  onJumpToBookmark: (position: number) => void;
 }
 
 export function PlaybackTimelineBar({
-  cameraId,
-  bookmarks,
+   cameraId,
   isTimelineExpanded,
   onToggleTimeline,
   zoomLevel,
@@ -70,9 +65,6 @@ export function PlaybackTimelineBar({
   onSkipForward,
   onStop,
   onSeekToDate,
-  onAddBookmark,
-  onRemoveBookmark,
-  onJumpToBookmark,
 }: Props) {
   const {
     globalTime,
@@ -88,7 +80,6 @@ export function PlaybackTimelineBar({
 
   const [pickerOpen, setPickerOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(globalTime);
-  const [lastAppliedTime, setLastAppliedTime] = useState<Date | null>(null);
 
   const [forwardSpeedOpen, setForwardSpeedOpen] = useState(false);
   const [reverseSpeedOpen, setReverseSpeedOpen] = useState(false);
@@ -103,8 +94,9 @@ export function PlaybackTimelineBar({
   const [ampm, setAmpm] = useState<"AM" | "PM">(
     globalTime.getHours() >= 12 ? "PM" : "AM"
   );
+ const [bookmarks, setBookmarks] = useState<PlaybackBookmark[]>([]);
   const zoomPercent = ((zoomLevel - 1) / 9) * 100;
-const pickerRef = useRef<HTMLDivElement>(null);
+
   const togglePlay = () => {
     if (isPlaying) pause();
     else play();
@@ -122,19 +114,6 @@ const pickerRef = useRef<HTMLDivElement>(null);
     setPickerOpen(open);
   };
 
-  // Sync picker values when globalTime changes (and picker is closed)
-  useEffect(() => {
-    if (!pickerOpen) {
-      setSelectedDate(globalTime);
-      const h = globalTime.getHours();
-      setHour(String(h % 12 || 12));
-      setMinute(String(globalTime.getMinutes()).padStart(2, "0"));
-      setSecond(String(globalTime.getSeconds()).padStart(2, "0"));
-      setAmpm(h >= 12 ? "PM" : "AM");
-      setLastAppliedTime(null); // Clear after store catches up
-    }
-  }, [globalTime, pickerOpen]);
-
   const applyDateTime = () => {
     const d = new Date(selectedDate);
     let h = parseInt(hour) || 0;
@@ -144,38 +123,26 @@ const pickerRef = useRef<HTMLDivElement>(null);
 
     d.setHours(h, parseInt(minute) || 0, parseInt(second) || 0, 0);
 
-    // Set immediately for instant UI feedback
-    setLastAppliedTime(d);
-    
-    // Then trigger store update (which will update globalTime)
-    onSeekToDate(d);
+    onSeekToDate(d); // store update
     setPickerOpen(false);
   };
 
   // -----------------------
-  // Display either lastAppliedTime (for instant feedback) or computed picker time
+  // Instant live display while picker is open
   // -----------------------
   const displayTime = useMemo(() => {
-    // If we just applied a time, show it immediately (don't wait for store)
-    if (lastAppliedTime) {
-      return lastAppliedTime;
-    }
-    // If picker is open, show computed time from inputs
-    if (pickerOpen) {
-      const h = parseInt(hour) || 0;
-      const realHour = ampm === "PM" ? (h === 12 ? 12 : h + 12) : (h === 12 ? 0 : h);
-      return new Date(
-        selectedDate.getFullYear(),
-        selectedDate.getMonth(),
-        selectedDate.getDate(),
-        realHour,
-        parseInt(minute) || 0,
-        parseInt(second) || 0
-      );
-    }
-    // Otherwise show globalTime from store
-    return globalTime;
-  }, [pickerOpen, selectedDate, hour, minute, second, ampm, globalTime, lastAppliedTime]);
+    if (!pickerOpen) return globalTime;
+    const h = parseInt(hour) || 0;
+    const realHour = ampm === "PM" ? (h === 12 ? 12 : h + 12) : (h === 12 ? 0 : h);
+    return new Date(
+      selectedDate.getFullYear(),
+      selectedDate.getMonth(),
+      selectedDate.getDate(),
+      realHour,
+      parseInt(minute) || 0,
+      parseInt(second) || 0
+    );
+  }, [pickerOpen, selectedDate, hour, minute, second, ampm, globalTime]);
 
   const handleForwardSpeedSelect = (speed: number) => {
     setSpeed(speed);
@@ -187,41 +154,60 @@ const pickerRef = useRef<HTMLDivElement>(null);
     setReverseSpeedOpen(false);
   };
 
-    // ----------------
+  // ----------------
   // BOOKMARK HANDLER
   // ----------------
-  const handleAddBookmark = (name: string, position: number, timestamp: string, camId: string) => {
-    if (!camId) return;
-    onAddBookmark(name, position, timestamp, camId);
-  };
+const handleAddBookmark = async (name: string, position: number, timestamp: string, camId: string) => {
+  if (!camId) return;
 
-  const handleRemoveBookmark = (id: string, camId: string) => {
-    onRemoveBookmark(id, camId);
+  try {
+    const res = await axios.post(`http://192.168.11.131:8081/api/bookmarks/addBookmark`, {
+      cameraId: camId,
+      bookmarkTime: timestamp,
+      title: name,
+      note: "Auto bookmark",
+      createdBy: 101,
+    }, { headers: getAuthHeaders() });
+
+    if (res.status === 200) {
+      // Handle API response structure (data.data or just data)
+      const bookmarkData = res.data.data || res.data;
+      const bookmarkId = bookmarkData?.id || res.data?.id;
+      
+      setBookmarks((prev) => [...prev, { 
+        id: bookmarkId, 
+        cameraId: camId, 
+        name, 
+        title: name, 
+        position, 
+        timestamp, 
+        bookmarkTime: timestamp, 
+        createdAt: new Date() 
+      }]);
+    }
+  } catch (err) {
+    console.error("Failed to add bookmark", err);
+  }
+};
+
+  const handleRemoveBookmark = async (id: string, camId: string) => {
+    try {
+      const res = await axios.delete(`http://192.168.11.131:8081/api/bookmarks/deleteBookmark/${id}`, {
+        headers: getAuthHeaders()
+      });
+      
+      if (res.status === 200) {
+        setBookmarks(bookmarks.filter((bm) => bm.id !== id));
+      }
+    } catch (err) {
+      console.error("Failed to remove bookmark", err);
+    }
   };
 
   const handleJumpToBookmark = (position: number) => {
     const date = new Date(position);
-    setLastAppliedTime(date);
     onSeekToDate(date);
-    onJumpToBookmark(position);
-    play();
   };
-
-  useEffect(() => {
-  const handleClickOutside = (event: MouseEvent) => {
-    if (pickerRef.current && !pickerRef.current.contains(event.target as Node)) {
-      setPickerOpen(false); 
-    }
-  };
-
-  if (pickerOpen) {
-    document.addEventListener("mousedown", handleClickOutside);
-  }
-
-  return () => {
-    document.removeEventListener("mousedown", handleClickOutside);
-  };
-}, [pickerOpen]);
 
   return (
     <div className="flex items-center h-9 px-2 py-3 gap-4 border-t bg-muted/30 text-[11px]">
@@ -239,67 +225,56 @@ const pickerRef = useRef<HTMLDivElement>(null);
             className="flex items-center gap-1 px-2 py-[2px] rounded bg-muted"
           >
             <CalendarIcon className="h-3 w-3" />
-           <span className="text-md font-roboto font-medium text-slate-900">
+           <span className="font-mono">
               {formatIST(displayTime)}
             </span>
           </button>
         </AppTooltip>
 
         {pickerOpen && (
-          
-        <div ref={pickerRef} className="absolute bottom-full mt-2 z-50 bg-background border rounded shadow p-3">
-  <Calendar
-    mode="single"
-    selected={selectedDate}
-    onSelect={(d) => d && setSelectedDate(d)}
-  />
+          <div className="absolute bottom-full mt-2 z-50 bg-background border rounded shadow p-3">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={(d) => d && setSelectedDate(d)}
+            />
 
-  <div className="flex items-center gap-1 mt-2">
-    <Input
-      value={hour}
-      onChange={(e) =>
-        setHour(e.target.value.replace(/\D/g, "").slice(0, 2))
-      }
-      className="w-10 h-7 text-center"
-    />
-    :
-    <Input
-      value={minute}
-      onChange={(e) =>
-        setMinute(e.target.value.replace(/\D/g, "").slice(0, 2))
-      }
-      className="w-10 h-7 text-center"
-    />
-    :
-    <Input
-      value={second}
-      onChange={(e) =>
-        setSecond(e.target.value.replace(/\D/g, "").slice(0, 2))
-      }
-      className="w-10 h-7 text-center"
-    />
+            <div className="flex items-center gap-1 mt-2">
+              <Input
+                value={hour}
+                onChange={(e) =>
+                  setHour(e.target.value.replace(/\D/g, "").slice(0, 2))
+                }
+                className="w-10 h-7 text-center"
+              />
+              :
+              <Input
+                value={minute}
+                onChange={(e) =>
+                  setMinute(e.target.value.replace(/\D/g, "").slice(0, 2))
+                }
+                className="w-10 h-7 text-center"
+              />
+              :
+              <Input
+                value={second}
+                onChange={(e) =>
+                  setSecond(e.target.value.replace(/\D/g, "").slice(0, 2))
+                }
+                className="w-10 h-7 text-center"
+              />
+              <Button size="sm" onClick={() => setAmpm("AM")}>
+                AM
+              </Button>
+              <Button size="sm" onClick={() => setAmpm("PM")}>
+                PM
+              </Button>
+            </div>
 
-    {/* AM/PM Buttons with selected highlight */}
-    <Button
-      size="sm"
-      className={`w-12 ${ampm === "AM" ? "bg-slate-600 text-white" : "bg-muted text-gray-700"}`}
-      onClick={() => setAmpm("AM")}
-    >
-      AM
-    </Button>
-    <Button
-      size="sm"
-      className={`w-12 ${ampm === "PM" ? "bg-slate-600 text-white" : "bg-muted text-gray-700"}`}
-      onClick={() => setAmpm("PM")}
-    >
-      PM
-    </Button>
-  </div>
-
-  <Button size="sm" className="w-full mt-2 bg-slate-600" onClick={applyDateTime}>
-    Go to Date & Time
-  </Button>
-</div>
+            <Button size="sm" className="w-full mt-2" onClick={applyDateTime}>
+              Go to Date & Time
+            </Button>
+          </div>
         )}
       </div>
 
@@ -457,27 +432,15 @@ const pickerRef = useRef<HTMLDivElement>(null);
         </PlaybackControlButton>
 
         {/* BOOKMARK POPOVER */}
-            {useMemo(() => {
-              const dateForBookmarks = lastAppliedTime || globalTime;
-              const dayStart = new Date(dateForBookmarks);
-              dayStart.setHours(0, 0, 0, 0);
-              const dayEnd = new Date(dateForBookmarks);
-              dayEnd.setHours(23, 59, 59, 999);
-              
-              return (
-                <PlaybackBookmarkPopover
-                  bookmarks={bookmarks}
-                  currentPosition={lastSeekTime ? lastSeekTime.getTime() : 0}
-                  currentTimestamp={lastSeekTime ? formatIST(lastSeekTime) : "00:00:00"}
-                  cameraId={cameraId || ""}
-                  fromDate={dayStart.toISOString()}
-                  toDate={dayEnd.toISOString()}
-                  onAddBookmark={handleAddBookmark}
-                  onRemoveBookmark={handleRemoveBookmark}
-                  onJumpToBookmark={handleJumpToBookmark}
-                />
-              );
-            }, [bookmarks, lastSeekTime, cameraId, lastAppliedTime, globalTime])}
+            <PlaybackBookmarkPopover
+              bookmarks={bookmarks}
+              currentPosition={lastSeekTime ? lastSeekTime.getTime() : 0}
+              currentTimestamp={lastSeekTime ? formatIST(lastSeekTime) : "00:00:00"}
+              cameraId={cameraId || ""}
+              onAddBookmark={handleAddBookmark}
+              onRemoveBookmark={handleRemoveBookmark}
+              onJumpToBookmark={handleJumpToBookmark}
+            />
 
         <PlaybackControlButton label="Clip">
           <Scissors className="h-3 w-3" />

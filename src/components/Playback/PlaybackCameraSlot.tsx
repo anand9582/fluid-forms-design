@@ -102,9 +102,9 @@ export function PlaybackCameraSlot({
           ref={videoRef}
           className="absolute inset-0 w-full h-full object-cover"
           muted
-          autoPlay
           playsInline
           preload="auto"
+          autoPlay
         />
       )}
 

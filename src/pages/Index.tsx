@@ -32,14 +32,14 @@ const Index = () => {
               {/* Left Column */}
               <div className="lg:col-span-3 space-y-2 sm:space-y-3 lg:space-y-4">
                   <SystemStatus />
-                  <SystemHealth />
+                  {/* <SystemHealth /> */}
                   <StorageVolumes />
               </div>
 
               {/* Middle Column */}
               <div className="lg:col-span-6 space-y-2 sm:space-y-3 lg:space-y-4">
                 <LiveMonitor />
-                <FacilityMap />
+                {/* <FacilityMap /> */}
                 <NetworkThroughput />
               </div>
 

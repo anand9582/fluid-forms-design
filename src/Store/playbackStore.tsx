@@ -1,10 +1,5 @@
 import { create } from "zustand";
 
-export interface Segment {
-  startTime: Date;
-  endTime: Date;
-}
-
 export interface SegmentHour {
   start: number;
   end: number;
@@ -20,33 +15,28 @@ export interface PlaybackStore {
 
   isSync: boolean;
   isPlaying: boolean;
-  isSeeking: boolean;
   playbackSpeed: number;
+  isSeeking: boolean;
 
   lastSeekTime: Date | null;
-  setLastSeekTime: (date: Date) => void;
 
   play: () => void;
   pause: () => void;
   stop: () => void;
-
   setSpeed: (speed: number) => void;
   setSynced: (sync: boolean) => void;
+  setSeeking: (seeking: boolean) => void;
   setSegments: (segments: Record<number, SegmentHour[]>, dayStart: Date) => void;
 
   seekTo: (date: Date, slotIndex?: number) => void;
   seekBySeconds: (sec: number, slotIndex?: number) => void;
-  seekToHour: (absHour: number, slotIndex?: number) => void;
-
-  updateFromVideo: (date: Date, slotIndex?: number) => void;
 }
 
-type TimerMap = Record<number, ReturnType<typeof setTimeout>>;
-
 export const usePlaybackStore = create<PlaybackStore>((set, get) => {
-  const slotTimers: TimerMap = {};
-  let playbackIntervalId: ReturnType<typeof setInterval> | null = null;
+  let rAFId: number | null = null;
   let lastUpdateTime = Date.now();
+  const slotTimers: Record<number, ReturnType<typeof setTimeout>> = {};
+  let seekingTimer: number | null = null;
 
   const clearSlotTimer = (slotIndex: number) => {
     if (slotTimers[slotIndex]) {
@@ -57,223 +47,98 @@ export const usePlaybackStore = create<PlaybackStore>((set, get) => {
 
   const startSlotSeeking = (slotIndex: number) => {
     clearSlotTimer(slotIndex);
-
     set((state) => ({
-      slotSeeking: {
-        ...state.slotSeeking,
-        [slotIndex]: true,
-      },
+      slotSeeking: { ...state.slotSeeking, [slotIndex]: true },
     }));
 
     slotTimers[slotIndex] = setTimeout(() => {
       set((state) => ({
-        slotSeeking: {
-          ...state.slotSeeking,
-          [slotIndex]: false,
-        },
+        slotSeeking: { ...state.slotSeeking, [slotIndex]: false },
       }));
-
       delete slotTimers[slotIndex];
     }, 3000);
   };
 
-  const stopSlotSeeking = (slotIndex: number) => {
-    clearSlotTimer(slotIndex);
-
-    set((state) => ({
-      slotSeeking: {
-        ...state.slotSeeking,
-        [slotIndex]: false,
-      },
-    }));
+  const hourToDate = (hour: number, dayStart: Date) => {
+    const d = new Date(dayStart);
+    d.setHours(Math.floor(hour), Math.floor((hour % 1) * 60), Math.floor((hour * 3600) % 60), 0);
+    return d;
   };
 
-  // Helper: Convert hour to date
-  const hourToDate = (hour: number, dayStart: Date): Date => {
-    const newDate = new Date(dayStart);
-    newDate.setHours(Math.floor(hour));
-    newDate.setMinutes(Math.floor((hour % 1) * 60));
-    newDate.setSeconds(Math.floor((hour * 3600) % 60));
-    newDate.setMilliseconds(0);
-    return newDate;
-  };
+  const dateToHour = (date: Date, dayStart: Date) => (date.getTime() - dayStart.getTime()) / 3600000;
 
-  // Helper: Convert date to hour
-  const dateToHour = (date: Date, dayStart: Date): number => {
-    const ms = date.getTime() - dayStart.getTime();
-    return ms / 3600000; // ms to hours
-  };
-
-  // Get all recording segments for a slot, sorted by start time
-  const getRecordingSegments = (slotIndex: number): SegmentHour[] => {
+  const getRecordingSegments = (slotIndex: number) => {
     const slots = get().segmentsPerSlot;
     return (slots[slotIndex] || [])
       .filter((s) => s.type === "recording")
       .sort((a, b) => a.start - b.start);
   };
 
-  // Find next segment to loop to (for forward playback)
-  const getNextSegmentStart = (currentHour: number, segments: SegmentHour[]): number | null => {
-    const recordings = segments.filter((s) => s.type === "recording").sort((a, b) => a.start - b.start);
-    
-    // Find first segment after currentHour
-    for (const rec of recordings) {
-      if (rec.start >= currentHour) {
-        return rec.start;
-      }
-    }
-    
-    // If none found, loop to first segment
-    return recordings.length > 0 ? recordings[0].start : null;
-  };
-
-  // Find previous segment to loop to (for reverse playback)
-  const getPreviousSegmentEnd = (currentHour: number, segments: SegmentHour[]): number | null => {
-    const recordings = segments.filter((s) => s.type === "recording").sort((a, b) => b.start - a.start);
-    
-    // Find first segment before currentHour
-    for (const rec of recordings) {
-      if (rec.end <= currentHour) {
-        return rec.end;
-      }
-    }
-    
-    // If none found, loop to last segment
-    return recordings.length > 0 ? recordings[recordings.length - 1].end : null;
-  };
-
-  // Clamp hour to valid recording segments
-  const clampToRecordings = (hour: number, segments: SegmentHour[]): number | null => {
-    const recordings = segments.filter((s) => s.type === "recording").sort((a, b) => a.start - b.start);
-    
-    if (recordings.length === 0) return null;
-
-    const first = recordings[0];
-    const last = recordings[recordings.length - 1];
-
-    if (hour <= first.start) return first.start;
-    if (hour >= last.end) return last.end;
-
-    for (const rec of recordings) {
-      if (hour >= rec.start && hour <= rec.end) return hour;
+  const playbackLoop = () => {
+    const { isPlaying, playbackSpeed, globalTime, cameraTimes, isSync, segmentsPerSlot, dayStart } = get();
+    if (!isPlaying || playbackSpeed === 0) {
+      rAFId = requestAnimationFrame(playbackLoop);
+      return;
     }
 
-    let nearest = first.start;
-    let minDist = Math.abs(hour - nearest);
-    for (const rec of recordings) {
-      const startDist = Math.abs(hour - rec.start);
-      const endDist = Math.abs(hour - rec.end);
-      if (startDist < minDist) {
-        minDist = startDist;
-        nearest = rec.start;
-      }
-      if (endDist < minDist) {
-        minDist = endDist;
-        nearest = rec.end;
-      }
-    }
-    return nearest;
-  };
+    const now = Date.now();
+    const deltaTime = (now - lastUpdateTime) / 1000; // seconds
+    lastUpdateTime = now;
+    // playbackSpeed is a multiplier (1x, 2x, etc.) relative to real time
+    const deltaHours = (deltaTime * playbackSpeed) / 3600;
 
-  const startPlaybackLoop = () => {
-    if (playbackIntervalId) return;
+    if (isSync) {
+      let currentHour = dateToHour(globalTime, dayStart) + deltaHours;
 
-    lastUpdateTime = Date.now();
+      const recordings = Object.keys(segmentsPerSlot)
+        .map(Number)
+        .flatMap((slot) => getRecordingSegments(slot))
+        .sort((a, b) => a.start - b.start);
 
-    playbackIntervalId = setInterval(() => {
-      const { isPlaying, playbackSpeed, globalTime, cameraTimes, isSync, segmentsPerSlot, dayStart } = get();
-
-      if (!isPlaying || playbackSpeed === 0 || Object.keys(segmentsPerSlot).length === 0) {
+      if (recordings.length === 0) {
+        rAFId = requestAnimationFrame(playbackLoop);
         return;
       }
 
-      const now = Date.now();
-      const deltaTime = (now - lastUpdateTime) / 1000; // seconds
-      lastUpdateTime = now;
+      const first = recordings[0];
+      const last = recordings[recordings.length - 1];
 
-      const updateAmount = deltaTime * playbackSpeed * 1000; // milliseconds
+      if (currentHour > last.end) currentHour = first.start;
+      else if (currentHour < first.start) currentHour = last.end;
 
-      if (isSync) {
-        // SYNC mode: all slots together
-        let currentHour = dateToHour(globalTime, dayStart);
-        let updateHour = currentHour + (updateAmount / 3600000); // Convert ms to hours
+      set({ globalTime: hourToDate(currentHour, dayStart) });
+    } else {
+      const newCameraTimes: Record<number, Date> = { ...cameraTimes };
+      Object.keys(segmentsPerSlot).forEach((slotKey) => {
+        const slotIndex = Number(slotKey);
+        const segs = getRecordingSegments(slotIndex);
+        if (!segs.length) return;
 
-        // Get all recording segments from first slot that has recordings
-        let recordings: SegmentHour[] = [];
-        for (const slotKey of Object.keys(segmentsPerSlot)) {
-          const segs = getRecordingSegments(Number(slotKey));
-          if (segs.length > 0) {
-            recordings = segs;
-            break;
-          }
-        }
+        let currentHour = dateToHour(cameraTimes[slotIndex] || globalTime, dayStart) + deltaHours;
+        const first = segs[0];
+        const last = segs[segs.length - 1];
+        if (currentHour > last.end) currentHour = first.start;
+        else if (currentHour < first.start) currentHour = last.end;
 
-        if (recordings.length === 0) return;
+        newCameraTimes[slotIndex] = hourToDate(currentHour, dayStart);
+      });
+      set({ cameraTimes: newCameraTimes });
+    }
 
-        // Check if we've passed the end of the last segment (forward)
-        const lastSeg = recordings[recordings.length - 1];
-        if (updateHour > lastSeg.end) {
-          // Loop to first segment
-          const firstSeg = recordings[0];
-          updateHour = firstSeg.start;
-        }
-        // Check if we've passed the start of the first segment (reverse)
-        else if (playbackSpeed < 0) {
-          const firstSeg = recordings[0];
-          if (updateHour < firstSeg.start) {
-            // Loop to last segment
-            updateHour = lastSeg.end;
-          }
-        }
-
-        const newTime = hourToDate(Math.max(0, Math.min(24, updateHour)), dayStart);
-        set({ globalTime: newTime });
-      } else {
-        // ASYNC mode: each slot independently
-        const newCameraTimes: Record<number, Date> = { ...cameraTimes };
-        let updated = false;
-
-        Object.keys(segmentsPerSlot).forEach((slotKey) => {
-          const slotIndex = Number(slotKey);
-          const recordings = getRecordingSegments(slotIndex);
-
-          if (recordings.length === 0) return;
-
-          const currentTime = cameraTimes[slotIndex] || globalTime;
-          let currentHour = dateToHour(currentTime, dayStart);
-          let updateHour = currentHour + (updateAmount / 3600000);
-
-          // Check if we've passed the end of the last segment (forward)
-          const lastSeg = recordings[recordings.length - 1];
-          if (updateHour > lastSeg.end) {
-            // Loop to first segment
-            const firstSeg = recordings[0];
-            updateHour = firstSeg.start;
-          }
-          // Check if we've passed the start of the first segment (reverse)
-          else if (playbackSpeed < 0) {
-            const firstSeg = recordings[0];
-            if (updateHour < firstSeg.start) {
-              // Loop to last segment
-              updateHour = lastSeg.end;
-            }
-          }
-
-          newCameraTimes[slotIndex] = hourToDate(Math.max(0, Math.min(24, updateHour)), dayStart);
-          updated = true;
-        });
-
-        if (updated) {
-          set({ cameraTimes: newCameraTimes });
-        }
-      }
-    }, 100); // Update every 100ms for smooth playback
+    rAFId = requestAnimationFrame(playbackLoop);
   };
 
-  const stopPlaybackLoop = () => {
-    if (playbackIntervalId) {
-      clearInterval(playbackIntervalId);
-      playbackIntervalId = null;
+  const startLoop = () => {
+    if (!rAFId) {
+      lastUpdateTime = Date.now();
+      rAFId = requestAnimationFrame(playbackLoop);
+    }
+  };
+
+  const stopLoop = () => {
+    if (rAFId) {
+      cancelAnimationFrame(rAFId);
+      rAFId = null;
     }
   };
 
@@ -286,26 +151,22 @@ export const usePlaybackStore = create<PlaybackStore>((set, get) => {
 
     isSync: false,
     isPlaying: false,
-    isSeeking: false,
     playbackSpeed: 1,
-
+    isSeeking: false,
     lastSeekTime: null,
-    setLastSeekTime: (date) => set({ lastSeekTime: date }),
 
-    setSegments: (segments, dayStart) =>
-      set({ segmentsPerSlot: segments, dayStart }),
+    setSeeking: (seeking: boolean) => set({ isSeeking: seeking }),
 
     play: () => {
       set({ isPlaying: true });
-      startPlaybackLoop();
+      startLoop();
     },
     pause: () => {
       set({ isPlaying: false });
-      stopPlaybackLoop();
+      stopLoop();
     },
-
     stop: () => {
-      stopPlaybackLoop();
+      stopLoop();
       set({
         isPlaying: false,
         playbackSpeed: 1,
@@ -316,118 +177,63 @@ export const usePlaybackStore = create<PlaybackStore>((set, get) => {
       });
     },
 
-    setSpeed: (speed) => {
-      if (speed < 0) {
-        set({ playbackSpeed: Math.max(speed, -32) });
-      } else {
-        set({
-          playbackSpeed: Math.min(Math.max(speed, 0.25), 36),
-        });
-      }
+    setSpeed: (speed: number) => {
+      set({ playbackSpeed: Math.sign(speed) * Math.min(Math.abs(speed), 36) });
     },
 
-    setSynced: (sync) => {
+    setSynced: (sync: boolean) => {
       const { globalTime, cameraTimes } = get();
-
-      if (sync) {
-        set({
-          isSync: true,
-          cameraTimes: {},
-          globalTime: new Date(globalTime),
-          slotSeeking: {},
-        });
-      } else {
+      if (sync) set({ isSync: true, cameraTimes: {}, globalTime });
+      else {
         const newTimes: Record<number, Date> = {};
-
         Object.keys(cameraTimes).forEach((slot) => {
           newTimes[Number(slot)] = new Date(globalTime);
         });
-
-        set({
-          isSync: false,
-          cameraTimes: newTimes,
-        });
+        set({ isSync: false, cameraTimes: newTimes });
       }
     },
 
-    //  MAIN FIXED FUNCTION
+    setSegments: (segments, dayStart) => set({ segmentsPerSlot: segments, dayStart }),
+
     seekTo: (date, slotIndex) => {
-      const { isSync } = get();
+      set({ lastSeekTime: date, isSeeking: true });
 
-      set({ lastSeekTime: date });
-
-      if (isSync) {
-        // SYNC mode: sab slots ek saath
-        set({
-          isSeeking: true,
-          slotSeeking: {}, // per-slot flags clear
-          globalTime: date,
-        });
-
-        setTimeout(() => set({ isSeeking: false }), 80);
-      } else if (slotIndex !== undefined) {
-        startSlotSeeking(slotIndex); 
-
+      if (get().isSync) set({ globalTime: date });
+      else if (slotIndex !== undefined) {
+        startSlotSeeking(slotIndex);
         set((state) => ({
-          globalTime: date,
-          cameraTimes: {
-            ...state.cameraTimes,
-            [slotIndex]: date,
-          },
+          cameraTimes: { ...state.cameraTimes, [slotIndex]: date },
         }));
       }
+
+      if (seekingTimer) {
+        window.clearTimeout(seekingTimer);
+      }
+
+      seekingTimer = window.setTimeout(() => {
+        set({ isSeeking: false });
+        seekingTimer = null;
+      }, 150);
     },
 
     seekBySeconds: (sec, slotIndex) => {
       const { isSync, globalTime, cameraTimes } = get();
+      const base = isSync ? globalTime : (slotIndex !== undefined ? cameraTimes[slotIndex] : globalTime);
+      const newDate = new Date(base.getTime() + sec * 1000);
+      if (!isSync && slotIndex !== undefined) startSlotSeeking(slotIndex);
 
-      if (isSync) {
-        const newDate = new Date(globalTime.getTime() + sec * 1000);
+      set({
+        globalTime: newDate,
+        cameraTimes: slotIndex !== undefined ? { ...cameraTimes, [slotIndex]: newDate } : cameraTimes,
+        lastSeekTime: newDate,
+        isSeeking: true,
+      });
 
-        set({
-          globalTime: newDate,
-          lastSeekTime: newDate,
-        });
-      } else if (slotIndex !== undefined) {
-        const now = cameraTimes[slotIndex] || globalTime;
-        const newDate = new Date(now.getTime() + sec * 1000);
-
-        startSlotSeeking(slotIndex);
-
-        set((state) => ({
-          globalTime: newDate,
-          cameraTimes: {
-            ...state.cameraTimes,
-            [slotIndex]: newDate,
-          },
-          lastSeekTime: newDate,
-        }));
-      }
-    },
-
-    seekToHour: (absHour, slotIndex) => {
-      const base = get().globalTime;
-
-      const date = new Date(base);
-      date.setHours(Math.floor(absHour));
-      date.setMinutes(Math.floor((absHour % 1) * 60));
-      date.setSeconds(Math.floor((absHour * 3600) % 60));
-      date.setMilliseconds(0);
-
-      get().seekTo(date, slotIndex);
-    },
-
-    updateFromVideo: (date, slotIndex) => {
-      if (slotIndex === undefined || get().isSeeking) return;
-
-      set((state) => ({
-        cameraTimes: {
-          ...state.cameraTimes,
-          [slotIndex]: date,
-        },
-      }));
-
-      stopSlotSeeking(slotIndex);
+      if (seekingTimer) window.clearTimeout(seekingTimer);
+      seekingTimer = window.setTimeout(() => {
+        set({ isSeeking: false });
+        seekingTimer = null;
+      }, 150);
     },
   };
 });

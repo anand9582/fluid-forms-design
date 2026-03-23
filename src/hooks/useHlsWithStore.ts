@@ -10,34 +10,17 @@ interface Props {
   isMaster?: boolean;
 }
 
-export function useHlsWithStore({
-  src,
-  cameraId,
-  segments,
-  slotIndex,
-  isMaster = false,
-}: Props) {
+export function useHlsWithStore({ src, cameraId, segments, slotIndex }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
-  const reverseIntervalRef = useRef<number | null>(null);
-  const fastForwardIntervalRef = useRef<number | null>(null);
-  const lastUpdateRef = useRef(0);
-
   const [isVideoReady, setIsVideoReady] = useState(false);
 
-  const {
-    globalTime,
-    cameraTimes,
-    isSync,
-    isPlaying,
-    playbackSpeed,
-    isSeeking,
-    updateFromVideo,
-  } = usePlaybackStore();
+  const { globalTime, cameraTimes, isSync, isPlaying, playbackSpeed, isSeeking } =
+    usePlaybackStore();
 
   const currentTime = isSync ? globalTime : cameraTimes[slotIndex] || globalTime;
 
-  /* ---------------- SEGMENT OFFSETS ---------------- */
+  // ---------------- SEGMENT OFFSETS ----------------
   const segmentOffsets = useMemo(() => {
     let acc = 0;
     return segments.map((s) => {
@@ -48,19 +31,23 @@ export function useHlsWithStore({
     });
   }, [segments]);
 
-  /* ---------------- HLS INIT ---------------- */
+  // ---------------- HLS INIT ----------------
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !src || !cameraId) return;
 
     setIsVideoReady(false);
+
     const hls = new Hls({ startLevel: 0, maxBufferLength: 10, enableWorker: true });
     hlsRef.current = hls;
-
     hls.attachMedia(video);
     hls.loadSource(src);
 
-    const onCanPlay = () => setIsVideoReady(true);
+    const onCanPlay = () => {
+      setIsVideoReady(true);
+      // Do NOT autoplay, user controls play/pause
+    };
+
     video.addEventListener("canplay", onCanPlay);
 
     return () => {
@@ -71,84 +58,94 @@ export function useHlsWithStore({
     };
   }, [src, cameraId]);
 
-  /* ---------------- SEEK LOADER ---------------- */
+  // ---------------- SEEK LOADER ----------------
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
+
     if (isSeeking) setIsVideoReady(false);
+
     const onCanPlay = () => {
       if (isSeeking) setIsVideoReady(true);
     };
+
     video.addEventListener("canplay", onCanPlay);
     return () => video.removeEventListener("canplay", onCanPlay);
   }, [isSeeking]);
 
-  /* ---------------- PLAYBACK ENGINE ---------------- */
+  // ---------------- PLAY / PAUSE SYNC ----------------
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (isPlaying) {
+      video.play().catch(() => {});
+    } else {
+      video.pause();
+    }
+  }, [isPlaying]);
+
+  // ---------------- MAIN PLAYBACK ENGINE ----------------
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !segmentOffsets.length) return;
 
-    // find current segment
-    let seg = segmentOffsets.find((s) => currentTime >= s.startTime && currentTime <= s.endTime);
-    if (!seg) seg = segmentOffsets[0];
-    if (!seg) return;
+    const currentSeg =
+      segmentOffsets.find(
+        (s) => currentTime >= s.startTime && currentTime <= s.endTime
+      ) || segmentOffsets[0];
 
-    const logicalSeconds = (currentTime.getTime() - seg.startTime.getTime()) / 1000;
-    const targetTime = seg.offset + logicalSeconds;
-    if (Math.abs(video.currentTime - targetTime) > 0.5) video.currentTime = targetTime;
+    if (!currentSeg) return;
 
-    // clear intervals
-    if (reverseIntervalRef.current !== null && playbackSpeed >= 0) {
-      clearInterval(reverseIntervalRef.current);
-      reverseIntervalRef.current = null;
-    }
-    if (fastForwardIntervalRef.current !== null && playbackSpeed <= 16) {
-      clearInterval(fastForwardIntervalRef.current);
-      fastForwardIntervalRef.current = null;
-    }
+    const logicalSeconds =
+      (currentTime.getTime() - currentSeg.startTime.getTime()) / 1000;
+    const targetTime = currentSeg.offset + logicalSeconds;
 
-    // pause if not playing
-    if (!isPlaying) {
-      video.pause();
-      return;
+    const diff = Math.abs(video.currentTime - targetTime);
+    const maxDrift = Math.abs(playbackSpeed) > 2 ? 0.6 : 0.15;
+
+    // Keep video in sync with global logical timeline
+    if (diff > maxDrift || !isPlaying || playbackSpeed < 0) {
+      video.currentTime = Math.max(0, Math.min(targetTime, video.duration || targetTime));
     }
 
-    /* ---------- FORWARD PLAYBACK ---------- */
     if (playbackSpeed >= 0) {
-      if (playbackSpeed <= 16) {
-        video.playbackRate = playbackSpeed;
-        video.muted = playbackSpeed > 4;
+      video.playbackRate = Math.min(Math.max(playbackSpeed, 0.25), 8);
+      video.muted = Math.abs(playbackSpeed) > 2;
+      if (isPlaying) {
         video.play().catch(() => {});
       } else {
-        video.playbackRate = 16;
-        video.muted = true;
-        video.play().catch(() => {});
-        const extra = playbackSpeed / 16;
-        fastForwardIntervalRef.current = window.setInterval(() => {
-          if (!video) return;
-          video.currentTime += (extra - 1) * 0.5;
-        }, 100);
+        video.pause();
       }
-    }
-
-    /* ---------- REVERSE PLAYBACK ---------- */
-    else {
+    } else {
       video.pause();
-      const step = Math.abs(playbackSpeed) / 60;
-      reverseIntervalRef.current = window.setInterval(() => {
-        if (!video) return;
-        video.currentTime -= step;
-        if (video.currentTime <= seg!.offset) {
-          clearInterval(reverseIntervalRef.current!);
-          reverseIntervalRef.current = null;
-        }
-      }, 33);
+      // Negative speed is handled by store time decrements + sync loop (no native reverse playback).
     }
   }, [currentTime, isPlaying, playbackSpeed, segmentOffsets]);
 
-  /* ---------------- VIDEO → STORE ---------------- */
+  // ---------------- REVERSE FRAME LOOP (for smoother reverse feel) ----------------
   useEffect(() => {
-    if (!isMaster) return;
+    if (playbackSpeed >= 0) return;
+    if (!isPlaying) return;
+
+    let rafId: number;
+
+    const stepReverse = () => {
+      const video = videoRef.current;
+      if (!video || !isPlaying) return;
+
+      const step = Math.abs(playbackSpeed) * 0.02;
+      const newTime = Math.max(0, video.currentTime - step);
+      video.currentTime = newTime;
+      rafId = requestAnimationFrame(stepReverse);
+    };
+
+    rafId = requestAnimationFrame(stepReverse);
+    return () => cancelAnimationFrame(rafId);
+  }, [playbackSpeed, isPlaying]);
+
+  // ---------------- LOOP HANDLING ----------------
+  useEffect(() => {
     const video = videoRef.current;
     if (!video || !segmentOffsets.length) return;
 
@@ -156,38 +153,31 @@ export function useHlsWithStore({
     const lastSeg = segmentOffsets[segmentOffsets.length - 1];
 
     const onTimeUpdate = () => {
-      if (isSeeking) return;
+      if (!isPlaying) return;
       const current = video.currentTime;
-      if (!isFinite(current)) return;
 
-      // throttle updates
-      const now = Date.now();
-      if (now - lastUpdateRef.current < 200) return;
-      lastUpdateRef.current = now;
-
-      const endOfTimeline = lastSeg.offset + lastSeg.duration;
-      if (current >= endOfTimeline - 0.2) {
+      // Forward loop
+      if (playbackSpeed > 0 && current >= lastSeg.offset + lastSeg.duration - 0.2) {
         video.currentTime = firstSeg.offset;
-        updateFromVideo(new Date(firstSeg.startTime), slotIndex);
-        return;
       }
 
-      const seg = segmentOffsets.find((s) => current >= s.offset && current <= s.offset + s.duration);
-      if (!seg) return;
-
-      const realTime = new Date(seg.startTime.getTime() + (current - seg.offset) * 1000);
-      updateFromVideo(realTime, slotIndex);
+      // Reverse loop
+      if (playbackSpeed < 0 && current <= firstSeg.offset + 0.2) {
+        video.currentTime = lastSeg.offset + lastSeg.duration - 0.2;
+      }
     };
 
     video.addEventListener("timeupdate", onTimeUpdate);
     return () => video.removeEventListener("timeupdate", onTimeUpdate);
-  }, [isMaster, isSeeking, segmentOffsets]);
+  }, [segmentOffsets, isPlaying, playbackSpeed]);
 
-  /* ---------------- CLEANUP ---------------- */
+  // ---------------- CLEANUP ----------------
   useEffect(() => {
     return () => {
-      if (reverseIntervalRef.current !== null) clearInterval(reverseIntervalRef.current);
-      if (fastForwardIntervalRef.current !== null) clearInterval(fastForwardIntervalRef.current);
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
     };
   }, []);
 

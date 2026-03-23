@@ -88,11 +88,13 @@ export const PlaybackTimelineSection = React.memo(
           onSeek={onSeek}
           cameraNames={cameraNames}
           cameraIds={cameraIds}
-          bookmarksPerSlot={{}} 
+          bookmarksPerSlot={{
+    [slotCount > 0 ? slotCount - 1 : 0]: bookmarks || []
+  }}
           timelineDate={timelineDate}
         />
 
-        <PlaybackAlertsBar />
+        {/* <PlaybackAlertsBar /> */}
       </div>
     );
   }
