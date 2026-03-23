@@ -4,6 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DonutChart from "./DonutChart";
 import StatCard from "./StatCard";
+import axios from "axios";
+import { APISERVERURL, getAuthHeaders } from "@/components/Config/api";
+
 export const SystemStatus = () => {
   const stats = {
     total: 142,
@@ -81,8 +84,8 @@ export const SystemStatus = () => {
         </div>
 
         {/* View offline cameras */}
-        <button className="w-full text-center text-fontSize14px text-textlightred  hover:text-danger transition-colors flex items-center justify-center gap-1 pt-4 border-t font-roboto font-medium ">
-          View {stats.offline} Offline Cameras
+        <button className="w-full text-center text-fontSize14px text-black  hover:text-danger transition-colors flex items-center justify-center gap-1 pt-4 border-t font-roboto font-medium ">
+          View {stats.offline} All devices
           <ArrowRight className="w-4 h-4 " />
         </button>
       </CardContent>

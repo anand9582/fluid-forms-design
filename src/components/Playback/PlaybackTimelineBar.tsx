@@ -33,9 +33,14 @@ import { Calendar } from "@/components/ui/calendar";
 import { AppTooltip } from "@/components/ui/AppTooltip";
 import { PlaybackControlButton } from "@/components/Common/PlaybackControlButton";
 import { cn } from "@/lib/utils";
-import { formatPlaybackTimestamp } from "@/hooks/use-playback";
+import { formatIST,toISTISOString  } from "@/components/Utils/Time";
 import { Slider } from "@/components/ui/slider";
+import axios from "axios";
+import { API_BASE_URL, API_URLS, getAuthHeaders } from "@/components/Config/api"; 
+import { PlaybackBookmarkPopover, PlaybackBookmark } from "@/components/Playback/PlaybackBookmarkPopover";
+
 interface Props {
+  cameraId?: string;
   isTimelineExpanded: boolean;
   onToggleTimeline: () => void;
   zoomLevel: number;
@@ -49,6 +54,7 @@ interface Props {
 }
 
 export function PlaybackTimelineBar({
+   cameraId,
   isTimelineExpanded,
   onToggleTimeline,
   zoomLevel,
@@ -69,6 +75,7 @@ export function PlaybackTimelineBar({
     setSpeed,
     isSync,
     setSynced,
+    lastSeekTime
   } = usePlaybackStore();
 
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -87,7 +94,7 @@ export function PlaybackTimelineBar({
   const [ampm, setAmpm] = useState<"AM" | "PM">(
     globalTime.getHours() >= 12 ? "PM" : "AM"
   );
-
+ const [bookmarks, setBookmarks] = useState<PlaybackBookmark[]>([]);
   const zoomPercent = ((zoomLevel - 1) / 9) * 100;
 
   const togglePlay = () => {
@@ -139,12 +146,69 @@ export function PlaybackTimelineBar({
 
   const handleForwardSpeedSelect = (speed: number) => {
     setSpeed(speed);
+    if (!isPlaying) play();
     setForwardSpeedOpen(false);
   };
 
   const handleReverseSpeedSelect = (speed: number) => {
     setSpeed(speed);
+    if (!isPlaying) play();
     setReverseSpeedOpen(false);
+  };
+
+  // ----------------
+  // BOOKMARK HANDLER
+  // ----------------
+const handleAddBookmark = async (name: string, position: number, timestamp: string, camId: string) => {
+  if (!camId) return;
+
+  try {
+    const res = await axios.post(`http://192.168.11.131:8081/api/bookmarks/addBookmark`, {
+      cameraId: camId,
+      bookmarkTime: timestamp,
+      title: name,
+      note: "Auto bookmark",
+      createdBy: 101,
+    }, { headers: getAuthHeaders() });
+
+    if (res.status === 200) {
+      // Handle API response structure (data.data or just data)
+      const bookmarkData = res.data.data || res.data;
+      const bookmarkId = bookmarkData?.id || res.data?.id;
+      
+      setBookmarks((prev) => [...prev, { 
+        id: bookmarkId, 
+        cameraId: camId, 
+        name, 
+        title: name, 
+        position, 
+        timestamp, 
+        bookmarkTime: timestamp, 
+        createdAt: new Date() 
+      }]);
+    }
+  } catch (err) {
+    console.error("Failed to add bookmark", err);
+  }
+};
+
+  const handleRemoveBookmark = async (id: string, camId: string) => {
+    try {
+      const res = await axios.delete(`http://192.168.11.131:8081/api/bookmarks/deleteBookmark/${id}`, {
+        headers: getAuthHeaders()
+      });
+      
+      if (res.status === 200) {
+        setBookmarks(bookmarks.filter((bm) => bm.id !== id));
+      }
+    } catch (err) {
+      console.error("Failed to remove bookmark", err);
+    }
+  };
+
+  const handleJumpToBookmark = (position: number) => {
+    const date = new Date(position);
+    onSeekToDate(date);
   };
 
   return (
@@ -163,8 +227,8 @@ export function PlaybackTimelineBar({
             className="flex items-center gap-1 px-2 py-[2px] rounded bg-muted"
           >
             <CalendarIcon className="h-3 w-3" />
-            <span className="font-mono">
-              {formatPlaybackTimestamp(displayTime)}
+           <span className="font-mono">
+              {formatIST(displayTime)}
             </span>
           </button>
         </AppTooltip>
@@ -174,7 +238,17 @@ export function PlaybackTimelineBar({
             <Calendar
               mode="single"
               selected={selectedDate}
-              onSelect={(d) => d && setSelectedDate(d)}
+              onSelect={(d) => {
+                if (d) {
+                  setSelectedDate(d);
+                  const newD = new Date(d);
+                  let h = parseInt(hour) || 0;
+                  if (ampm === "PM" && h !== 12) h += 12;
+                  if (ampm === "AM" && h === 12) h = 0;
+                  newD.setHours(h, parseInt(minute) || 0, parseInt(second) || 0, 0);
+                  onSeekToDate(newD);
+                }
+              }}
             />
 
             <div className="flex items-center gap-1 mt-2">
@@ -368,9 +442,18 @@ export function PlaybackTimelineBar({
         <PlaybackControlButton label="Filter">
           <Filter className="h-3 w-3" />
         </PlaybackControlButton>
-        <PlaybackControlButton label="Bookmark">
-          <Bookmark className="h-3 w-3" />
-        </PlaybackControlButton>
+
+        {/* BOOKMARK POPOVER */}
+            <PlaybackBookmarkPopover
+              bookmarks={bookmarks}
+              currentPosition={lastSeekTime ? lastSeekTime.getTime() : 0}
+              currentTimestamp={lastSeekTime ? formatIST(lastSeekTime) : "00:00:00"}
+              cameraId={cameraId || ""}
+              onAddBookmark={handleAddBookmark}
+              onRemoveBookmark={handleRemoveBookmark}
+              onJumpToBookmark={handleJumpToBookmark}
+            />
+
         <PlaybackControlButton label="Clip">
           <Scissors className="h-3 w-3" />
         </PlaybackControlButton>

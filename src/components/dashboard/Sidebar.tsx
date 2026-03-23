@@ -118,14 +118,6 @@ export function Sidebar() {
             })}
           </ul>
         </div>
-          {/* Settings Sub-Navigation */}
-            {isSettingsSection && (
-              <SettingsSubNav
-                variant="desktop"
-                hoveredItem={hoveredItem}
-                setHoveredItem={setHoveredItem}
-              />
-            )}
       </aside>
 
       {/* ---------------- Mobile Bottom Navigation ---------------- */}

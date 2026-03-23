@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 export function SequenceControlBar() {
     const { isSequencing, setIsSequencing, sequencingPlaylist } = SidebarCameraStore();
 
-    if (sequencingPlaylist.length === 0) return null;
+    if (sequencingPlaylist?.length === 0) return null;
 
     return (
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">

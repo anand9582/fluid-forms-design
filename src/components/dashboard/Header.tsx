@@ -117,9 +117,9 @@ export function Header() {
           <span className="text-sm text-white">138 / 142 device online</span>
         </div>
 
-        <Button className={` ${theme.lightorange} hover:opacity-90 text-white gap-2 px-3 py-2 rounded-sm px-2 md:px-3 transition-colors duration-300`}>
-          <span className="hidden sm:inline text-sm">AI Report </span>
-        </Button>
+        {/* <Button className={` ${theme.lightorange} hover:opacity-90 text-white gap-2 px-3 py-2 rounded-sm px-2 md:px-3 transition-colors duration-300`}>
+           <span className="hidden sm:inline text-sm">AI Report </span>
+        </Button> */}
 
 
         <DropdownMenu>

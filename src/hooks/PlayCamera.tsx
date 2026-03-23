@@ -57,9 +57,18 @@ export const usePlayCamera = (addDebugLog: (msg: string) => void) => {
             "loading-spinner absolute inset-0 flex flex-col items-center justify-center  z-10";
 
           loadingDiv.innerHTML = `
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 border-t-transparent mb-2"></div>
-            <div class="loading-text text-blue-500 text-sm">Trying to connect...</div>
-          `;
+          <div class="absolute inset-0 flex items-center justify-center bg-black/40 transition-opacity duration-200">
+            <div class="flex flex-col items-center gap-1.5">
+              <div class="relative h-8 w-8">
+                <div class="absolute inset-0 rounded-full border-2 border-white/20"></div>
+                <div class="absolute inset-0 rounded-full border-2 border-t-white border-r-transparent border-b-transparent border-l-transparent animate-spin"></div>
+              </div>
+              <span class="text-[10px] text-white/80 font-medium tracking-wide">
+                Connecting
+              </span>
+            </div>
+          </div>
+        `;
 
           parent.appendChild(loadingDiv);
         }

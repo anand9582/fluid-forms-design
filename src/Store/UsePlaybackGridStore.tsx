@@ -8,6 +8,7 @@ interface PlaybackGridStore {
   clearAllSlots: () => void;
   setLayout: (rows: number, cols: number) => void;
   resizeSlots: () => void;
+   reset: () => void;
 }
 
 const usePlaybackGridStore = create<PlaybackGridStore>((set, get) => ({
@@ -40,6 +41,11 @@ const usePlaybackGridStore = create<PlaybackGridStore>((set, get) => ({
     }),
 
     clearAllSlots: () => set((state) => ({
+    })),
+   reset: () =>
+    set(() => ({
+      layout: { rows: 2, cols: 2 },
+      slotAssignments: Array(2 * 2).fill(null),
     })),
 }));
 

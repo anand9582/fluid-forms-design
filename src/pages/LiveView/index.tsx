@@ -216,9 +216,9 @@ export default function LiveView() {
         </div>
       </div>
 
-      <div className="h-[53px] shrink-0">
+      {/* <div className="h-[53px] shrink-0">
         <LiveAlertsBar />
-      </div>
+      </div> */}
     </div>
   );
 }
