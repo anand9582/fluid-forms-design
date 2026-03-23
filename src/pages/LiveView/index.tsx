@@ -5,6 +5,7 @@ import {
   CameraGrid,
   AISurveillanceSidebar,
   LiveAlertsBar,
+  SequenceControlBar
 } from "@/components/LiveView/PagesInclude";
 
 import { useGridController } from "@/hooks/useGridController";
@@ -161,18 +162,18 @@ export default function LiveView() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)]">
-        <LiveViewToolbar
-          showCameraList={showCameraList}
-          onToggleCameraList={() => setShowCameraList(!showCameraList)}
-          gridStore={useGridStore()}
-          selectedLayout={selectedLayout}
-          onLayoutChange={(layout) => setSelectedLayout(layout)}
-          enableSaveView={true}
-          mode="live"
-        />
+      <LiveViewToolbar
+        showCameraList={showCameraList}
+        onToggleCameraList={() => setShowCameraList(!showCameraList)}
+        gridStore={useGridStore()}
+        selectedLayout={selectedLayout}
+        onLayoutChange={(layout) => setSelectedLayout(layout)}
+        enableSaveView={true}
+        mode="live"
+      />
 
       <div className="flex flex-1 gap-3 min-h-0 overflow-hidden">
-        <div className="flex gap-3 py-3 pl-3 flex-1">
+        <div className="flex gap-3 py-3 pl-3 flex-1 relative">
           <CameraTreeSidebar
             isVisible={showCameraList}
             onCameraClick={handleCameraClick}
@@ -189,6 +190,7 @@ export default function LiveView() {
             handleSnapshot={handleSnapshot}
             handleRefresh={handleRefresh}
           />
+          <SequenceControlBar />
         </div>
 
         {/* RIGHT AI SIDEBAR */}

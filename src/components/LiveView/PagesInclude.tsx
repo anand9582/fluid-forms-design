@@ -4,6 +4,7 @@ export { LiveViewToolbar } from "@/components/LiveView/LiveViewToolbar";
 export { CameraGrid } from "@/components/LiveView/CameraGrid";
 export { AISurveillanceSidebar } from "@/components/LiveView/AISurveillanceSidebar";
 export { LiveAlertsBar } from "@/components/LiveView/LiveAlertsBar";
+export { SequenceControlBar } from "@/components/LiveView/SequenceControlBar";
 export { SaveViewDialog } from "@/components/LiveView/SaveViewDialog";
 
 // Types

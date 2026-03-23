@@ -14,14 +14,14 @@ interface Props {
 
 export function CameraTreeSidebar({
   isVisible,
-  onCameraClick = () => {},
+  onCameraClick = () => { },
 }: Props) {
   const { cameras, fetchCameras } = SidebarCameraStore();
   const [search, setSearch] = useState("");
   const [openProperty, setOpenProperty] = useState(true);
 
 
-useEffect(() => {
+  useEffect(() => {
     fetchCameras();
   }, [fetchCameras]);
 
@@ -32,7 +32,7 @@ useEffect(() => {
   }, [cameras, search]);
 
   const offlineCount = filtered.filter(
-     (d) => !d.streams?.some((s) => s.status === "ONLINE")
+    (d) => !d.streams?.some((s) => s.status === "ONLINE")
   ).length;
 
   return (

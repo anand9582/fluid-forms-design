@@ -141,8 +141,6 @@ export function ManageStorageView({ unit }: ManageStorageViewProps) {
     if (!allStorages || !unit) return [];
 
     const targetRole = (unit.category || "").toUpperCase();
-    console.log("DEBUG: Current Unit:", unit);
-    console.log("DEBUG: Target Role for filtering:", targetRole);
 
     const filtered = allStorages.filter(s => {
       const sId = String(s.id);
@@ -156,12 +154,9 @@ export function ManageStorageView({ unit }: ManageStorageViewProps) {
       const isNotSelf = sId !== uId;
       const roleMatch = sRole === targetRole;
 
-      console.log(`Checking Storage ${sId} (${s.name}): isNotSelf=${isNotSelf}, roleMatch=${roleMatch} (sRole=${sRole}, targetRole=${targetRole})`);
-
       return isNotSelf && roleMatch;
     });
 
-    console.log("DEBUG: Filtered Destination Storages:", filtered);
     return filtered;
   }, [allStorages, unit]);
 

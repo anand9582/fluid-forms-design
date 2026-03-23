@@ -2,20 +2,31 @@ import { create } from "zustand";
 import { Device } from "@/components/LiveView/DeviceTypes";
 import { APISERVERURL, API_URLS } from "@/components/Config/api";
 
+export interface SequencingDevice extends Device {
+  duration?: string;
+}
 
 interface CameraStore {
   cameras: Device[];
   loading: boolean;
+  sequencingPlaylist: SequencingDevice[];
+  isSequencing: boolean;
 
   fetchCameras: () => Promise<void>;
   addCamera: (camera: Device) => void;
   reset: () => void;
+  setSequencingPlaylist: (playlist: SequencingDevice[]) => void;
+  setIsSequencing: (is: boolean) => void;
+  updateDeviceDuration: (cameraId: string, duration: string) => void;
 }
 
 export const SidebarCameraStore = create<CameraStore>((set) => ({
   cameras: [],
   loading: false,
- fetchCameras: async () => {
+  sequencingPlaylist: [],
+  isSequencing: false,
+
+  fetchCameras: async () => {
     set({ loading: true });
 
     const res = await fetch(
@@ -39,4 +50,13 @@ export const SidebarCameraStore = create<CameraStore>((set) => ({
     })),
 
   reset: () => set({ cameras: [] }),
+
+  setSequencingPlaylist: (playlist) => set({ sequencingPlaylist: playlist }),
+  setIsSequencing: (is) => set({ isSequencing: is }),
+  updateDeviceDuration: (cameraId, duration) =>
+    set((state) => ({
+      sequencingPlaylist: state.sequencingPlaylist.map((d) =>
+        d.cameraId === cameraId ? { ...d, duration } : d
+      ),
+    })),
 }));
