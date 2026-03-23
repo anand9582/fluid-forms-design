@@ -204,6 +204,7 @@ export const usePlaybackStore = create<PlaybackStore>((set, get) => {
         startSlotSeeking(slotIndex);
         set((state) => ({
           cameraTimes: { ...state.cameraTimes, [slotIndex]: date },
+          globalTime: date,
         }));
       }
 
@@ -232,6 +233,7 @@ export const usePlaybackStore = create<PlaybackStore>((set, get) => {
         startSlotSeeking(slotIndex);
         set({
           cameraTimes: { ...cameraTimes, [slotIndex]: newDate },
+          globalTime: newDate,
         });
       }
 

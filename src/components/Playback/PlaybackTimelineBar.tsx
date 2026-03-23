@@ -238,7 +238,17 @@ const handleAddBookmark = async (name: string, position: number, timestamp: stri
             <Calendar
               mode="single"
               selected={selectedDate}
-              onSelect={(d) => d && setSelectedDate(d)}
+              onSelect={(d) => {
+                if (d) {
+                  setSelectedDate(d);
+                  const newD = new Date(d);
+                  let h = parseInt(hour) || 0;
+                  if (ampm === "PM" && h !== 12) h += 12;
+                  if (ampm === "AM" && h === 12) h = 0;
+                  newD.setHours(h, parseInt(minute) || 0, parseInt(second) || 0, 0);
+                  onSeekToDate(newD);
+                }
+              }}
             />
 
             <div className="flex items-center gap-1 mt-2">

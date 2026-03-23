@@ -471,51 +471,51 @@ export function usePlaybackLogic(
     };
   }, [resetGrid, resetPlayback]);
 
-  // useEffect(() => {
-  //   const reloadAllSlots = async () => {
-  //     if (!selectedDate) return;
+  const [loadedDay, setLoadedDay] = useState<number>(DAY_START.getTime());
 
-  //     const newPlayers: Player[] = [];
+  useEffect(() => {
+    if (DAY_START.getTime() === loadedDay) return;
 
-  //     for (let slotIndex = 0; slotIndex < slotAssignments.length; slotIndex++) {
-  //       const cameraId = slotAssignments[slotIndex];
-  //       if (!cameraId) continue;
+    const reloadAllSlots = async () => {
+      if (slotAssignments.filter(Boolean).length === 0) {
+        setLoadedDay(DAY_START.getTime());
+        return;
+      }
 
-  //       console.log("🔄 Reloading slot", slotIndex, "for date", selectedDate);
+      const newPlayers: Player[] = [];
 
-  //       const segments = await fetchTimelineForSlot(slotIndex, cameraId);
-  //       const blobUrl = await startCamera(cameraId, slotIndex);
-  //       if (!blobUrl) continue;
+      for (let slotIndex = 0; slotIndex < slotAssignments.length; slotIndex++) {
+        const cameraId = slotAssignments[slotIndex];
+        if (!cameraId) continue;
 
-  //       const firstRecording = segments?.find((s) => s.type === "recording");
+        console.log("🔄 Reloading slot", slotIndex, "for date", selectedDate);
 
-  //       if (firstRecording) {
-  //         const seekDate = new Date(selectedDate);
-  //         const hour = Math.floor(firstRecording.start);
-  //         const minutes = Math.floor((firstRecording.start % 1) * 60);
+        const segments = await fetchTimelineForSlot(slotIndex, cameraId);
+        const blobUrl = await startCamera(cameraId, slotIndex);
+        if (!blobUrl) continue;
 
-  //         seekDate.setHours(hour);
-  //         seekDate.setMinutes(minutes);
-  //         seekDate.setSeconds(0);
+        // No need to seek to firstRecording. The store's globalTime / cameraTime 
+        // is already updated by handleSeekToDate, so useHlsWithStore will automatically sync to it!
 
-  //         playback.seekTo(seekDate, slotIndex);
-  //       }
+        newPlayers.push({
+          slotIndex,
+          cameraId,
+          blobUrl,
+          sessionId: "",
+          date: new Date(selectedDate),
+        });
+      }
 
-  //       newPlayers.push({
-  //         slotIndex,
-  //         cameraId,
-  //         blobUrl,
-  //         sessionId: "",
-  //         date: selectedDate,
-  //       });
-  //     }
+      setPlayers(newPlayers);
+      setLoadedDay(DAY_START.getTime());
 
-  //     setPlayers(newPlayers);
-  //     playback.play();
-  //   };
+      if (!playback.isPlaying) {
+        playback.play();
+      }
+    };
 
-  //   reloadAllSlots();
-  // }, [selectedDate, slotAssignments]);
+    reloadAllSlots();
+  }, [DAY_START.getTime(), loadedDay, slotAssignments, fetchTimelineForSlot, startCamera, playback, selectedDate]);
 
   // Fetch bookmarks when slot changes
   useEffect(() => {
