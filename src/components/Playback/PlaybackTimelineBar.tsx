@@ -33,10 +33,10 @@ import { Calendar } from "@/components/ui/calendar";
 import { AppTooltip } from "@/components/ui/AppTooltip";
 import { PlaybackControlButton } from "@/components/Common/PlaybackControlButton";
 import { cn } from "@/lib/utils";
-import { formatIST,toISTISOString  } from "@/components/Utils/Time";
+import { formatIST, toISTISOString } from "@/components/Utils/Time";
 import { Slider } from "@/components/ui/slider";
 import axios from "axios";
-import { API_BASE_URL, API_URLS, getAuthHeaders } from "@/components/Config/api"; 
+import { API_BASE_URL, API_URLS, getAuthHeaders } from "@/components/Config/api";
 import { PlaybackBookmarkPopover, PlaybackBookmark } from "@/components/Playback/PlaybackBookmarkPopover";
 
 interface Props {
@@ -54,7 +54,7 @@ interface Props {
 }
 
 export function PlaybackTimelineBar({
-   cameraId,
+  cameraId,
   isTimelineExpanded,
   onToggleTimeline,
   zoomLevel,
@@ -94,7 +94,7 @@ export function PlaybackTimelineBar({
   const [ampm, setAmpm] = useState<"AM" | "PM">(
     globalTime.getHours() >= 12 ? "PM" : "AM"
   );
- const [bookmarks, setBookmarks] = useState<PlaybackBookmark[]>([]);
+  const [bookmarks, setBookmarks] = useState<PlaybackBookmark[]>([]);
   const zoomPercent = ((zoomLevel - 1) / 9) * 100;
 
   const togglePlay = () => {
@@ -159,45 +159,44 @@ export function PlaybackTimelineBar({
   // ----------------
   // BOOKMARK HANDLER
   // ----------------
-const handleAddBookmark = async (name: string, position: number, timestamp: string, camId: string) => {
-  if (!camId) return;
+  const handleAddBookmark = async (name: string, position: number, timestamp: string, camId: string) => {
+    if (!camId) return;
 
-  try {
-    const res = await axios.post(`http://192.168.11.131:8081/api/bookmarks/addBookmark`, {
-      cameraId: camId,
-      bookmarkTime: timestamp,
-      title: name,
-      note: "Auto bookmark",
-      createdBy: 101,
-    }, { headers: getAuthHeaders() });
+    try {
+      const res = await axios.post(`http://192.168.11.131:8081/api/bookmarks/addBookmark`, {
+        cameraId: camId,
+        bookmarkTime: timestamp,
+        title: name,
+        note: "Auto bookmark",
+        createdBy: 101,
+      }, { headers: getAuthHeaders() });
 
-    if (res.status === 200) {
-      // Handle API response structure (data.data or just data)
-      const bookmarkData = res.data.data || res.data;
-      const bookmarkId = bookmarkData?.id || res.data?.id;
-      
-      setBookmarks((prev) => [...prev, { 
-        id: bookmarkId, 
-        cameraId: camId, 
-        name, 
-        title: name, 
-        position, 
-        timestamp, 
-        bookmarkTime: timestamp, 
-        createdAt: new Date() 
-      }]);
+      if (res.status === 200) {
+        const bookmarkData = res.data.data || res.data;
+        const bookmarkId = bookmarkData?.id || res.data?.id;
+
+        setBookmarks((prev) => [...prev, {
+          id: bookmarkId,
+          cameraId: camId,
+          name,
+          title: name,
+          position,
+          timestamp,
+          bookmarkTime: timestamp,
+          createdAt: new Date()
+        }]);
+      }
+    } catch (err) {
+      console.error("Failed to add bookmark", err);
     }
-  } catch (err) {
-    console.error("Failed to add bookmark", err);
-  }
-};
+  };
 
   const handleRemoveBookmark = async (id: string, camId: string) => {
     try {
       const res = await axios.delete(`http://192.168.11.131:8081/api/bookmarks/deleteBookmark/${id}`, {
         headers: getAuthHeaders()
       });
-      
+
       if (res.status === 200) {
         setBookmarks(bookmarks.filter((bm) => bm.id !== id));
       }
@@ -227,7 +226,7 @@ const handleAddBookmark = async (name: string, position: number, timestamp: stri
             className="flex items-center gap-1 px-2 py-[2px] rounded bg-muted"
           >
             <CalendarIcon className="h-3 w-3" />
-           <span className="font-mono">
+            <span className="font-mono">
               {formatIST(displayTime)}
             </span>
           </button>
@@ -238,17 +237,7 @@ const handleAddBookmark = async (name: string, position: number, timestamp: stri
             <Calendar
               mode="single"
               selected={selectedDate}
-              onSelect={(d) => {
-                if (d) {
-                  setSelectedDate(d);
-                  const newD = new Date(d);
-                  let h = parseInt(hour) || 0;
-                  if (ampm === "PM" && h !== 12) h += 12;
-                  if (ampm === "AM" && h === 12) h = 0;
-                  newD.setHours(h, parseInt(minute) || 0, parseInt(second) || 0, 0);
-                  onSeekToDate(newD);
-                }
-              }}
+              onSelect={(d) => d && setSelectedDate(d)}
             />
 
             <div className="flex items-center gap-1 mt-2">
@@ -291,75 +280,75 @@ const handleAddBookmark = async (name: string, position: number, timestamp: stri
       </div>
 
       {/* SYNC SWITCH */}
-     <TooltipProvider>
-  <Tooltip>
-    <TooltipTrigger asChild>
-      <div className="ml-1 flex items-center gap-2 rounded-md bg-muted px-2 py-1">
-        <Switch
-          checked={isSync}
-          onCheckedChange={(v) => setSynced(v)}
-          className="h-4 w-7 data-[state=checked]:bg-primary"
-        />
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="ml-1 flex items-center gap-2 rounded-md bg-muted px-2 py-1">
+              <Switch
+                checked={isSync}
+                onCheckedChange={(v) => setSynced(v)}
+                className="h-4 w-7 data-[state=checked]:bg-primary"
+              />
 
-        <span className="text-[11px] font-medium text-foreground">
-          Synced
-        </span>
-      </div>
-    </TooltipTrigger>
+              <span className="text-[11px] font-medium text-foreground">
+                Synced
+              </span>
+            </div>
+          </TooltipTrigger>
 
-    <TooltipContent side="top">
-      <p>
-        {isSync
-          ? "All cameras seek together"
-          : "Seek selected camera only"}
-      </p>
-    </TooltipContent>
-  </Tooltip>
-</TooltipProvider>
+          <TooltipContent side="top">
+            <p>
+              {isSync
+                ? "All cameras seek together"
+                : "Seek selected camera only"}
+            </p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
 
       <div className="flex-1" />
 
       {/* ZOOM CONTROLS */}
-     <div className="flex items-center gap-2 bg-timelinebg rounded text-slate-600">
+      <div className="flex items-center gap-2 bg-timelinebg rounded text-slate-600">
 
-  {/* Zoom Out */}
-  <AppTooltip label="Zoom Out" side="top">
-    <Button
-      size="sm"
-      variant="ghost"
-      className="h-6 w-6 p-0 [&_svg]:h-3 [&_svg]:w-3"
-      onClick={() => onZoomChange(Math.max(1, zoomLevel - 1))}
-    >
-      <Mountain />
-    </Button>
-  </AppTooltip>
+        {/* Zoom Out */}
+        <AppTooltip label="Zoom Out" side="top">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 w-6 p-0 [&_svg]:h-3 [&_svg]:w-3"
+            onClick={() => onZoomChange(Math.max(1, zoomLevel - 1))}
+          >
+            <Mountain />
+          </Button>
+        </AppTooltip>
 
-  {/* Slider */}
-  <Slider
-    value={[zoomLevel]}
-    min={1}
-    max={10}
-    step={1}
-    trackHeight={3}
-    thumbSize={10}
-    className="w-16"
-    onValueChange={(v) => onZoomChange(v[0])}
-    thumbClassName="bg-white border-blue-600"
-  />
+        {/* Slider */}
+        <Slider
+          value={[zoomLevel]}
+          min={1}
+          max={10}
+          step={1}
+          trackHeight={3}
+          thumbSize={10}
+          className="w-16"
+          onValueChange={(v) => onZoomChange(v[0])}
+          thumbClassName="bg-white border-blue-600"
+        />
 
-  {/* Zoom In */}
-  <AppTooltip label="Zoom In" side="top">
-    <Button
-      size="sm"
-      variant="ghost"
-      className="h-6 w-6 p-0 [&_svg]:h-4 [&_svg]:w-4"
-      onClick={() => onZoomChange(Math.min(10, zoomLevel + 1))}
-    >
-      <Mountain />
-    </Button>
-  </AppTooltip>
+        {/* Zoom In */}
+        <AppTooltip label="Zoom In" side="top">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 w-6 p-0 [&_svg]:h-4 [&_svg]:w-4"
+            onClick={() => onZoomChange(Math.min(10, zoomLevel + 1))}
+          >
+            <Mountain />
+          </Button>
+        </AppTooltip>
 
-</div>
+      </div>
 
       {/* PLAYBACK CONTROLS */}
       <div className="flex items-center gap-3 bg-muted/60 px-1 rounded">
@@ -444,15 +433,15 @@ const handleAddBookmark = async (name: string, position: number, timestamp: stri
         </PlaybackControlButton>
 
         {/* BOOKMARK POPOVER */}
-            <PlaybackBookmarkPopover
-              bookmarks={bookmarks}
-              currentPosition={lastSeekTime ? lastSeekTime.getTime() : 0}
-              currentTimestamp={lastSeekTime ? formatIST(lastSeekTime) : "00:00:00"}
-              cameraId={cameraId || ""}
-              onAddBookmark={handleAddBookmark}
-              onRemoveBookmark={handleRemoveBookmark}
-              onJumpToBookmark={handleJumpToBookmark}
-            />
+        <PlaybackBookmarkPopover
+          bookmarks={bookmarks}
+          currentPosition={lastSeekTime ? lastSeekTime.getTime() : 0}
+          currentTimestamp={lastSeekTime ? formatIST(lastSeekTime) : "00:00:00"}
+          cameraId={cameraId || ""}
+          onAddBookmark={handleAddBookmark}
+          onRemoveBookmark={handleRemoveBookmark}
+          onJumpToBookmark={handleJumpToBookmark}
+        />
 
         <PlaybackControlButton label="Clip">
           <Scissors className="h-3 w-3" />
@@ -469,7 +458,7 @@ const handleAddBookmark = async (name: string, position: number, timestamp: stri
         </Button>
       </div>
 
-       {/* EXPAND */}
+      {/* EXPAND */}
       <AppTooltip
         label={isTimelineExpanded ? "Collapse Timeline" : "Expand Timeline"}
         side="top"

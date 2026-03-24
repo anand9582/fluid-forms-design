@@ -1,7 +1,3 @@
-/**
- * Playback Toolbar Component
- * Displays layout controls and camera list toggle
- */
 
 import React from "react";
 import { LiveViewToolbar } from "@/components/LiveView/PagesInclude";

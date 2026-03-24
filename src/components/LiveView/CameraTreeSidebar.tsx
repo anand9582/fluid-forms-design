@@ -97,7 +97,7 @@ export function CameraTreeSidebar({
 
       {/* Search */}
       <div className="relative mb-3">
-        <Search className="absolute left-2 top-2 h-4 w-4 text-muted-foreground" />
+        <Search className="absolute left-2 top-[11px] h-4 w-4 text-muted-foreground" />
         <Input
           className="pl-8"
           placeholder="Search cameras..."
