@@ -3,7 +3,6 @@ import { usePlaybackStore } from "@/Store/playbackStore";
 
 import {
   Clock,
-  Calendar as CalendarIcon,
   Rewind,
   SkipBack,
   SkipForward,
@@ -38,6 +37,7 @@ import { Slider } from "@/components/ui/slider";
 import axios from "axios";
 import { API_BASE_URL, API_URLS, getAuthHeaders } from "@/components/Config/api";
 import { PlaybackBookmarkPopover, PlaybackBookmark } from "@/components/Playback/PlaybackBookmarkPopover";
+import { DatePickerIcon } from "@/components/Icons/Svg/PlaybackIcons";
 
 interface Props {
   cameraId?: string;
@@ -211,11 +211,14 @@ export function PlaybackTimelineBar({
   };
 
   return (
-    <div className="flex items-center h-9 px-2 py-3 gap-4 border-t bg-muted/30 text-[11px]">
+    <div className="flex items-center h-9 px-2 py-3 gap-4 border-t text-[11px]
+  bg-gradient-to-r 
+  from-[#F8FAFC] to-[#E2E8F0] 
+  dark:from-[#0F172A] dark:to-[#1E293B]">
       {/* LEFT: Clock + Timeline label */}
       <div className="flex items-center gap-1 text-muted-foreground">
-        <Clock className="h-3 w-3" />
-        <span className="font-semibold tracking-wide">TIMELINE</span>
+        <Clock className="h-4 w-4" />
+        <span className="font-roboto text-slate-500 font-semibold tracking-wide text-xs uppercase">Timelines</span>
       </div>
 
       {/* DATE PICKER */}
@@ -223,10 +226,12 @@ export function PlaybackTimelineBar({
         <AppTooltip label="Select Date & Time" side="top">
           <button
             onClick={() => handleOpenPicker(!pickerOpen)}
-            className="flex items-center gap-1 px-2 py-[2px] rounded bg-muted"
+            className="flex items-center gap-1 px-2 py-[2px] rounded "
           >
-            <CalendarIcon className="h-3 w-3" />
-            <span className="font-mono">
+            <div className="w-4 h-4 bg-slate-200 rounded-[3px] flex items-center justify-center">
+              <DatePickerIcon size={12} />
+            </div>
+            <span className="font-roboto  font-semibold text-slate-900">
               {formatIST(displayTime)}
             </span>
           </button>
@@ -290,9 +295,7 @@ export function PlaybackTimelineBar({
                 className="h-4 w-7 data-[state=checked]:bg-primary"
               />
 
-              <span className="text-[11px] font-medium text-foreground">
-                Synced
-              </span>
+              <span className="font-roboto font-normal text-xs text-foreground text-slate-600">Synced</span>
             </div>
           </TooltipTrigger>
 

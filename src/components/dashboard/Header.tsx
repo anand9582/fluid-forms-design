@@ -1,4 +1,7 @@
-import { Search, Languages, Wifi, FileText, Globe, ChevronDown, Bell, LogOut } from "lucide-react";
+import {
+  Search, Languages, ChevronDown, User,
+  Settings, LogOut
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
@@ -15,6 +18,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNavigate } from "react-router-dom";
 import Logo from "@/assets/img/logo.png";
 import { languages as allLanguages } from "@/components/local/translation";
+import {
+  DropdownMenuGroup,
+  DropdownMenuShortcut,
+} from "@/components/ui/dropdown-menu";
+
 
 export function Header() {
   const [searchOpen, setSearchOpen] = useState(false);
@@ -23,7 +31,7 @@ export function Header() {
 
   const handleLogout = () => {
     localStorage.clear();
-    navigate("/login", { replace: true });
+    navigate("/", { replace: true });
   };
   const theme = isAltTheme
     ? {
@@ -58,7 +66,7 @@ export function Header() {
             <img
               src={Logo}
               alt="CamPulse Logo"
-              className="h-11 w-auto object-contain"
+              className="h-8 w-auto object-contain"
             />
           </span>
         </button>
@@ -171,24 +179,12 @@ export function Header() {
           </svg>
         </button>
 
-
-        {/* User Profile */}
-        {/* <div className="flex items-center gap-2 md:gap-3 pl-2 md:pl-4 border-l border-white/10">
-          <div className="hidden md:block text-right">
-            <p className="text-sm font-medium text-white">Ayush Gupta</p>
-            <p className="text-xs text-white/60">Project Manager</p>
-          </div>
-          <div className="w-8 h-8 rounded-full bg-white  flex items-center justify-center overflow-hidden">
-            <span className="text-sm font-semibold text-black font-roboto">KR</span>
-          </div>
-        </div> */}
-
-        {/* USER PROFILE DROPDOWN */}
+        {/* User Dropdown (UPDATED) */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-2 pl-3 border-l border-white/10">
               <div className="hidden md:block text-right">
-                <p className="text-sm font-medium text-white">
+                <p className="text-sm text-white font-medium">
                   Ayush Gupta
                 </p>
                 <p className="text-xs text-white/60">
@@ -197,21 +193,37 @@ export function Header() {
               </div>
 
               <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
-                <span className="text-sm font-semibold text-black">
-                  KR
+                <span className="text-black font-semibold text-sm">
+                  AG
                 </span>
               </div>
             </button>
           </DropdownMenuTrigger>
 
-          <DropdownMenuContent align="end" className="w-44">
-            <DropdownMenuItem
-              onClick={handleLogout}
-              className="text-red-600 cursor-pointer flex gap-2"
-            >
-              <LogOut className="h-4 w-4" />
-              Logout
-            </DropdownMenuItem>
+          <DropdownMenuContent align="end" className="w-52">
+            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+
+            <DropdownMenuSeparator />
+
+            <DropdownMenuGroup>
+
+              <DropdownMenuItem onClick={() => navigate("/settings")}>
+                <Settings className="mr-2 h-4 w-4" />
+                Settings
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+
+            <DropdownMenuSeparator />
+
+            <DropdownMenuGroup>
+              <DropdownMenuItem
+                onClick={handleLogout}
+                className="text-red-600 focus:text-red-600"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

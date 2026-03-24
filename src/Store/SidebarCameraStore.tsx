@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { Device as BaseDevice } from "@/components/LiveView/DeviceTypes";
 
 const BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://192.168.11.212:9081";
+  import.meta.env.VITE_API_BASE_URL || "http://192.168.11.131:9081";
 
 export interface MappedDevice extends BaseDevice {
   groupId: number;

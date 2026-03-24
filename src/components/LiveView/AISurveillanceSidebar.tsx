@@ -434,8 +434,8 @@ export function AISurveillanceSidebar({ selectedCamera, selectedSlotIndex, mainS
           {!isCreatingSequence && !activeSequence ? (
             /* EMPTY STATE */
             <div className="flex-1 flex flex-col items-center justify-center p-6 border border-dashed border-slate-300 rounded-[24px] bg-[#f8fafc]/40 mx-1 mb-8 min-w-0">
-              <div className="w-14 h-14 bg-slate-200 border border-slate-300 rounded-xl flex items-center justify-center mb-6 shadow-sm">
-                <SwitchCamera className="text-slate-500" />
+              <div className="w-11 h-11 bg-[#E5E5E5]  border-slate-300 rounded-sm flex items-center justify-center mb-6 shadow-sm">
+                <SwitchCamera className="text-black-500" />
               </div>
               <h3 className="text-[15px] font-bold text-slate-800 text-center mb-2 px-4 leading-tight">
                 No camera sequences created yet.
@@ -445,7 +445,7 @@ export function AISurveillanceSidebar({ selectedCamera, selectedSlotIndex, mainS
               </p>
               <Button
                 onClick={() => setIsCreatingSequence(true)}
-                className="w-full bg-[#1d4ed8] hover:bg-blue-700 text-white rounded-xl h-12 flex items-center justify-center gap-2 text-sm font-bold shadow-md transition-all active:scale-[0.98]"
+                className="w-full bg-[#1d4ed8] hover:bg-blue-700 text-white font-roboto font-medium rounded-sm h-10 flex items-center justify-center gap-2 text-sm  shadow-md transition-all active:scale-[0.98]"
               >
                 <Plus size={18} strokeWidth={3} />
                 Create first sequence.
