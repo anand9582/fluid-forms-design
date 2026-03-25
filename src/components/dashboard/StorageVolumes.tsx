@@ -141,7 +141,7 @@ function StorageRow({
         </span>
 
         {/* SIZE */}
-        {item.total && (
+        {/* {item.total && (
           <span
             className={cn(
               "text-xs font-medium font-roboto",
@@ -150,8 +150,7 @@ function StorageRow({
           >
             {item.total}
           </span>
-
-        )}
+        )} */}
 
         {/* % */}
         {level === 0 && (
