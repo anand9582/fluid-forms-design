@@ -28,12 +28,13 @@ import { API_VAISHALI_URL, getAuthHeaders } from "@/components/Config/api";
 
 import { cn } from "@/lib/utils";
 import { Devices } from "@/components/ui/icons";
+import { ConfirmDialog, useConfirmDialog } from "@/components/Dialogs/ConfirmDialog";
 
 
 import { SidebarCameraStore } from "@/Store/SidebarCameraStore";
 
 const ConfigureDevicesPage = () => {
-  const { cameras } = SidebarCameraStore();
+  const { cameras, fetchCameras } = SidebarCameraStore();
   const [selectedCamera, setSelectedCamera] = useState<any>(null);
   console.log("selectedCamera", selectedCamera);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(
@@ -43,6 +44,8 @@ const ConfigureDevicesPage = () => {
   const { setActiveRoute, setActiveItem } = useSettingsStore();
   const [activeTab, setActiveTab] = useState("network");
   const [showSidebar, setShowSidebar] = useState(true);
+  const { isOpen, openDialog, closeDialog, setIsOpen } = useConfirmDialog();
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleReboot = async () => {
     const idToReboot = 4; // Hardcoded 4 as per user request
@@ -60,6 +63,31 @@ const ConfigureDevicesPage = () => {
     } catch (error) {
       console.error("DEBUG: Error rebooting device:", error);
       toast.error("Failed to reboot device");
+    }
+  };
+
+  const handleDeleteDevice = async () => {
+    if (!selectedCamera?.id) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await axios.delete(`${API_VAISHALI_URL}/v1/devices/delete-device-by-id/${selectedCamera.id}`, {
+        headers: getAuthHeaders()
+      });
+
+      if (response.data?.success) {
+        toast.success(response.data.message || "Device deleted successfully");
+        setSelectedCamera(null);
+        fetchCameras();
+        closeDialog();
+      } else {
+        toast.error(response.data?.message || "Failed to delete device");
+      }
+    } catch (error) {
+      console.error("DEBUG: Error deleting device:", error);
+      toast.error("An error occurred while deleting the device");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -176,11 +204,40 @@ const ConfigureDevicesPage = () => {
                     <RefreshCw className="h-4 w-4" />
                     Reboot Device
                   </Button>
-                  <Button variant="outline" size="icon" className="h-9 w-9 bg-white">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-9 w-9 bg-white"
+                    onClick={openDialog}
+                  >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
+
+              <ConfirmDialog
+                open={isOpen}
+                onOpenChange={setIsOpen}
+                title="Delete Device"
+                description={
+                  <div className="text-[12px] font-normal leading-[150%] tracking-[0.18px] text-[#737373] max-w-[280px]">
+                    Are you sure you want to delete{" "}
+                    <span className="text-[#334155] font-medium">
+                      "{selectedCamera?.name}"
+                    </span>
+                    ?
+                    <br />
+                    <span>This action cannot be undone.</span>
+                  </div>
+                }
+                icon="danger"
+                confirmLabel="Delete"
+                confirmVariant="destructive"
+                onConfirm={handleDeleteDevice}
+                confirmDisabled={isDeleting}
+                headerCentered={true}
+                fullWidthActions={true}
+              />
 
               <SettingsTabs
                 onTabChange={setActiveTab}

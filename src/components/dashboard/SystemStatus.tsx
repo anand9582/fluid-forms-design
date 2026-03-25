@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import DonutChart from "./DonutChart";
 import StatCard from "./StatCard";
 import axios from "axios";
-import { API_VIVEK_URL, getAuthHeaders } from "@/components/Config/api";
+import { API_VIVEK_URL, APISERVERURL, getAuthHeaders } from "@/components/Config/api";
 
 export const SystemStatus = () => {
   const [stats, setStats] = useState({
@@ -21,7 +21,7 @@ export const SystemStatus = () => {
     const fetchDeviceData = async () => {
       try {
         const res = await axios.get(
-          `${API_VIVEK_URL}/device/getDeviceStatusCount`,
+          `${APISERVERURL}device/getDeviceStatusCount`,
           { headers: getAuthHeaders() }
         );
 
