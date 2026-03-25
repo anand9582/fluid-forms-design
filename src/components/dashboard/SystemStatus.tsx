@@ -1,19 +1,52 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Cctv, ChevronDown, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DonutChart from "./DonutChart";
 import StatCard from "./StatCard";
 import axios from "axios";
-import { APISERVERURL, getAuthHeaders } from "@/components/Config/api";
+import { API_VIVEK_URL, getAuthHeaders } from "@/components/Config/api";
 
 export const SystemStatus = () => {
-  const stats = {
-    total: 142,
-    online: 138,
-    offline: 9,
-    recording: 135,
-  };
+  const [stats, setStats] = useState({
+    total: 0,
+    online: 0,
+    offline: 0,
+    recording: 0,
+  });
+
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDeviceData = async () => {
+      try {
+        const res = await axios.get(
+          `${API_VIVEK_URL}/device/getDeviceStatusCount`,
+          { headers: getAuthHeaders() }
+        );
+
+        console.log("API Response", res.data);
+
+        const data = res.data?.data;
+
+        setStats({
+          online: data?.onlineCount,
+          offline: data?.offlineCount,
+          recording: data?.enabledRecordingCount,
+          total:
+            (data?.onlineCount) +
+            (data?.offlineCount),
+        });
+
+      } catch (error) {
+        console.error("API Error ❌", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDeviceData();
+  }, []);
 
 
   return (

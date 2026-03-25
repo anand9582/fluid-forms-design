@@ -123,7 +123,7 @@ export function RestrictionsStep({
         tags={macAddresses}
         onTagsChange={setMacAddresses}
         placeholder="Add MAC address..."
-        label="Allowed MAC Addresses"
+        label="Allowed Ip Addresses"
       />
 
       {/* DEVICE UID */}
@@ -218,7 +218,7 @@ export function RestrictionsStep({
         <Checkbox
           checked={loginAllowed}
           onCheckedChange={(v) => setLoginAllowed(v === true)}
-         className="h-4 w-4 rounded border-2 border-muted-foreground data-[state=checked]:border-primary data-[state=checked]:bg-primary"
+          className="h-4 w-4 rounded border-2 border-muted-foreground data-[state=checked]:border-primary data-[state=checked]:bg-primary"
         />
         <Label>User login allowed</Label>
       </div>

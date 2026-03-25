@@ -218,7 +218,7 @@ export function PlaybackTimelineBar({
       {/* LEFT: Clock + Timeline label */}
       <div className="flex items-center gap-1 text-muted-foreground">
         <Clock className="h-4 w-4" />
-        <span className="font-roboto text-slate-500 font-semibold tracking-wide text-xs uppercase">Timelines</span>
+        <span className="font-roboto text-slate-500 font-semibold tracking-wide text-xs capitilize">Timelines</span>
       </div>
 
       {/* DATE PICKER */}
@@ -295,7 +295,9 @@ export function PlaybackTimelineBar({
                 className="h-4 w-7 data-[state=checked]:bg-primary"
               />
 
-              <span className="font-roboto font-normal text-xs text-foreground text-slate-600">Synced</span>
+              <span className="text-[11px] font-medium text-foreground">
+                Synced
+              </span>
             </div>
           </TooltipTrigger>
 
