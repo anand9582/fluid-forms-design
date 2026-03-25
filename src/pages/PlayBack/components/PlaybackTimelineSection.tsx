@@ -1,7 +1,3 @@
-/**
- * Playback Timeline Section Component
- * Displays playback controls, timeline bar, timeline visualization, and alerts
- */
 
 import React from "react";
 import { PlaybackTimelineBar, PlaybackTimeline, PlaybackAlertsBar } from "@/components/Playback/PagesInclude";

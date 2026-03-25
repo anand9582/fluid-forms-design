@@ -24,15 +24,15 @@ const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
   { icon: Video, label: "Live view", path: "/live" },
   { icon: PlayCircle, label: "Playback", path: "/playback" },
-  { icon: Alerts, label: "Alerts", path: "/alerts" },
-  { icon: Emap, label: "Emap", path: "/emap" },
-  { icon: Health, label: "Health", path: "/health" },
+  // { icon: Alerts, label: "Alerts", path: "/alerts" },
+  // { icon: Emap, label: "Emap", path: "/emap" },
+  // { icon: Health, label: "Health", path: "/health" },
 ];
 
 const bottomItems = [
-  { icon: lighticons, label: "Light", path: "/theme" },
+  // { icon: lighticons, label: "Light", path: "/theme" },
   { icon: Settings, label: "Settings", path: "/settings" },
-  { icon: helpCircle, label: "Help", path: "/help" },
+  // { icon: helpCircle, label: "Help", path: "/help" },
 ];
 
 export function Sidebar() {

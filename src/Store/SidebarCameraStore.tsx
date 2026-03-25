@@ -3,7 +3,7 @@ import { Device as BaseDevice } from "@/components/LiveView/DeviceTypes";
 import { API_VIVEK_URL } from "@/components/Config/api";
 
 const BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://192.168.11.212:9081";
+  import.meta.env.VITE_API_BASE_URL || "http://192.168.10.190:9081";
 
 export interface MappedDevice extends BaseDevice {
   groupId: number;

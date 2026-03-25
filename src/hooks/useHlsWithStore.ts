@@ -1,11 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Hls from "hls.js";
-import { usePlaybackStore } from "@/Store/playbackStore";
-
-export interface Segment {
-  startTime: Date;
-  endTime: Date;
-}
+import { Segment, usePlaybackStore } from "@/Store/playbackStore";
 
 interface Props {
   src: string;
@@ -20,11 +15,10 @@ export function useHlsWithStore({ src, cameraId, segments, slotIndex }: Props) {
   const hlsRef = useRef<Hls | null>(null);
   const [isVideoReady, setIsVideoReady] = useState(false);
 
-  const { globalTime, cameraTimes, isSync, isPlaying, playbackSpeed, isSeeking, slotSeeking } =
+  const { globalTime, cameraTimes, isSync, isPlaying, playbackSpeed, isSeeking } =
     usePlaybackStore();
 
   const currentTime = isSync ? globalTime : cameraTimes[slotIndex] || globalTime;
-  const isCurrentSlotSeeking = isSync ? isSeeking : (slotSeeking[slotIndex] || isSeeking);
 
   // ---------------- SEGMENT OFFSETS ----------------
   const segmentOffsets = useMemo(() => {
@@ -69,15 +63,15 @@ export function useHlsWithStore({ src, cameraId, segments, slotIndex }: Props) {
     const video = videoRef.current;
     if (!video) return;
 
-    if (isCurrentSlotSeeking) setIsVideoReady(false);
+    if (isSeeking) setIsVideoReady(false);
 
     const onCanPlay = () => {
-      if (isCurrentSlotSeeking) setIsVideoReady(true);
+      if (isSeeking) setIsVideoReady(true);
     };
 
     video.addEventListener("canplay", onCanPlay);
     return () => video.removeEventListener("canplay", onCanPlay);
-  }, [isCurrentSlotSeeking]);
+  }, [isSeeking]);
 
   // ---------------- PLAY / PAUSE SYNC ----------------
   useEffect(() => {
