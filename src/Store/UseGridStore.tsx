@@ -13,6 +13,7 @@ interface GridStore {
   resizeSlots: () => void;
   assignCameraToSlot: (slotIndex: number, cameraId: string) => void;
   clearSlot: (slotIndex: number) => void;
+  clearAllSlots: () => void;
   swapSlots: (from: number, to: number) => void;
   setPlayingCameraIds: (updater: (prev: Set<string>) => Set<string>) => void;
 
@@ -61,6 +62,13 @@ const useGridStore = create<GridStore>((set, get) => ({
         playingCameraIds: playing,
       };
     }),
+
+  clearAllSlots: () =>
+    set((state) => ({
+      slotAssignments: Array(state.layout.rows * state.layout.cols).fill(null),
+      playingCameraIds: new Set(),
+    })),
+
   swapSlots: (from, to) =>
     set((state) => {
       const updated = [...state.slotAssignments];

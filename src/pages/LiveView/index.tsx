@@ -173,7 +173,7 @@ export default function LiveView() {
       />
 
       <div className="flex flex-1 gap-3 min-h-0 overflow-hidden">
-        <div className="flex gap-3 py-3 pl-3 flex-1 relative">
+        <div id="live-view-grid-container" className="flex gap-3 py-3 pl-3 flex-1 relative bg-background">
           <CameraTreeSidebar
             isVisible={showCameraList}
             onCameraClick={handleCameraClick}

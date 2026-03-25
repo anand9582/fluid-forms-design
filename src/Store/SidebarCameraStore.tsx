@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { Device as BaseDevice } from "@/components/LiveView/DeviceTypes";
+import { API_VIVEK_URL } from "@/components/Config/api";
 
 const BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://192.168.11.212:9081";
@@ -52,7 +53,7 @@ export const SidebarCameraStore = create<CameraStore>((set, get) => ({
     set({ loading: true });
 
     try {
-      const res = await fetch(`${BASE_URL}/api/v1/groups/get-tree-view`);
+      const res = await fetch(`${API_VIVEK_URL}/api/v1/groups/get-tree-view`);
       const json = await res.json();
       const groupData: Group[] = json?.data || [];
 
