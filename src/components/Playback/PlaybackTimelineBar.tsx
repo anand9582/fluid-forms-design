@@ -292,8 +292,13 @@ export function PlaybackTimelineBar({
                     <div className="relative flex h-full w-full flex-col items-center justify-center pointer-events-none">
                       <span className="pointer-events-none">{dayNumber}</span>
 
-                      {isCurrentMonth && isAvailable && (
-                        <div className="absolute top-[-3px] right-0 w-[6px] h-[6px] rounded-full bg-green-500 pointer-events-none" />
+                      {isCurrentMonth && (
+                        <div
+                          className={cn(
+                            "absolute top-[-0px] right-0 w-[6px] h-[6px] rounded-full pointer-events-none",
+                            isAvailable ? "bg-green-500" : "bg-red-500"
+                          )}
+                        />
                       )}
                     </div>
                   );
@@ -499,8 +504,12 @@ export function PlaybackTimelineBar({
         {/* BOOKMARK POPOVER */}
         <PlaybackBookmarkPopover
           bookmarks={bookmarks}
-          currentPosition={lastSeekTime ? lastSeekTime.getTime() : 0}
-          currentTimestamp={lastSeekTime ? formatIST(lastSeekTime) : "00:00:00"}
+          currentPosition={(lastSeekTime || globalTime).getTime()}
+          currentTimestamp={
+            lastSeekTime
+              ? toISTISOString(lastSeekTime)
+              : toISTISOString(globalTime)
+          }
           cameraId={cameraId || ""}
           onAddBookmark={handleAddBookmark}
           onRemoveBookmark={handleRemoveBookmark}
