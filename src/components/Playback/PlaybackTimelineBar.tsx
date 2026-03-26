@@ -84,26 +84,6 @@ export function PlaybackTimelineBar({
   const [selectedDate, setSelectedDate] = useState<Date>(globalTime);
   const [calendarMonth, setCalendarMonth] = useState<Date>(globalTime);
   const [availableDates, setAvailableDates] = useState<number[]>([]);
-  const calendarRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        calendarRef.current &&
-        !calendarRef.current.contains(event.target as Node)
-      ) {
-        setPickerOpen(false);
-      }
-    };
-
-    if (pickerOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [pickerOpen]);
 
   useEffect(() => {
     if (!pickerOpen || !cameraId) return;
@@ -293,7 +273,7 @@ export function PlaybackTimelineBar({
         </AppTooltip>
 
         {pickerOpen && (
-          <div ref={calendarRef} className="absolute bottom-full mt-2 z-50 bg-background border rounded shadow p-3">
+          <div className="absolute bottom-full mt-2 z-50 bg-background border rounded shadow p-3">
             <Calendar
               mode="single"
               selected={selectedDate}
@@ -304,18 +284,21 @@ export function PlaybackTimelineBar({
               components={{
                 DayContent: (props) => {
                   const dayNumber = props.date.getDate();
-                  const isCurrentMonth = props.date.getMonth() === calendarMonth.getMonth();
+                  const isCurrentMonth =
+                    props.date.getMonth() === calendarMonth.getMonth();
                   const isAvailable = availableDates.includes(dayNumber);
 
                   return (
-                    <div className="relative flex h-full w-full flex-col items-center justify-center">
-                      <span>{dayNumber}</span>
+                    <div className="relative flex h-full w-full flex-col items-center justify-center pointer-events-none">
+                      <span className="pointer-events-none">{dayNumber}</span>
+
                       {isCurrentMonth && isAvailable && (
-                        <div className="absolute top-[-3px] right-0 w-[6px] h-[6px] rounded-full bg-green-500" />
+                        <div className="absolute top-[-3px] right-0 w-[6px] h-[6px] rounded-full bg-green-500 pointer-events-none" />
                       )}
                     </div>
                   );
                 },
+
                 IconLeft: () => <ChevronLeft className="h-4 w-4" />,
                 IconRight: () => <ChevronRight className="h-4 w-4" />
               }}
