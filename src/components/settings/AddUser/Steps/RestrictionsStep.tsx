@@ -122,17 +122,10 @@ export function RestrictionsStep({
       <TagInput
         tags={macAddresses}
         onTagsChange={setMacAddresses}
-        placeholder="Add MAC address..."
+        placeholder="Add Ip address..."
         label="Allowed Ip Addresses"
       />
 
-      {/* DEVICE UID */}
-      <TagInput
-        tags={deviceUIDs}
-        onTagsChange={setDeviceUIDs}
-        placeholder="Add Device UID..."
-        label="Allowed Device UIDs"
-      />
 
       {/* EXPIRY + TIMEOUT */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -170,26 +163,6 @@ export function RestrictionsStep({
             value={inactivityTimeout}
             onChange={(e) => setInactivityTimeout(e.target.value)}
             placeholder="Value"
-            className="h-[42px]"
-          />
-        </div>
-      </div>
-
-      {/* IP RANGE */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <Label>Allowed IP Start</Label>
-          <Input
-            value={allowedIPStart}
-            onChange={(e) => setAllowedIPStart(e.target.value)}
-            className="h-[42px]"
-          />
-        </div>
-        <div>
-          <Label>Allowed IP End</Label>
-          <Input
-            value={allowedIPEnd}
-            onChange={(e) => setAllowedIPEnd(e.target.value)}
             className="h-[42px]"
           />
         </div>

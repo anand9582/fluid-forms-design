@@ -11,10 +11,10 @@ import {
   PlaybackBookmark,
   PlaybackState,
 } from "./types";
+import { APISERVERURL } from "@/components/Config/api";
 
-const BASE_URL = "http://192.168.10.190:8090";
-const BOOKMARK_API = `${BASE_URL}/api/bookmarks`;
-const PLAYBACK_API = `${BASE_URL}/api/playback`;
+const BOOKMARK_API = `${APISERVERURL}api/bookmarks`;
+const PLAYBACK_API = `${APISERVERURL}api/playback`;
 
 export function usePlaybackLogic(
   getAuthHeaders: () => Record<string, string>

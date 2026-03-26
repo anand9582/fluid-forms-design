@@ -51,12 +51,12 @@ export const usePlayCamera = (addDebugLog: (msg: string) => void) => {
         ".loading-spinner"
       ) as HTMLElement;
 
-     if (!loadingDiv && parent) {
-          loadingDiv = document.createElement("div");
-          loadingDiv.className =
-            "loading-spinner absolute inset-0 flex flex-col items-center justify-center  z-10";
+      if (!loadingDiv && parent) {
+        loadingDiv = document.createElement("div");
+        loadingDiv.className =
+          "loading-spinner absolute inset-0 flex flex-col items-center justify-center  z-10";
 
-          loadingDiv.innerHTML = `
+        loadingDiv.innerHTML = `
           <div class="absolute inset-0 flex items-center justify-center bg-black/40 transition-opacity duration-200">
             <div class="flex flex-col items-center gap-1.5">
               <div class="relative h-8 w-8">
@@ -70,8 +70,8 @@ export const usePlayCamera = (addDebugLog: (msg: string) => void) => {
           </div>
         `;
 
-          parent.appendChild(loadingDiv);
-        }
+        parent.appendChild(loadingDiv);
+      }
 
       if (loadingDiv) loadingDiv.style.display = "flex";
 

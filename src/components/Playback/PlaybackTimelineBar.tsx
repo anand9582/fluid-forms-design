@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { usePlaybackStore } from "@/Store/playbackStore";
 
 import {
@@ -17,6 +17,8 @@ import {
   Download,
   Scissors,
   MoreHorizontal,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -35,7 +37,7 @@ import { cn } from "@/lib/utils";
 import { formatIST, toISTISOString } from "@/components/Utils/Time";
 import { Slider } from "@/components/ui/slider";
 import axios from "axios";
-import { API_BASE_URL, API_URLS, getAuthHeaders } from "@/components/Config/api";
+import { APISERVERURL, API_URLS, getAuthHeaders } from "@/components/Config/api";
 import { PlaybackBookmarkPopover, PlaybackBookmark } from "@/components/Playback/PlaybackBookmarkPopover";
 import { DatePickerIcon } from "@/components/Icons/Svg/PlaybackIcons";
 
@@ -80,6 +82,31 @@ export function PlaybackTimelineBar({
 
   const [pickerOpen, setPickerOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(globalTime);
+  const [calendarMonth, setCalendarMonth] = useState<Date>(globalTime);
+  const [availableDates, setAvailableDates] = useState<number[]>([]);
+
+  useEffect(() => {
+    if (!pickerOpen || !cameraId) return;
+
+    const fetchAvailableDates = async () => {
+      try {
+        const year = calendarMonth.getFullYear();
+        const monthStr = String(calendarMonth.getMonth() + 1).padStart(2, "0");
+        const res = await axios.get(`${APISERVERURL}api/recorder/available-dates?cameraId=${cameraId}&month=${year}-${monthStr}`);
+
+        if (res.data?.data) {
+          setAvailableDates(res.data.data);
+        } else {
+          setAvailableDates([]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch available dates:", error);
+        setAvailableDates([]);
+      }
+    };
+
+    fetchAvailableDates();
+  }, [pickerOpen, cameraId, calendarMonth]);
 
   const [forwardSpeedOpen, setForwardSpeedOpen] = useState(false);
   const [reverseSpeedOpen, setReverseSpeedOpen] = useState(false);
@@ -105,6 +132,7 @@ export function PlaybackTimelineBar({
   const handleOpenPicker = (open: boolean) => {
     if (open) {
       setSelectedDate(globalTime);
+      setCalendarMonth(globalTime);
       const h = globalTime.getHours();
       setHour(String(h % 12 || 12));
       setMinute(String(globalTime.getMinutes()).padStart(2, "0"));
@@ -123,7 +151,7 @@ export function PlaybackTimelineBar({
 
     d.setHours(h, parseInt(minute) || 0, parseInt(second) || 0, 0);
 
-    onSeekToDate(d); // store update
+    onSeekToDate(d);
     setPickerOpen(false);
   };
 
@@ -163,13 +191,17 @@ export function PlaybackTimelineBar({
     if (!camId) return;
 
     try {
-      const res = await axios.post(`http://192.168.11.131:8081/api/bookmarks/addBookmark`, {
-        cameraId: camId,
-        bookmarkTime: timestamp,
-        title: name,
-        note: "Auto bookmark",
-        createdBy: 101,
-      }, { headers: getAuthHeaders() });
+      const res = await axios.post(
+        `${APISERVERURL}${API_URLS.Bookmark}`,
+        {
+          cameraId: camId,
+          bookmarkTime: timestamp,
+          title: name,
+          note: "Auto bookmark",
+          createdBy: 101,
+        },
+        { headers: getAuthHeaders() }
+      );
 
       if (res.status === 200) {
         const bookmarkData = res.data.data || res.data;
@@ -193,9 +225,12 @@ export function PlaybackTimelineBar({
 
   const handleRemoveBookmark = async (id: string, camId: string) => {
     try {
-      const res = await axios.delete(`http://192.168.11.131:8081/api/bookmarks/deleteBookmark/${id}`, {
-        headers: getAuthHeaders()
-      });
+      const res = await axios.delete(
+        `${APISERVERURL}${API_URLS.DELETE_BOOKMARK}/${id}`,
+        {
+          headers: getAuthHeaders(),
+        }
+      );
 
       if (res.status === 200) {
         setBookmarks(bookmarks.filter((bm) => bm.id !== id));
@@ -243,6 +278,30 @@ export function PlaybackTimelineBar({
               mode="single"
               selected={selectedDate}
               onSelect={(d) => d && setSelectedDate(d)}
+              month={calendarMonth}
+              onMonthChange={setCalendarMonth}
+              disabled={[{ after: new Date() }]}
+              components={{
+                DayContent: (props) => {
+                  const dayNumber = props.date.getDate();
+                  const isCurrentMonth =
+                    props.date.getMonth() === calendarMonth.getMonth();
+                  const isAvailable = availableDates.includes(dayNumber);
+
+                  return (
+                    <div className="relative flex h-full w-full flex-col items-center justify-center pointer-events-none">
+                      <span className="pointer-events-none">{dayNumber}</span>
+
+                      {isCurrentMonth && isAvailable && (
+                        <div className="absolute top-[-3px] right-0 w-[6px] h-[6px] rounded-full bg-green-500 pointer-events-none" />
+                      )}
+                    </div>
+                  );
+                },
+
+                IconLeft: () => <ChevronLeft className="h-4 w-4" />,
+                IconRight: () => <ChevronRight className="h-4 w-4" />
+              }}
             />
 
             <div className="flex items-center gap-1 mt-2">

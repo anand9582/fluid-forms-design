@@ -7,7 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { PlaybackControlButton } from "@/components/Common/PlaybackControlButton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import axios from "axios";
-import { getAuthHeaders } from "@/components/Config/api";
+import { APISERVERURL, getAuthHeaders, API_URLS } from "@/components/Config/api";
 
 export interface PlaybackBookmark {
   id: string | number;
@@ -65,22 +65,20 @@ export function PlaybackBookmarkPopover({
 
   //  Helper: jump handler
   const handleJumpClick = (bm: PlaybackBookmark) => {
+    const position = getBookmarkPosition(bm);
 
-  const position = getBookmarkPosition(bm);
-  console.log("⏱ Raw position:", position);
+    const date = new Date(position);
+    console.log("Converted date:", date.toString());
 
-  const date = new Date(position);
-  console.log("📅 Converted date:", date.toString());
+    if (!position || isNaN(position)) {
+      console.warn(" Invalid bookmark position");
+      return;
+    }
 
-  if (!position || isNaN(position)) {
-    console.warn("❌ Invalid bookmark position");
-    return;
-  }
+    onJumpToBookmark(position);
 
-  onJumpToBookmark(position);
-
-  console.log("🚀 Jump triggered");
-};
+    console.log("Jump triggered");
+  };
 
   //  Helper: remove handler
   const handleRemoveClick = (bm: PlaybackBookmark) => {
@@ -139,7 +137,7 @@ export function PlaybackBookmarkPopover({
         }
 
         const res = await axios.get(
-          `http://192.168.10.190:8090/api/bookmarks/bookmarkList`,
+          `${APISERVERURL}${API_URLS.Bookmark_List}`,
           {
             params: { cameraId, fromDate: startDate, toDate: endDate },
             headers: getAuthHeaders(),

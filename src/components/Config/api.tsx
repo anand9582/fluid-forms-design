@@ -1,8 +1,8 @@
 export const API_BASE_URL = "http://192.168.10.190:9080/api/v1";
 export const API_BASE_URL2 = "http://192.168.10.190:9081/api/v1";
 export const APISERVERURL = "http://192.168.10.190:8090/";
-export const API_MANISH_URL = "http://192.168.10.190:8090/api";
-export const API_VAISHALI_URL = "http://192.168.10.190:9081/api";
+export const API_MANISH_URL = "http://192.168.11.212:8085/api";
+export const API_VAISHALI_URL = "http://192.168.10.107:9081/api";
 export const API_VIVEK_URL = "http://192.168.10.190:9081";
 
 export const API_URLS = {
@@ -34,8 +34,11 @@ export const API_URLS = {
   get_devices_by_storage_id: "/storage/get-devices-by-storage-id",
   stop_recording: "/storage/stop-recording",
   move_devices: "/storage/move-devices",
-  Bookmark: "/api/bookmarks/addBookmark",
-  DeviceStatus: "metadata/status/all  ",
+  Bookmark: "api/bookmarks/addBookmark",
+  DELETE_BOOKMARK: "api/bookmarks/deleteBookmark",
+  DeviceStatus: "metadata/status/all",
+  AddDevices: "/devices/add-devices",
+  Bookmark_List: "api/bookmarks/bookmarkList",
 };
 
 export const getAuthHeaders = () => {

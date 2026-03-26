@@ -205,6 +205,7 @@ export const usePlaybackStore = create<PlaybackStore>((set, get) => {
         set((state) => ({
           cameraTimes: { ...state.cameraTimes, [slotIndex]: date },
           globalTime: date,
+          lastSeekTime: date
         }));
       }
 
