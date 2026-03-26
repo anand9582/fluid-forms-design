@@ -37,7 +37,7 @@ import { cn } from "@/lib/utils";
 import { formatIST, toISTISOString } from "@/components/Utils/Time";
 import { Slider } from "@/components/ui/slider";
 import axios from "axios";
-import { API_BASE_URL, API_URLS, getAuthHeaders, API_VIVEK_URL } from "@/components/Config/api";
+import { APISERVERURL, API_URLS, getAuthHeaders, API_VIVEK_URL } from "@/components/Config/api";
 import { PlaybackBookmarkPopover, PlaybackBookmark } from "@/components/Playback/PlaybackBookmarkPopover";
 import { DatePickerIcon } from "@/components/Icons/Svg/PlaybackIcons";
 
@@ -92,7 +92,7 @@ export function PlaybackTimelineBar({
       try {
         const year = calendarMonth.getFullYear();
         const monthStr = String(calendarMonth.getMonth() + 1).padStart(2, "0");
-        const res = await axios.get(`${API_VIVEK_URL}/api/recorder/available-dates?cameraId=${cameraId}&month=${year}-${monthStr}`);
+        const res = await axios.get(`${APISERVERURL}api/recorder/available-dates?cameraId=${cameraId}&month=${year}-${monthStr}`);
 
         if (res.data?.data) {
           setAvailableDates(res.data.data);
@@ -151,7 +151,7 @@ export function PlaybackTimelineBar({
 
     d.setHours(h, parseInt(minute) || 0, parseInt(second) || 0, 0);
 
-    onSeekToDate(d); // store update
+    onSeekToDate(d);
     setPickerOpen(false);
   };
 
@@ -273,6 +273,7 @@ export function PlaybackTimelineBar({
               onSelect={(d) => d && setSelectedDate(d)}
               month={calendarMonth}
               onMonthChange={setCalendarMonth}
+              disabled={[{ after: new Date() }]}
               components={{
                 DayContent: (props) => {
                   const dayNumber = props.date.getDate();
