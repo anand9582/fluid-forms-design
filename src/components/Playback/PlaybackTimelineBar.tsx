@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { usePlaybackStore } from "@/Store/playbackStore";
 
 import {
@@ -17,6 +17,8 @@ import {
   Download,
   Scissors,
   MoreHorizontal,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -35,7 +37,7 @@ import { cn } from "@/lib/utils";
 import { formatIST, toISTISOString } from "@/components/Utils/Time";
 import { Slider } from "@/components/ui/slider";
 import axios from "axios";
-import { API_BASE_URL, API_URLS, getAuthHeaders } from "@/components/Config/api";
+import { API_BASE_URL, API_URLS, getAuthHeaders, API_VIVEK_URL } from "@/components/Config/api";
 import { PlaybackBookmarkPopover, PlaybackBookmark } from "@/components/Playback/PlaybackBookmarkPopover";
 import { DatePickerIcon } from "@/components/Icons/Svg/PlaybackIcons";
 
@@ -80,6 +82,31 @@ export function PlaybackTimelineBar({
 
   const [pickerOpen, setPickerOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(globalTime);
+  const [calendarMonth, setCalendarMonth] = useState<Date>(globalTime);
+  const [availableDates, setAvailableDates] = useState<number[]>([]);
+
+  useEffect(() => {
+    if (!pickerOpen || !cameraId) return;
+
+    const fetchAvailableDates = async () => {
+      try {
+        const year = calendarMonth.getFullYear();
+        const monthStr = String(calendarMonth.getMonth() + 1).padStart(2, "0");
+        const res = await axios.get(`${API_VIVEK_URL}/api/recorder/available-dates?cameraId=${cameraId}&month=${year}-${monthStr}`);
+
+        if (res.data?.data) {
+          setAvailableDates(res.data.data);
+        } else {
+          setAvailableDates([]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch available dates:", error);
+        setAvailableDates([]);
+      }
+    };
+
+    fetchAvailableDates();
+  }, [pickerOpen, cameraId, calendarMonth]);
 
   const [forwardSpeedOpen, setForwardSpeedOpen] = useState(false);
   const [reverseSpeedOpen, setReverseSpeedOpen] = useState(false);
@@ -105,6 +132,7 @@ export function PlaybackTimelineBar({
   const handleOpenPicker = (open: boolean) => {
     if (open) {
       setSelectedDate(globalTime);
+      setCalendarMonth(globalTime);
       const h = globalTime.getHours();
       setHour(String(h % 12 || 12));
       setMinute(String(globalTime.getMinutes()).padStart(2, "0"));
@@ -243,6 +271,31 @@ export function PlaybackTimelineBar({
               mode="single"
               selected={selectedDate}
               onSelect={(d) => d && setSelectedDate(d)}
+              month={calendarMonth}
+              onMonthChange={setCalendarMonth}
+              components={{
+                DayContent: (props) => {
+                  const dayNumber = props.date.getDate();
+                  const isCurrentMonth = props.date.getMonth() === calendarMonth.getMonth();
+                  const isAvailable = availableDates.includes(dayNumber);
+
+                  return (
+                    <div className="relative flex h-full w-full flex-col items-center justify-center">
+                      <span>{dayNumber}</span>
+                      {isCurrentMonth && (
+                        <div
+                          className={cn(
+                            "absolute bottom-[2px] w-1 h-1 rounded-full",
+                            isAvailable ? "bg-green-500" : "bg-red-500"
+                          )}
+                        />
+                      )}
+                    </div>
+                  );
+                },
+                IconLeft: () => <ChevronLeft className="h-4 w-4" />,
+                IconRight: () => <ChevronRight className="h-4 w-4" />
+              }}
             />
 
             <div className="flex items-center gap-1 mt-2">
