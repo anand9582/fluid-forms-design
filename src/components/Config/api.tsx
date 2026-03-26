@@ -34,9 +34,11 @@ export const API_URLS = {
   get_devices_by_storage_id: "/storage/get-devices-by-storage-id",
   stop_recording: "/storage/stop-recording",
   move_devices: "/storage/move-devices",
-  Bookmark: "/api/bookmarks/addBookmark",
+  Bookmark: "api/bookmarks/addBookmark",
+  DELETE_BOOKMARK: "api/bookmarks/deleteBookmark",
   DeviceStatus: "metadata/status/all",
   AddDevices: "/devices/add-devices",
+  Bookmark_List: "api/bookmarks/bookmarkList",
 };
 
 export const getAuthHeaders = () => {

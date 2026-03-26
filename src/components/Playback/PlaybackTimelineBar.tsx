@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { usePlaybackStore } from "@/Store/playbackStore";
 
 import {
@@ -37,7 +37,7 @@ import { cn } from "@/lib/utils";
 import { formatIST, toISTISOString } from "@/components/Utils/Time";
 import { Slider } from "@/components/ui/slider";
 import axios from "axios";
-import { APISERVERURL, API_URLS, getAuthHeaders, API_VIVEK_URL } from "@/components/Config/api";
+import { APISERVERURL, API_URLS, getAuthHeaders } from "@/components/Config/api";
 import { PlaybackBookmarkPopover, PlaybackBookmark } from "@/components/Playback/PlaybackBookmarkPopover";
 import { DatePickerIcon } from "@/components/Icons/Svg/PlaybackIcons";
 
@@ -84,6 +84,26 @@ export function PlaybackTimelineBar({
   const [selectedDate, setSelectedDate] = useState<Date>(globalTime);
   const [calendarMonth, setCalendarMonth] = useState<Date>(globalTime);
   const [availableDates, setAvailableDates] = useState<number[]>([]);
+  const calendarRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        calendarRef.current &&
+        !calendarRef.current.contains(event.target as Node)
+      ) {
+        setPickerOpen(false);
+      }
+    };
+
+    if (pickerOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [pickerOpen]);
 
   useEffect(() => {
     if (!pickerOpen || !cameraId) return;
@@ -191,13 +211,17 @@ export function PlaybackTimelineBar({
     if (!camId) return;
 
     try {
-      const res = await axios.post(`http://192.168.11.131:8081/api/bookmarks/addBookmark`, {
-        cameraId: camId,
-        bookmarkTime: timestamp,
-        title: name,
-        note: "Auto bookmark",
-        createdBy: 101,
-      }, { headers: getAuthHeaders() });
+      const res = await axios.post(
+        `${APISERVERURL}${API_URLS.Bookmark}`,
+        {
+          cameraId: camId,
+          bookmarkTime: timestamp,
+          title: name,
+          note: "Auto bookmark",
+          createdBy: 101,
+        },
+        { headers: getAuthHeaders() }
+      );
 
       if (res.status === 200) {
         const bookmarkData = res.data.data || res.data;
@@ -221,9 +245,12 @@ export function PlaybackTimelineBar({
 
   const handleRemoveBookmark = async (id: string, camId: string) => {
     try {
-      const res = await axios.delete(`http://192.168.11.131:8081/api/bookmarks/deleteBookmark/${id}`, {
-        headers: getAuthHeaders()
-      });
+      const res = await axios.delete(
+        `${APISERVERURL}${API_URLS.DELETE_BOOKMARK}/${id}`,
+        {
+          headers: getAuthHeaders(),
+        }
+      );
 
       if (res.status === 200) {
         setBookmarks(bookmarks.filter((bm) => bm.id !== id));
@@ -266,7 +293,7 @@ export function PlaybackTimelineBar({
         </AppTooltip>
 
         {pickerOpen && (
-          <div className="absolute bottom-full mt-2 z-50 bg-background border rounded shadow p-3">
+          <div ref={calendarRef} className="absolute bottom-full mt-2 z-50 bg-background border rounded shadow p-3">
             <Calendar
               mode="single"
               selected={selectedDate}
@@ -283,13 +310,8 @@ export function PlaybackTimelineBar({
                   return (
                     <div className="relative flex h-full w-full flex-col items-center justify-center">
                       <span>{dayNumber}</span>
-                      {isCurrentMonth && (
-                        <div
-                          className={cn(
-                            "absolute bottom-[2px] w-1 h-1 rounded-full",
-                            isAvailable ? "bg-green-500" : "bg-red-500"
-                          )}
-                        />
+                      {isCurrentMonth && isAvailable && (
+                        <div className="absolute top-[-3px] right-0 w-[6px] h-[6px] rounded-full bg-green-500" />
                       )}
                     </div>
                   );

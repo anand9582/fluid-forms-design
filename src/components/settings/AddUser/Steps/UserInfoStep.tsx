@@ -15,11 +15,11 @@ interface UserInfoStepProps {
   totalSteps: number;
 }
 const deviceTypes = [
-    { value: "camera", label: "Camera", icon: Camera },
-    { value: "nvr", label: "NVR", icon: MonitorSpeaker },
-    { value: "router", label: "Router", icon: Router },
-    { value: "access_control", label: "Access Control", icon: Shield },
-    { value: "iot", label: "IOT Center", icon: Cpu },
+  { value: "camera", label: "Camera", icon: Camera },
+  { value: "nvr", label: "NVR", icon: MonitorSpeaker },
+  { value: "router", label: "Router", icon: Router },
+  { value: "access_control", label: "Access Control", icon: Shield },
+  { value: "iot", label: "IOT Center", icon: Cpu },
 ];
 
 export function UserInfoStep({ formik, currentStep, totalSteps }: UserInfoStepProps) {
@@ -28,22 +28,22 @@ export function UserInfoStep({ formik, currentStep, totalSteps }: UserInfoStepPr
       <StepFormSection description={`Step ${currentStep + 1} of ${totalSteps}`}>
         <StepFormRow>
           <StepFormField>
-            <Label htmlFor="name">Full Name</Label>
+            <Label htmlFor="name">First Name</Label>
             <Input
               id="name"
               name="name"
-              placeholder="Enter Full Name"
+              placeholder="Enter FirstName"
               value={formik.values.name}
               onChange={formik.handleChange}
             />
           </StepFormField>
 
           <StepFormField>
-            <Label htmlFor="username">Username</Label>
+            <Label htmlFor="LastName">Last Name</Label>
             <Input
               id="username"
               name="username"
-              placeholder="Enter Username"
+              placeholder="Enter LastName"
               value={formik.values.username}
               onChange={formik.handleChange}
             />
@@ -78,69 +78,69 @@ export function UserInfoStep({ formik, currentStep, totalSteps }: UserInfoStepPr
           <hr className="mt-2 border-border" />
         </div>
 
-       
+
+        <StepFormField>
+          <Label htmlFor="address">Street Address</Label>
+          <Input
+            id="address"
+            name="address"
+            placeholder="123 Security Blvd, Monitoring Center A"
+            value={formik.values.address}
+            onChange={formik.handleChange}
+          />
+        </StepFormField>
+
+        <StepFormRow columns={3}>
           <StepFormField>
-            <Label htmlFor="address">Street Address</Label>
+            <Label htmlFor="city">City</Label>
             <Input
-              id="address"
-              name="address"
-              placeholder="123 Security Blvd, Monitoring Center A"
-              value={formik.values.address}
+              id="city"
+              name="city"
+              placeholder="City"
+              value={formik.values.city}
               onChange={formik.handleChange}
             />
           </StepFormField>
 
-      <StepFormRow columns={3}>
-  <StepFormField>
-    <Label htmlFor="city">City</Label>
-    <Input
-      id="city"
-      name="city"
-      placeholder="City"
-      value={formik.values.city}
-      onChange={formik.handleChange}
-    />
-  </StepFormField>
+          <StepFormField>
+            <Label htmlFor="state">State</Label>
+            <Input
+              id="state"
+              name="state"
+              placeholder="State"
+              value={formik.values.state}
+              onChange={formik.handleChange}
+            />
+          </StepFormField>
 
-  <StepFormField>
-    <Label htmlFor="state">State</Label>
-    <Input
-      id="state"
-      name="state"
-      placeholder="State"
-      value={formik.values.state}
-      onChange={formik.handleChange}
-    />
-  </StepFormField>
-
-  <StepFormField>
-    <Label htmlFor="pincode">Pincode</Label>
-    <Input
-      id="pincode"
-      name="pincode"
-      placeholder="Pincode"
-      value={formik.values.pincode}
-      onChange={formik.handleChange}
-    />
-  </StepFormField>
-</StepFormRow>
+          <StepFormField>
+            <Label htmlFor="pincode">Pincode</Label>
+            <Input
+              id="pincode"
+              name="pincode"
+              placeholder="Pincode"
+              value={formik.values.pincode}
+              onChange={formik.handleChange}
+            />
+          </StepFormField>
+        </StepFormRow>
 
       </StepFormSection>
 
       {/* Security */}
       <StepFormSection>
-         <div className="flex items-center gap-2">
-              <h2 className="text-sm font-semibold text-foreground">
-                Security
-              </h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-sm font-semibold text-foreground">
+            Security
+          </h2>
 
-              <Badge
-                variant="secondary"
-                className="rounded-full px-2 py-0.5 text-xs font-medium text-gray-500"
-              >
-                Admin only
-              </Badge>
-            </div>
+          <Badge
+            variant="secondary"
+            className="rounded-full px-2 py-0.5 text-xs font-medium text-gray-500"
+          >
+            Admin only
+          </Badge>
+        </div>
         <StepFormRow>
           <StepFormField>
             <Label htmlFor="oldPassword">Password</Label>
