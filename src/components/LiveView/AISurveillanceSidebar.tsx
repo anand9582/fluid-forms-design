@@ -52,7 +52,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 import {
   AISurveillanceIcons,
@@ -111,6 +111,7 @@ export function AISurveillanceSidebar({ selectedCamera, selectedSlotIndex, mainS
   const [loopMode, setLoopMode] = useState(false);
   const [alertPriority, setAlertPriority] = useState(false);
   const [availableSequences, setAvailableSequences] = useState<any[]>([]);
+  console.log("availableSequences", availableSequences);
   const [loadingSequences, setLoadingSequences] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [sequenceToDelete, setSequenceToDelete] = useState<any>(null);
@@ -213,10 +214,8 @@ export function AISurveillanceSidebar({ selectedCamera, selectedSlotIndex, mainS
         : await axios.post(url, payload);
 
       if (res.data?.success) {
-        toast({
-          title: "Success",
-          description: res.data?.message || "Sequence saved successfully",
-        });
+
+        toast.success(res.data?.message || "Sequence saved successfully");
 
         setActiveSequence({
           sequenceId: res.data?.data?.sequenceId || activeSequence?.sequenceId,
@@ -230,19 +229,12 @@ export function AISurveillanceSidebar({ selectedCamera, selectedSlotIndex, mainS
         SidebarCameraStore.getState().setIsSequencing(true);
         fetchSequences(); // Refresh the list
       } else {
-        toast({
-          title: "Error",
-          description: res.data?.message || "Failed to save sequence",
-          variant: "destructive",
-        });
+
+        toast.error(res.data?.message || "Failed to save sequence");
       }
     } catch (error: any) {
       console.error("Failed to call sequence save API", error);
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to call sequence save API",
-        variant: "destructive",
-      });
+      toast.error(error.response?.data?.message || "Failed to call sequence save API");
     } finally {
       setIsSaving(false);
     }
@@ -277,10 +269,7 @@ export function AISurveillanceSidebar({ selectedCamera, selectedSlotIndex, mainS
     try {
       const res = await axios.delete(`${API_VIVEK_URL}/api/deleteBySequenceId/${sequenceToDelete.sequenceId}`);
       if (res.data?.success) {
-        toast({
-          title: "Deleted",
-          description: res.data?.message || "Sequence deleted successfully",
-        });
+        toast.success(res.data?.message || "Sequence deleted successfully");
         setIsDeleteConfirmOpen(false);
         // If we deleted the active sequence, clear the view
         if (activeSequence?.sequenceId === sequenceToDelete.sequenceId) {
@@ -289,19 +278,11 @@ export function AISurveillanceSidebar({ selectedCamera, selectedSlotIndex, mainS
         setSequenceToDelete(null);
         fetchSequences();
       } else {
-        toast({
-          title: "Error",
-          description: res.data?.message || "Failed to delete sequence",
-          variant: "destructive",
-        });
+        toast.error(res.data?.message || "Failed to delete sequence");
       }
     } catch (error: any) {
       console.error("Failed to delete sequence:", error);
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to delete sequence",
-        variant: "destructive",
-      });
+      toast.error(error.response?.data?.message || "Failed to delete sequence");
     } finally {
       setIsDeleting(false);
     }

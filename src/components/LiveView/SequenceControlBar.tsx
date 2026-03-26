@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { SidebarCameraStore } from "@/Store/SidebarCameraStore";
 import useGridStore from "@/Store/UseGridStore";
+import { useStreamStore } from "@/Store/useStreamStore";
 import {
     Select,
     SelectContent,
@@ -34,6 +35,7 @@ export function SequenceControlBar() {
     const [fetchedSequence, setFetchedSequence] = useState<any>(null);
     const playbackTimerRef = useRef<NodeJS.Timeout | null>(null);
     const individualTimersRef = useRef<NodeJS.Timeout[]>([]);
+    const pendingTimersRef = useRef<{ [key: string]: { durationMs: number; slotIndex: number, started: boolean, endTime?: number } }>({});
 
     // Sync external sequencing state with local sequenceType if it's turned off externally
     useEffect(() => {
@@ -117,8 +119,26 @@ export function SequenceControlBar() {
         }
     };
 
+    const handleNextSequence = () => {
+        if (!availableSequences || availableSequences.length === 0) return;
+        const currentIndex = availableSequences.findIndex(s => s.sequenceId.toString() === selectedSequenceId);
+        if (currentIndex === -1) return;
+        const nextIndex = (currentIndex + 1) % availableSequences.length;
+        handleSequenceSelect(availableSequences[nextIndex].sequenceId.toString());
+    };
+
+    const handlePreviousSequence = () => {
+        if (!availableSequences || availableSequences.length === 0) return;
+        const currentIndex = availableSequences.findIndex(s => s.sequenceId.toString() === selectedSequenceId);
+        if (currentIndex === -1) return;
+        const prevIndex = (currentIndex - 1 + availableSequences.length) % availableSequences.length;
+        handleSequenceSelect(availableSequences[prevIndex].sequenceId.toString());
+    };
+
     // Playback Engine
     useEffect(() => {
+        let processedInstances = new Set<string>();
+
         const clearTimers = () => {
             if (playbackTimerRef.current) clearTimeout(playbackTimerRef.current);
             individualTimersRef.current.forEach(clearTimeout);
@@ -130,50 +150,98 @@ export function SequenceControlBar() {
             return;
         }
 
-        const runSequenceCycle = () => {
+        const playItem = (index: number) => {
             clearTimers();
+            pendingTimersRef.current = {};
+
             const items = fetchedSequence.items || [];
-            let maxDuration = 0;
-
-            items.forEach((item: any) => {
-                const slotIndex = item.order - 1;
-
-                // Map to grid if within bounds
-                if (slotIndex >= 0 && slotIndex < layout.rows * layout.cols) {
-                    assignCameraToSlot(slotIndex, String(item.cameraId));
-
-                    const durationMs = item.duration * 1000;
-                    if (durationMs > maxDuration) {
-                        maxDuration = durationMs;
+            
+            if (index >= items.length) {
+                // Sequence finished, handle loop or next sequence
+                if (fetchedSequence.repeatSequence) {
+                    // Use a short delay before looping to avoid strict infinite recursion instantly
+                    playbackTimerRef.current = setTimeout(() => playItem(0), 100);
+                } else {
+                    if (availableSequences && availableSequences.length > 0) {
+                        const currentIndex = availableSequences.findIndex(s => s.sequenceId.toString() === selectedSequenceId);
+                        if (currentIndex !== -1) {
+                            const nextIndex = (currentIndex + 1) % availableSequences.length;
+                            handleSequenceSelect(availableSequences[nextIndex].sequenceId.toString());
+                        } else {
+                            setIsSequencing(false);
+                        }
+                    } else {
+                        setIsSequencing(false);
                     }
+                }
+                return;
+            }
 
-                    // Clear slot after its duration expires
+            const item = items[index];
+            const slotIndex = 0; // Drop camera in first cell only
+
+            assignCameraToSlot(slotIndex, String(item.cameraId));
+
+            const durationMs = item.duration * 1000;
+            const key = `${item.cameraId}-${slotIndex}`;
+            
+            pendingTimersRef.current[key] = {
+                durationMs,
+                slotIndex,
+                started: false,
+                endTime: 0,
+                itemIndex: index // Store index so we can play the next item
+            } as any;
+
+            // Fallback timer: if the stream takes longer than 15s to load, start its timer anyway
+            const fallbackTimer = setTimeout(() => {
+                const currentObj = pendingTimersRef.current[key] as any;
+                if (currentObj && !currentObj.started) {
+                    currentObj.started = true;
+                    
                     const timer = setTimeout(() => {
                         clearSlot(slotIndex);
+                        playItem(index + 1);
                     }, durationMs);
-
                     individualTimersRef.current.push(timer);
                 }
-            });
-
-            // Handle repeating or single play after the overall duration finishes
-            if (maxDuration > 0) {
-                playbackTimerRef.current = setTimeout(() => {
-                    if (fetchedSequence.repeatSequence) {
-                        runSequenceCycle(); // Loop
-                    } else {
-                        setIsSequencing(false); // Stop sequence
-                    }
-                }, maxDuration);
-            }
+            }, 15000);
+            individualTimersRef.current.push(fallbackTimer);
         };
 
-        runSequenceCycle();
+        const unsubStreamStore = useStreamStore.subscribe((state) => {
+            if (!isSequencing) return;
+
+            state.streams.forEach(stream => {
+                if (!processedInstances.has(stream.instanceId)) {
+                    processedInstances.add(stream.instanceId);
+
+                    const key = `${stream.cameraId}-${stream.slotId}`;
+                    const pending = pendingTimersRef.current[key] as any;
+
+                    if (pending && !pending.started) {
+                        pending.started = true;
+
+                        const timer = setTimeout(() => {
+                            clearSlot(pending.slotIndex);
+                            playItem(pending.itemIndex + 1);
+                        }, pending.durationMs);
+
+                        individualTimersRef.current.push(timer);
+                    }
+                }
+            });
+        });
+
+        processedInstances = new Set<string>(); // Reset for new play
+        playItem(0);
 
         return () => {
             clearTimers();
+            if (typeof unsubStreamStore === "function") unsubStreamStore();
         };
-    }, [isSequencing, fetchedSequence, layout, assignCameraToSlot, clearSlot]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isSequencing, fetchedSequence, layout, assignCameraToSlot, clearSlot, availableSequences, selectedSequenceId]);
 
     return (
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
@@ -252,7 +320,10 @@ export function SequenceControlBar() {
                 {/* Right Side Tools */}
                 <div className="flex items-center px-2 border-l border-slate-100 h-full ml-1">
                     <div className="flex items-center gap-1">
-                        <button className="p-1 hover:bg-slate-100 rounded-lg text-[#A3A3A3] hover:text-[#0A0A0A] transition-all active:scale-90">
+                        <button 
+                            className="p-1 hover:bg-slate-100 rounded-lg text-[#A3A3A3] hover:text-[#0A0A0A] transition-all active:scale-90"
+                            onClick={handlePreviousSequence}
+                        >
                             <SkipBack size={18} fill="currentColor" className="opacity-80" />
                         </button>
                         <button
@@ -264,7 +335,10 @@ export function SequenceControlBar() {
                         >
                             {isSequencing ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" />}
                         </button>
-                        <button className="p-1 hover:bg-slate-100 rounded-lg text-[#A3A3A3] hover:text-[#0A0A0A] transition-all active:scale-90">
+                        <button 
+                            className="p-1 hover:bg-slate-100 rounded-lg text-[#A3A3A3] hover:text-[#0A0A0A] transition-all active:scale-90"
+                            onClick={handleNextSequence}
+                        >
                             <SkipForward size={18} fill="currentColor" className="opacity-80" />
                         </button>
                     </div>

@@ -126,7 +126,7 @@ export default function RecordingPage({ deviceId }: RecordingProps) {
   };
 
   const fetchRecordingConfig = async () => {
-    const idToFetch = 2;
+    const idToFetch = deviceId || 2;
     console.log("idToFetch", idToFetch);
     console.log(`DEBUG: Fetching Recording config for ID: ${idToFetch}`);
     try {
@@ -153,7 +153,7 @@ export default function RecordingPage({ deviceId }: RecordingProps) {
   };
 
   const fetchRetentionPolicy = async () => {
-    const idToFetch = 3;
+    const idToFetch = deviceId || 3;
     console.log(`DEBUG: Fetching Retention Policy for ID: ${idToFetch}`);
     try {
       const response = await axios.get(`${API_VAISHALI_URL}/v1/devices/retention-policy/${idToFetch}`, {
@@ -182,7 +182,7 @@ export default function RecordingPage({ deviceId }: RecordingProps) {
   }, [syncMethod]);
 
   useEffect(() => {
-    const idToFetch = 1;
+    const idToFetch = deviceId || 1;
     const streamType = "MAIN";
 
     const fetchStreamInfo = async () => {
@@ -785,9 +785,8 @@ export default function RecordingPage({ deviceId }: RecordingProps) {
           </div>
         </ConfigSection>
 
-        <ConfigSection icon={<SettingIcons className="h-4 w-4" />} title="Other Settings">
+        {/* <ConfigSection icon={<SettingIcons className="h-4 w-4" />} title="Other Settings">
           <div className="space-y-4">
-            {/* Checkbox Grid */}
             <div className="grid grid-cols-2 gap-4">
               <label className="flex items-center justify-between gap-3 p-2 border rounded-sm cursor-pointer  hover:bg-muted/50 transition-colors shadow-sm">
                 <div className="flex gap-2">
@@ -833,15 +832,15 @@ export default function RecordingPage({ deviceId }: RecordingProps) {
           <p className="text-sm text-center text-slate-700">
             Stops all active recordings on this device. Recording can be resumed at any time.
           </p>
-        </ConfigSection>
+        </ConfigSection> */}
 
-        <ConfigSection icon={<AlertIcons className="h-4 w-4" />} title="Network Module Alerts" defaultOpen>
+        {/* <ConfigSection icon={<AlertIcons className="h-4 w-4" />} title="Network Module Alerts" defaultOpen>
           <AlertsTable
             alerts={alerts}
             setAlerts={setAlerts}
             channels={CHANNELS}
           />
-        </ConfigSection>
+        </ConfigSection> */}
       </TabsContent>
     </Form>
   );

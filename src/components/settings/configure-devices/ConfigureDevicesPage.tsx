@@ -119,10 +119,22 @@ const ConfigureDevicesPage = () => {
           onCameraClick={(cameraId) => {
             const camera = cameras.find(c => String(c.cameraId) === String(cameraId));
             if (camera) {
+              let displayName = camera.name;
+              let displayIp = camera.ipAddress;
+              
+              if (camera.name && camera.name.includes("_")) {
+                const parts = camera.name.split("_");
+                const possibleIp = parts.pop();
+                if (possibleIp) {
+                  displayIp = possibleIp;
+                  displayName = parts.join("_");
+                }
+              }
+
               setSelectedCamera({
                 id: camera.cameraId,
-                name: camera.name,
-                ip: "192.168.1.101",
+                name: displayName,
+                ip: displayIp,
                 status: camera.streams?.some((s: any) => s.status === "ONLINE") ? "online" : "offline",
               });
             }
