@@ -311,6 +311,17 @@ export function usePlaybackLogic(
     }
   };
 
+  // Handle camera click (double click)
+  const handleCameraClick = async (cameraId: string) => {
+    const existingIndex = slotAssignments.findIndex((id) => id === cameraId);
+    if (existingIndex !== -1) return; // Prevent duplicate assigning
+
+    const freeIndex = slotAssignments.findIndex((s) => s === null);
+    if (freeIndex === -1) return; // Grid is full
+
+    await handleCameraDrop(cameraId, freeIndex);
+  };
+
   // Handle seek
   const handleSeek = useCallback(
     (absHour: number, slotIndex?: number) => {
@@ -601,6 +612,7 @@ export function usePlaybackLogic(
 
     // Handlers
     handleCameraDrop,
+    handleCameraClick,
     handleSeek,
     handleSeekToDate,
     handleJumpToBookmark,

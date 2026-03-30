@@ -37,7 +37,7 @@ export default function LiveView() {
   const { layout, slotAssignments, assignCameraToSlot, clearSlot, resizeSlots } =
     useGridStore();
 
-  const { play, handleSnapshot, handleRefresh } = useGridController();
+  const { play, handleSnapshot, handleRefresh, slotErrors, closeSlotConnections } = useGridController();
 
   useEffect(() => {
     resizeSlots();
@@ -189,6 +189,8 @@ export default function LiveView() {
             clearSlot={clearSlot}
             handleSnapshot={handleSnapshot}
             handleRefresh={handleRefresh}
+            slotErrors={slotErrors}
+            closeSlotConnections={closeSlotConnections}
           />
           <SequenceControlBar />
         </div>

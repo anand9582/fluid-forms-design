@@ -66,7 +66,6 @@ export function PlaybackBookmarkPopover({
   //  Helper: jump handler
   const handleJumpClick = (bm: PlaybackBookmark) => {
     const position = getBookmarkPosition(bm);
-
     const date = new Date(position);
     console.log("Converted date:", date.toString());
 
@@ -91,7 +90,6 @@ export function PlaybackBookmarkPopover({
   //  Helper: add handler
   const handleAdd = () => {
     const name = newName.trim() || `Bookmark ${bookmarks.length + 1}`;
-
     onAddBookmark(name, currentPosition, currentTimestamp, cameraId);
 
     setFetchedBookmarks((prev) => [

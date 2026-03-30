@@ -114,7 +114,7 @@ export const SidebarCameraStore = create<CameraStore>((set, get) => ({
     set({
       sequencingPlaylist: playlist.map((d) => ({
         ...d,
-        duration: d.duration || "10s",
+        duration: d.duration,
       })),
     }),
   setIsSequencing: (is) => set({ isSequencing: is }),

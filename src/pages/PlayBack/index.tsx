@@ -17,6 +17,7 @@ export default function Index() {
     setZoomLevel,
     setTimelineExpanded,
     handleCameraDrop,
+    handleCameraClick,
     handleSeek,
     handleSeekToDate,
     handleJumpToBookmark,
@@ -67,6 +68,7 @@ export default function Index() {
         onSlotSelect={setSelectedSlot}
         getVideoSrc={getVideoSrc}
         onCameraDrop={handleCameraDrop}
+        onCameraClick={handleCameraClick}
         isCameraLoading={(slotIndex) => state.loadingSlots.has(slotIndex)}
         rawSegmentsPerSlot={state.rawSegmentsPerSlot}
         slotErrors={state.slotErrors}

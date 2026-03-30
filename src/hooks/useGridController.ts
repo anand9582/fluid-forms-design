@@ -1,4 +1,4 @@
-import { useRef, useCallback, useEffect } from "react";
+import { useRef, useCallback, useEffect, useState } from "react";
 import { toast } from "@/hooks/use-toast";
 import { usePlayCamera } from "@/hooks/PlayCamera";
 import useGridStore from "@/Store/UseGridStore";
@@ -11,7 +11,42 @@ export const useGridController = () => {
   } = useGridStore();
 
   const gridRef = useRef<HTMLDivElement>(null);
-  const { play, closeConnection, closeSlotConnections, getActiveConnectionCount } = usePlayCamera(console.log);
+  const [slotErrors, setSlotErrors] = useState<Record<number, string>>({});
+
+  const { play: originalPlay, closeConnection, closeSlotConnections, getActiveConnectionCount } = usePlayCamera(console.log);
+
+  const play = useCallback(
+    (
+      cameraId: string,
+      videoElement: HTMLVideoElement,
+      type: "main" | "sub" = "sub",
+      slotId?: number
+    ) => {
+      if (slotId !== undefined) {
+        setSlotErrors((prev) => {
+          const next = { ...prev };
+          delete next[slotId];
+          return next;
+        });
+
+        // Ensure we close any existing connections in this slot before starting a new one
+        closeSlotConnections(slotId);
+      }
+
+      return originalPlay(
+        cameraId,
+        videoElement,
+        type,
+        slotId,
+        (errMessage) => {
+          if (slotId !== undefined) {
+            setSlotErrors((prev) => ({ ...prev, [slotId]: errMessage }));
+          }
+        }
+      );
+    },
+    [originalPlay]
+  );
 
 
   useEffect(() => {
@@ -91,6 +126,7 @@ export const useGridController = () => {
     closeConnection,
     closeSlotConnections,
     getActiveConnectionCount,
-    handleRefresh
+    handleRefresh,
+    slotErrors
   };
 };
