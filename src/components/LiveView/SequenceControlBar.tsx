@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { API_VIVEK_URL } from "@/components/Config/api";
 import {
-    Play, Pause, SkipBack, SkipForward, ChevronLeft, ChevronRight, Maximize, ExternalLink, X
+    Play, Pause, SkipBack, SkipForward, ChevronLeft, ChevronRight, Maximize, ExternalLink, X, ChevronUp
 } from "lucide-react";
 import { SidebarCameraStore } from "@/Store/SidebarCameraStore";
 import useGridStore from "@/Store/UseGridStore";
@@ -21,11 +21,12 @@ export function SequenceControlBar() {
     const { isSequencing, setIsSequencing } = SidebarCameraStore();
 
     // Explicitly bind to grid store functions and state to avoid unnecessary re-renders
+    const layout = useGridStore((state) => state.layout);
     const assignCameraToSlot = useGridStore((state) => state.assignCameraToSlot);
     const clearSlot = useGridStore((state) => state.clearSlot);
     const clearAllSlots = useGridStore((state) => state.clearAllSlots);
 
-    const [isExpanded, setIsExpanded] = useState(true);
+    const [expandLevel, setExpandLevel] = useState<0 | 1 | 2>(2);
     const [sequenceType, setSequenceType] = useState<"OFF" | "CAMERA" | "VIEW">("OFF");
     const [availableSequences, setAvailableSequences] = useState<any[]>([]);
     const [selectedSequenceId, setSelectedSequenceId] = useState<string>("");
@@ -164,8 +165,14 @@ export function SequenceControlBar() {
                     if (availableSequences && availableSequences.length > 0) {
                         const currentIndex = availableSequences.findIndex(s => s.sequenceId.toString() === selectedSequenceId);
                         if (currentIndex !== -1) {
-                            const nextIndex = (currentIndex + 1) % availableSequences.length;
-                            handleSequenceSelect(availableSequences[nextIndex].sequenceId.toString());
+                            if (currentIndex === availableSequences.length - 1) {
+                                // Reached the last sequence, stop playing.
+                                setIsSequencing(false);
+                            } else {
+                                // Auto-advance to the next sequence in the list
+                                const nextIndex = currentIndex + 1;
+                                handleSequenceSelect(availableSequences[nextIndex].sequenceId.toString());
+                            }
                         } else {
                             setIsSequencing(false);
                         }
@@ -181,6 +188,9 @@ export function SequenceControlBar() {
             const isViewSequence = sequenceType === "VIEW" || fetchedSequence.sequenceType === "VIEW";
 
             if (isViewSequence) {
+                let requiredCameras = 0;
+                let mappedCams: any[] = [];
+                
                 if (item.cellMapping) {
                     const indices = Object.keys(item.cellMapping).map(Number);
                     const maxIndex = Math.max(...indices, -1);
@@ -194,20 +204,48 @@ export function SequenceControlBar() {
                     clearAllSlots();
                     useGridStore.getState().setLayout(rows, cols);
 
-                    Object.entries(item.cellMapping).forEach(([slotIdx, camId]) => {
-                        if (camId !== null) {
-                            assignCameraToSlot(Number(slotIdx), String(camId));
-                        }
+                    mappedCams = Object.entries(item.cellMapping).filter(([_, camId]) => camId !== null);
+                    requiredCameras = mappedCams.length;
+
+                    mappedCams.forEach(([slotIdx, camId]) => {
+                        assignCameraToSlot(Number(slotIdx), String(camId));
                     });
                 }
 
-                // Wait for the duration of the view, then proceed
-                const timer = setTimeout(() => {
-                    clearAllSlots();
-                    playItem(index + 1);
-                }, Math.max(durationMs, 2000));
+                if (requiredCameras === 0) {
+                     const timer = setTimeout(() => {
+                        clearAllSlots();
+                        playItem(index + 1);
+                     }, durationMs);
+                     individualTimersRef.current.push(timer);
+                     return;
+                }
+
+                const key = `view_step_${index}`;
                 
-                individualTimersRef.current.push(timer);
+                pendingTimersRef.current[key] = {
+                    durationMs,
+                    started: false,
+                    isView: true,
+                    itemIndex: index,
+                    expectedCams: requiredCameras,
+                    loadedCams: new Set()
+                } as any;
+                
+                // Fallback timer for views
+                const fallbackTimer = setTimeout(() => {
+                    const currentObj = pendingTimersRef.current[key] as any;
+                    if (currentObj && !currentObj.started) {
+                        currentObj.started = true;
+                        const timer = setTimeout(() => {
+                            clearAllSlots();
+                            playItem(index + 1);
+                        }, durationMs);
+                        individualTimersRef.current.push(timer);
+                    }
+                }, 15000);
+                individualTimersRef.current.push(fallbackTimer);
+                
                 return;
             }
 
@@ -221,6 +259,7 @@ export function SequenceControlBar() {
                 durationMs,
                 slotIndex,
                 started: false,
+                isView: false,
                 endTime: 0,
                 itemIndex: index // Store index so we can play the next item
             } as any;
@@ -248,18 +287,31 @@ export function SequenceControlBar() {
                 if (!processedInstances.has(stream.instanceId)) {
                     processedInstances.add(stream.instanceId);
 
-                    const key = `${stream.cameraId}-${stream.slotId}`;
-                    const pending = pendingTimersRef.current[key] as any;
+                    const viewItemObj = Object.values(pendingTimersRef.current).find((p: any) => p.isView && !p.started) as any;
+                    if (viewItemObj) {
+                        viewItemObj.loadedCams.add(`${stream.cameraId}-${stream.slotId}`);
+                        if (viewItemObj.loadedCams.size >= viewItemObj.expectedCams) {
+                            viewItemObj.started = true;
+                            const timer = setTimeout(() => {
+                                clearAllSlots();
+                                playItem(viewItemObj.itemIndex + 1);
+                            }, viewItemObj.durationMs);
+                            individualTimersRef.current.push(timer);
+                        }
+                    } else {
+                        const key = `${stream.cameraId}-${stream.slotId}`;
+                        const pending = pendingTimersRef.current[key] as any;
 
-                    if (pending && !pending.started) {
-                        pending.started = true;
+                        if (pending && !pending.started && !pending.isView) {
+                            pending.started = true;
 
-                        const timer = setTimeout(() => {
-                            clearSlot(pending.slotIndex);
-                            playItem(pending.itemIndex + 1);
-                        }, pending.durationMs);
+                            const timer = setTimeout(() => {
+                                clearSlot(pending.slotIndex);
+                                playItem(pending.itemIndex + 1);
+                            }, pending.durationMs);
 
-                        individualTimersRef.current.push(timer);
+                            individualTimersRef.current.push(timer);
+                        }
                     }
                 }
             });
@@ -275,19 +327,36 @@ export function SequenceControlBar() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isSequencing, fetchedSequence, assignCameraToSlot, clearSlot, availableSequences, selectedSequenceId]);
 
+    // Hide if grid is 1:1
+    if (layout.rows === 1 && layout.cols === 1) return null;
+
+    if (expandLevel === 0) {
+        return (
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                <button
+                    onClick={() => setExpandLevel(2)}
+                    className="flex items-center justify-center w-10 h-10 bg-white rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-100 text-[#737373] hover:text-[#0A0A0A] hover:bg-slate-50 transition-all active:scale-95"
+                    title="Show Control Bar"
+                >
+                    <ChevronUp size={20} strokeWidth={2.5} />
+                </button>
+            </div>
+        );
+    }
+
     return (
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
             <div className="flex items-center bg-white rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-100 p-1 h-[46px] transition-all duration-300">
 
                 {/* Expand/Collapse Toggle */}
                 <button
-                    onClick={() => setIsExpanded(!isExpanded)}
+                    onClick={() => setExpandLevel(expandLevel === 2 ? 1 : 0)}
                     className="p-1.5 hover:bg-slate-100 rounded-full text-[#737373] hover:text-[#0A0A0A] transition-all flex items-center justify-center"
                 >
-                    {isExpanded ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
+                    {expandLevel === 2 ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
                 </button>
 
-                {isExpanded && (
+                {expandLevel === 2 && (
                     <div className="flex items-center h-full ml-1">
                         {/* Primary Mode Dropdown */}
                         <div className="flex items-center px-1 border-l border-slate-100 h-full">
