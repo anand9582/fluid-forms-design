@@ -1,9 +1,12 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { useDrop } from "react-dnd";
 import { Devices } from "@/components/Icons/Svg/liveViewIcons";
 import { cn } from "@/lib/utils";
 import { useHlsWithStore } from "@/hooks/useHlsWithStore";
 import { usePlaybackStore } from "@/Store/playbackStore";
+import usePlaybackGridStore from "@/Store/UsePlaybackGridStore";
+import { RefershIcons, VioceIcons } from "@/components/Icons/Svg/liveViewIcons";
+import { Volume2, VolumeX, Camera, X } from "lucide-react";
 
 interface RawSegment {
   startTime: Date;
@@ -35,6 +38,58 @@ export function PlaybackCameraSlot({
 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const playback = usePlaybackStore();
+  const clearSlot = usePlaybackGridStore((s) => s.clearSlot);
+  
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [isMuted, setIsMuted] = useState(true);
+
+  const segments = rawSegmentsPerSlot[index] || [];
+
+  const handleRefresh = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setRefreshKey((prev) => prev + 1);
+    
+    // Seek to first recording segment start time
+    const firstSegment = segments.find((s: any) => s.type === "recording") || segments[0];
+    if (firstSegment) {
+       playback.seekTo(new Date(firstSegment.startTime), index);
+    }
+  };
+
+  const handleMuteToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsMuted((prev) => !prev);
+  };
+
+  const handleSnapshot = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Use the DOM element from the videoRef in useHlsWithStore
+    const vp = document.querySelector(`#playback-video-${index}`) as HTMLVideoElement;
+    if (!vp) return;
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = vp.videoWidth;
+      canvas.height = vp.videoHeight;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(vp, 0, 0, canvas.width, canvas.height);
+        const dataUri = canvas.toDataURL("image/jpeg");
+        const link = document.createElement("a");
+        link.href = dataUri;
+        link.download = `playback_snapshot_${cameraId}_${Date.now()}.jpg`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    } catch (err) {
+      console.error("Failed to take snapshot", err);
+    }
+  };
+
+  const handleClearSlot = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    clearSlot(index);
+  };
 
   /* ---------------- DROP ---------------- */
   const [{ isOver }, dropRef] = useDrop({
@@ -49,7 +104,6 @@ export function PlaybackCameraSlot({
   dropRef(containerRef);
 
   /* ---------------- DATA ---------------- */
-  const segments = rawSegmentsPerSlot[index] || [];
   const src = cameraId ? getVideoSrc(index) : "";
 
   /* ---------------- HLS ---------------- */
@@ -59,6 +113,7 @@ export function PlaybackCameraSlot({
     segments,
     slotIndex: index,
     isMaster: true, 
+    refreshKey,
   });
 
   /* ---------------- FULLSCREEN ---------------- */
@@ -99,9 +154,10 @@ export function PlaybackCameraSlot({
       {/* VIDEO */}
       {cameraId && src && !errorMessage && (
         <video
+          id={`playback-video-${index}`}
           ref={videoRef}
           className="absolute inset-0 w-full h-full object-cover"
-          muted
+          muted={isMuted}
           playsInline
           preload="auto"
           autoPlay
@@ -137,6 +193,49 @@ export function PlaybackCameraSlot({
       {errorMessage && (
         <div className="flex items-center justify-center h-full text-red-500 text-xs p-2 text-center">
           {errorMessage}
+        </div>
+      )}
+
+      {/* CONTROLS */}
+      {cameraId && !errorMessage && (
+        <div
+          className={cn(
+            "absolute bottom-2 left-1/2 -translate-x-1/2 z-10 px-2 py-1 flex gap-2",
+            "opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0",
+            "transition-all duration-300 ease-out pointer-events-none group-hover:pointer-events-auto"
+          )}
+        >
+          <button
+            className="p-1.5 bg-black/70 hover:bg-black rounded text-white/90 transition-colors"
+            title="Refresh Stream"
+            onClick={handleRefresh}
+          >
+            <RefershIcons size={12} />
+          </button>
+
+          <button
+            className="p-1.5 bg-black/70 hover:bg-black rounded text-white/90 transition-colors"
+            title={isMuted ? "Unmute" : "Mute"}
+            onClick={handleMuteToggle}
+          >
+            {isMuted ? <VolumeX size={12} /> : <Volume2 size={12} />}
+          </button>
+
+          <button
+            className="p-1.5 bg-black/70 hover:bg-black rounded text-white/90 transition-colors"
+            title="Snapshot"
+            onClick={handleSnapshot}
+          >
+            <Camera size={12} />
+          </button>
+
+          <button
+            className="p-1.5 bg-black/70 hover:bg-black rounded text-white/90 transition-colors"
+            title="Close Slot"
+            onClick={handleClearSlot}
+          >
+            <X size={12} />
+          </button>
         </div>
       )}
     </div>

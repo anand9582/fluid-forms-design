@@ -104,6 +104,7 @@ export default function Index() {
         cameraNames={cameraNames}
         cameraIds={Object.values(state.players).map((p) => p.cameraId) || []}
         timelineDate={state.selectedDate}
+        selectedSlot={state.selectedSlot}
       />
     </div>
   );

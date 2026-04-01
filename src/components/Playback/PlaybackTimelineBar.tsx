@@ -53,6 +53,7 @@ interface Props {
   onSkipForward: () => void;
   onStop: () => void;
   onSeekToDate: (date: Date) => void;
+  selectedSlot: number | null;
 }
 
 export function PlaybackTimelineBar({
@@ -67,6 +68,7 @@ export function PlaybackTimelineBar({
   onSkipForward,
   onStop,
   onSeekToDate,
+  selectedSlot,
 }: Props) {
   const {
     globalTime,
@@ -77,7 +79,8 @@ export function PlaybackTimelineBar({
     setSpeed,
     isSync,
     setSynced,
-    lastSeekTime
+    lastSeekTime,
+    slotPlaying
   } = usePlaybackStore();
 
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -124,9 +127,20 @@ export function PlaybackTimelineBar({
   const [bookmarks, setBookmarks] = useState<PlaybackBookmark[]>([]);
   const zoomPercent = ((zoomLevel - 1) / 9) * 100;
 
+  const currentSlotPlaying = (!isSync && selectedSlot !== null) 
+    ? !!slotPlaying[selectedSlot] 
+    : isPlaying;
+
   const togglePlay = () => {
-    if (isPlaying) pause();
-    else play();
+    if (isSync) {
+      if (isPlaying) pause();
+      else play();
+    } else {
+      if (selectedSlot !== null) {
+        if (slotPlaying[selectedSlot]) pause(selectedSlot);
+        else play(selectedSlot);
+      }
+    }
   };
 
   const handleOpenPicker = (open: boolean) => {
@@ -425,10 +439,10 @@ export function PlaybackTimelineBar({
           <SkipBack className="h-3 w-3" />
         </PlaybackControlButton>
         <PlaybackControlButton
-          label={isPlaying ? "Pause" : "Play"}
+          label={currentSlotPlaying ? "Pause" : "Play"}
           onClick={togglePlay}
         >
-          {isPlaying ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
+          {currentSlotPlaying ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
         </PlaybackControlButton>
         <PlaybackControlButton label="Stop" onClick={onStop}>
           <Square className="h-3 w-3" />

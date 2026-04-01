@@ -10,6 +10,7 @@ export interface PlaybackStore {
   globalTime: Date;
   cameraTimes: Record<number, Date>;
   slotSeeking: Record<number, boolean>;
+  slotPlaying: Record<number, boolean>;
   segmentsPerSlot: Record<number, SegmentHour[]>;
   dayStart: Date;
 
@@ -20,8 +21,8 @@ export interface PlaybackStore {
 
   lastSeekTime: Date | null;
 
-  play: () => void;
-  pause: () => void;
+  play: (slotIndex?: number | null) => void;
+  pause: (slotIndex?: number | null) => void;
   stop: () => void;
   setSpeed: (speed: number) => void;
   setSynced: (sync: boolean) => void;
@@ -108,9 +109,14 @@ export const usePlaybackStore = create<PlaybackStore>((set, get) => {
 
       set({ globalTime: hourToDate(currentHour, dayStart) });
     } else {
+      const { slotPlaying } = get();
       const newCameraTimes: Record<number, Date> = { ...cameraTimes };
       Object.keys(segmentsPerSlot).forEach((slotKey) => {
         const slotIndex = Number(slotKey);
+        
+        // If not synced, only advance slots that are actually playing
+        if (!slotPlaying[slotIndex]) return;
+
         const segs = getRecordingSegments(slotIndex);
         if (!segs.length) return;
 
@@ -146,6 +152,7 @@ export const usePlaybackStore = create<PlaybackStore>((set, get) => {
     globalTime: new Date(),
     cameraTimes: {},
     slotSeeking: {},
+    slotPlaying: {},
     segmentsPerSlot: {},
     dayStart: new Date(),
 
@@ -157,13 +164,35 @@ export const usePlaybackStore = create<PlaybackStore>((set, get) => {
 
     setSeeking: (seeking: boolean) => set({ isSeeking: seeking }),
 
-    play: () => {
-      set({ isPlaying: true });
+    play: (slotIndex?: number | null) => {
+      const { isSync, slotPlaying } = get();
+      if (isSync || slotIndex === undefined || slotIndex === null) {
+        // If sync is ON, or no specific slot targeted, play globally
+        set({ isPlaying: true });
+      } else {
+        // Play only specific slot
+        set({
+          isPlaying: true, // Keep global true to keep loop running
+          slotPlaying: { ...slotPlaying, [slotIndex]: true },
+        });
+      }
       startLoop();
     },
-    pause: () => {
-      set({ isPlaying: false });
-      stopLoop();
+    pause: (slotIndex?: number | null) => {
+      const { isSync, slotPlaying } = get();
+      if (isSync || slotIndex === undefined || slotIndex === null) {
+        set({ isPlaying: false });
+        stopLoop();
+      } else {
+        const newSlotPlaying = { ...slotPlaying, [slotIndex]: false };
+        set({ slotPlaying: newSlotPlaying });
+        
+        // If NO slot is playing anymore, stop the loop and stop global playing
+        if (!Object.values(newSlotPlaying).some(Boolean)) {
+          set({ isPlaying: false });
+          stopLoop();
+        }
+      }
     },
     stop: () => {
       stopLoop();
@@ -173,6 +202,7 @@ export const usePlaybackStore = create<PlaybackStore>((set, get) => {
         globalTime: new Date(),
         cameraTimes: {},
         slotSeeking: {},
+        slotPlaying: {},
         lastSeekTime: null,
       });
     },
@@ -182,14 +212,19 @@ export const usePlaybackStore = create<PlaybackStore>((set, get) => {
     },
 
     setSynced: (sync: boolean) => {
-      const { globalTime, cameraTimes } = get();
-      if (sync) set({ isSync: true, cameraTimes: {}, globalTime });
-      else {
+      const { globalTime, cameraTimes, isPlaying, segmentsPerSlot } = get();
+      if (sync) {
+        set({ isSync: true, cameraTimes: {}, globalTime });
+      } else {
         const newTimes: Record<number, Date> = {};
-        Object.keys(cameraTimes).forEach((slot) => {
+        const newSlotPlaying: Record<number, boolean> = {};
+        
+        Object.keys(segmentsPerSlot).forEach((slot) => {
           newTimes[Number(slot)] = new Date(globalTime);
+          newSlotPlaying[Number(slot)] = isPlaying; // Inherit global play state
         });
-        set({ isSync: false, cameraTimes: newTimes });
+        
+        set({ isSync: false, cameraTimes: newTimes, slotPlaying: newSlotPlaying });
       }
     },
 

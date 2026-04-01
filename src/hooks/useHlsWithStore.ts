@@ -8,6 +8,7 @@ interface Props {
   segments: Segment[];
   slotIndex: number;
   isMaster?: boolean;
+  refreshKey?: number;
 }
 
 export function useHlsWithStore({ src, cameraId, segments, slotIndex }: Props) {
@@ -15,9 +16,10 @@ export function useHlsWithStore({ src, cameraId, segments, slotIndex }: Props) {
   const hlsRef = useRef<Hls | null>(null);
   const [isVideoReady, setIsVideoReady] = useState(false);
 
-  const { globalTime, cameraTimes, isSync, isPlaying, playbackSpeed, isSeeking } =
+  const { globalTime, cameraTimes, isSync, isPlaying, slotPlaying, playbackSpeed, isSeeking, slotSeeking } =
     usePlaybackStore();
 
+  const currentSlotPlaying = isSync ? isPlaying : !!slotPlaying[slotIndex];
   const currentTime = isSync ? globalTime : cameraTimes[slotIndex] || globalTime;
 
   // ---------------- SEGMENT OFFSETS ----------------
@@ -78,12 +80,12 @@ export function useHlsWithStore({ src, cameraId, segments, slotIndex }: Props) {
     const video = videoRef.current;
     if (!video) return;
 
-    if (isPlaying) {
+    if (currentSlotPlaying) {
       video.play().catch(() => { });
     } else {
       video.pause();
     }
-  }, [isPlaying]);
+  }, [currentSlotPlaying]);
 
   // ---------------- MAIN PLAYBACK ENGINE ----------------
   useEffect(() => {
@@ -101,18 +103,23 @@ export function useHlsWithStore({ src, cameraId, segments, slotIndex }: Props) {
       (currentTime.getTime() - currentSeg.startTime.getTime()) / 1000;
     const targetTime = currentSeg.offset + logicalSeconds;
 
+    const isUserSeeking = isSync ? isSeeking : (slotSeeking[slotIndex] || isSeeking);
     const diff = Math.abs(video.currentTime - targetTime);
     const maxDrift = Math.abs(playbackSpeed) > 2 ? 0.6 : 0.15;
 
     // Keep video in sync with global logical timeline
-    if (diff > maxDrift || !isPlaying || playbackSpeed < 0) {
+    const needsSync = currentSlotPlaying 
+      ? (diff > maxDrift || playbackSpeed < 0) 
+      : isUserSeeking;
+
+    if (needsSync) {
       video.currentTime = Math.max(0, Math.min(targetTime, video.duration || targetTime));
     }
 
     if (playbackSpeed >= 0) {
       video.playbackRate = Math.min(Math.max(playbackSpeed, 0.25), 8);
       video.muted = Math.abs(playbackSpeed) > 2;
-      if (isPlaying) {
+      if (currentSlotPlaying) {
         video.play().catch(() => { });
       } else {
         video.pause();
@@ -121,18 +128,18 @@ export function useHlsWithStore({ src, cameraId, segments, slotIndex }: Props) {
       video.pause();
       // Negative speed is handled by store time decrements + sync loop (no native reverse playback).
     }
-  }, [currentTime, isPlaying, playbackSpeed, segmentOffsets]);
+  }, [currentTime, currentSlotPlaying, playbackSpeed, segmentOffsets]);
 
   // ---------------- REVERSE FRAME LOOP (for smoother reverse feel) ----------------
   useEffect(() => {
     if (playbackSpeed >= 0) return;
-    if (!isPlaying) return;
+    if (!currentSlotPlaying) return;
 
     let rafId: number;
 
     const stepReverse = () => {
       const video = videoRef.current;
-      if (!video || !isPlaying) return;
+      if (!video || !currentSlotPlaying) return;
 
       const step = Math.abs(playbackSpeed) * 0.02;
       const newTime = Math.max(0, video.currentTime - step);
@@ -142,7 +149,7 @@ export function useHlsWithStore({ src, cameraId, segments, slotIndex }: Props) {
 
     rafId = requestAnimationFrame(stepReverse);
     return () => cancelAnimationFrame(rafId);
-  }, [playbackSpeed, isPlaying]);
+  }, [playbackSpeed, currentSlotPlaying]);
 
   // ---------------- LOOP HANDLING ----------------
   useEffect(() => {
@@ -153,7 +160,7 @@ export function useHlsWithStore({ src, cameraId, segments, slotIndex }: Props) {
     const lastSeg = segmentOffsets[segmentOffsets.length - 1];
 
     const onTimeUpdate = () => {
-      if (!isPlaying) return;
+      if (!currentSlotPlaying) return;
       const current = video.currentTime;
 
       // Forward loop
@@ -169,7 +176,7 @@ export function useHlsWithStore({ src, cameraId, segments, slotIndex }: Props) {
 
     video.addEventListener("timeupdate", onTimeUpdate);
     return () => video.removeEventListener("timeupdate", onTimeUpdate);
-  }, [segmentOffsets, isPlaying, playbackSpeed]);
+  }, [segmentOffsets, currentSlotPlaying, playbackSpeed]);
 
   // ---------------- CLEANUP ----------------
   useEffect(() => {

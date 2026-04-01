@@ -30,6 +30,7 @@ interface PlaybackTimelineSectionProps {
   cameraNames: Record<number, string>;
   cameraIds: (string | null)[];
   timelineDate: Date;
+  selectedSlot: number | null;
 }
 
 export const PlaybackTimelineSection = React.memo(
@@ -55,11 +56,13 @@ export const PlaybackTimelineSection = React.memo(
     cameraNames,
     cameraIds,
     timelineDate,
+    selectedSlot,
   }: PlaybackTimelineSectionProps) => {
     return (
       <div className="shrink-0 z-50 bg-white">
         <PlaybackTimelineBar
           cameraId={cameraId}
+          selectedSlot={selectedSlot}
           bookmarks={bookmarks}
           isTimelineExpanded={isTimelineExpanded}
           onToggleTimeline={onToggleTimeline}
@@ -88,6 +91,7 @@ export const PlaybackTimelineSection = React.memo(
             [slotCount > 0 ? slotCount - 1 : 0]: bookmarks || []
           }}
           timelineDate={timelineDate}
+          selectedSlot={selectedSlot}
         />
 
         {/* <PlaybackAlertsBar /> */}
