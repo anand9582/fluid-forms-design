@@ -15,9 +15,10 @@ interface Props {
   slotIndex: number;
   isMaster?: boolean;
   refreshKey?: number;
+  isMuted?: boolean;
 }
 
-export function useHlsWithStore({ src, cameraId, segments, slotIndex }: Props) {
+export function useHlsWithStore({ src, cameraId, segments, slotIndex, isMuted = false }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const [isVideoReady, setIsVideoReady] = useState(false);
@@ -124,7 +125,7 @@ export function useHlsWithStore({ src, cameraId, segments, slotIndex }: Props) {
 
     if (playbackSpeed >= 0) {
       video.playbackRate = Math.min(Math.max(playbackSpeed, 0.25), 8);
-      video.muted = Math.abs(playbackSpeed) > 2;
+      video.muted = isMuted || Math.abs(playbackSpeed) > 2;
       if (currentSlotPlaying) {
         video.play().catch(() => { });
       } else {
@@ -134,7 +135,7 @@ export function useHlsWithStore({ src, cameraId, segments, slotIndex }: Props) {
       video.pause();
       // Negative speed is handled by store time decrements + sync loop (no native reverse playback).
     }
-  }, [currentTime, currentSlotPlaying, playbackSpeed, segmentOffsets]);
+  }, [currentTime, currentSlotPlaying, playbackSpeed, segmentOffsets, isMuted]);
 
   // ---------------- REVERSE FRAME LOOP (for smoother reverse feel) ----------------
   useEffect(() => {

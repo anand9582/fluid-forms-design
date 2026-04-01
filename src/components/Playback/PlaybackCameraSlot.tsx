@@ -121,6 +121,7 @@ export function PlaybackCameraSlot({
     slotIndex: index,
     isMaster: true,
     refreshKey,
+    isMuted,
   });
 
   /* ---------------- FULLSCREEN ---------------- */
