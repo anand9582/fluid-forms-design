@@ -34,7 +34,8 @@ export const usePlayCamera = (addDebugLog: (msg: string) => void) => {
       cameraId: string,
       videoElement: HTMLVideoElement,
       type: "main" | "sub" = "sub",
-      slotId?: number
+      slotId?: number,
+      onError?: (errMessage: string) => void
     ) => {
       if (!cameraId || !videoElement)
         return { pc: null, instanceId: null };
@@ -125,9 +126,22 @@ export const usePlayCamera = (addDebugLog: (msg: string) => void) => {
             }
           )
         )
-        .then((res) => {
-          if (!res.ok)
-            throw new Error(`WHEP proxy error ${res.status}`);
+        .then(async (res) => {
+          if (!res.ok) {
+            let errorMsg = `WHEP proxy error ${res.status}`;
+            try {
+              const textStr = await res.text();
+              try {
+                const jsonObj = JSON.parse(textStr);
+                errorMsg = jsonObj.message || jsonObj.error || textStr;
+              } catch {
+                errorMsg = textStr || errorMsg;
+              }
+            } catch {
+              // Ignore failure to parse response
+            }
+            throw new Error(errorMsg);
+          }
           return res.text();
         })
         .then((answerSdp) =>
@@ -150,9 +164,12 @@ export const usePlayCamera = (addDebugLog: (msg: string) => void) => {
           logActiveConnections();
         })
         .catch((err) => {
+          const errMsg = err?.message || String(err);
           addDebugLog(
-            `play() failed for ${cameraId} | ${err?.message || err}`
+            `play() failed for ${cameraId} | ${errMsg}`
           );
+
+          if (onError) onError(errMsg);
 
           try {
             pc.close();

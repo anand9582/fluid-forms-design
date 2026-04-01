@@ -21,6 +21,8 @@ interface CameraGridProps {
   handleRefresh?: (slotIndex: number) => void;
   toggleMainSub?: (slotIndex: number, cameraId: string, nextType: "main" | "sub") => void;
   mainSubMap?: Record<number, "main" | "sub">;
+  slotErrors?: Record<number, string>;
+  closeSlotConnections?: (slotIndex: number) => void;
 }
 
 export function CameraGrid({
@@ -30,7 +32,9 @@ export function CameraGrid({
   play,
   clearSlot,
   handleSnapshot,
-  handleRefresh
+  handleRefresh,
+  slotErrors = {},
+  closeSlotConnections
 }: CameraGridProps) {
   const { layout } = useGridStore();
   const totalSlots = layout.rows * layout.cols;
@@ -64,6 +68,8 @@ export function CameraGrid({
               clearSlot={clearSlot}
               handleSnapshot={handleSnapshot}
               handleRefresh={handleRefresh}
+              error={slotErrors[index]}
+              closeSlotConnections={closeSlotConnections}
             />
           ))}
         </div>
@@ -83,17 +89,22 @@ function CameraGridSlot({
   clearSlot,
   handleSnapshot,
   handleRefresh,
+  error,
+  closeSlotConnections
 }: {
   index: number;
   slot: CameraSlot | null;
   isSelected: boolean;
   onSelect: (i: number | null) => void;
-  play: (cameraId: string, videoEl: HTMLVideoElement) => void;
+  play: (cameraId: string, videoEl: HTMLVideoElement, type?: "main" | "sub", slotIndex?: number) => void;
   clearSlot?: (slotIndex: number) => void;
   handleSnapshot?: (slotIndex: number) => void;
   handleRefresh?: (slotIndex: number) => void;
+  error?: string;
+  closeSlotConnections?: (slotIndex: number) => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const playingCameraRef = useRef<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const assignCameraToSlot = useGridStore((s) => s.assignCameraToSlot);
   const swapSlots = useGridStore((s) => s.swapSlots);
@@ -124,14 +135,24 @@ function CameraGridSlot({
   }, [dragRef, dropRef]);
 
   useEffect(() => {
-    if (!slot || !videoRef.current) return;
-    const cameraId = slot.id;
-    const currentCamera = (videoRef.current as any).__cameraId;
-    if (currentCamera !== cameraId) {
-      play(cameraId, videoRef.current);
-      (videoRef.current as any).__cameraId = cameraId;
+    if (!slot) {
+      if (playingCameraRef.current) {
+        closeSlotConnections?.(index);
+      }
+      playingCameraRef.current = null;
+      return;
     }
-  }, [slot, play]);
+    if (!videoRef.current) return;
+
+    const cameraId = slot.id;
+    if (playingCameraRef.current !== cameraId) {
+      if (playingCameraRef.current) {
+        closeSlotConnections?.(index);
+      }
+      playingCameraRef.current = cameraId;
+      play(cameraId, videoRef.current, "sub", index);
+    }
+  }, [slot, play, index, closeSlotConnections]);
 
   // FULLSCREEN
   const handleFullscreenToggle = () => {
@@ -166,7 +187,13 @@ function CameraGridSlot({
           <div className="absolute top-1 left-1 flex justify-between text-white text-xs px-2">
             <span>{slot.name}</span>
           </div>
-
+          {error && (
+            <div className="absolute inset-0  flex flex-col items-center justify-center z-20">
+              <span className="text-red-400 text-sm text-center px-2">
+                {error}
+              </span>
+            </div>
+          )}
           <div
             className={cn(
               "absolute bottom-1 left-1/2 -translate-x-1/2 z-10 px-2 py-1 flex gap-1",
@@ -222,6 +249,7 @@ function CameraGridSlot({
           <Devices className="h-4 w-4 mr-2" />
           <span className="text-sm font-medium">Drop Camera</span>
         </div>
+
       )}
     </div>
   );

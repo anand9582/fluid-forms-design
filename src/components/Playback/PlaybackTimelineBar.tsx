@@ -295,7 +295,7 @@ export function PlaybackTimelineBar({
                       {isCurrentMonth && (
                         <div
                           className={cn(
-                            "absolute top-[-0px] right-0 w-[6px] h-[6px] rounded-full pointer-events-none",
+                            "absolute top-[-2px] right-0 w-[6px] h-[6px] rounded-full pointer-events-none",
                             isAvailable ? "bg-green-500" : "bg-red-500"
                           )}
                         />
