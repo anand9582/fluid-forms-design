@@ -21,7 +21,6 @@ export function SequenceControlBar() {
     const { isSequencing, setIsSequencing } = SidebarCameraStore();
 
     // Explicitly bind to grid store functions and state to avoid unnecessary re-renders
-    const layout = useGridStore((state) => state.layout);
     const assignCameraToSlot = useGridStore((state) => state.assignCameraToSlot);
     const clearSlot = useGridStore((state) => state.clearSlot);
     const clearAllSlots = useGridStore((state) => state.clearAllSlots);
@@ -155,7 +154,7 @@ export function SequenceControlBar() {
             pendingTimersRef.current = {};
 
             const items = fetchedSequence.items || [];
-            
+
             if (index >= items.length) {
                 // Sequence finished, handle loop or next sequence
                 if (fetchedSequence.repeatSequence) {
@@ -178,13 +177,46 @@ export function SequenceControlBar() {
             }
 
             const item = items[index];
+            const durationMs = item.duration * 1000;
+            const isViewSequence = sequenceType === "VIEW" || fetchedSequence.sequenceType === "VIEW";
+
+            if (isViewSequence) {
+                if (item.cellMapping) {
+                    const indices = Object.keys(item.cellMapping).map(Number);
+                    const maxIndex = Math.max(...indices, -1);
+                    let rows = 2, cols = 2;
+                    if (maxIndex >= 16) { rows = 5; cols = 5; }
+                    else if (maxIndex >= 9) { rows = 4; cols = 4; }
+                    else if (maxIndex >= 4) { rows = 3; cols = 3; }
+                    else if (maxIndex >= 1) { rows = 2; cols = 2; }
+                    else { rows = 1; cols = 1; }
+
+                    clearAllSlots();
+                    useGridStore.getState().setLayout(rows, cols);
+
+                    Object.entries(item.cellMapping).forEach(([slotIdx, camId]) => {
+                        if (camId !== null) {
+                            assignCameraToSlot(Number(slotIdx), String(camId));
+                        }
+                    });
+                }
+
+                // Wait for the duration of the view, then proceed
+                const timer = setTimeout(() => {
+                    clearAllSlots();
+                    playItem(index + 1);
+                }, Math.max(durationMs, 2000));
+                
+                individualTimersRef.current.push(timer);
+                return;
+            }
+
             const slotIndex = 0; // Drop camera in first cell only
 
             assignCameraToSlot(slotIndex, String(item.cameraId));
 
-            const durationMs = item.duration * 1000;
             const key = `${item.cameraId}-${slotIndex}`;
-            
+
             pendingTimersRef.current[key] = {
                 durationMs,
                 slotIndex,
@@ -198,7 +230,7 @@ export function SequenceControlBar() {
                 const currentObj = pendingTimersRef.current[key] as any;
                 if (currentObj && !currentObj.started) {
                     currentObj.started = true;
-                    
+
                     const timer = setTimeout(() => {
                         clearSlot(slotIndex);
                         playItem(index + 1);
@@ -241,7 +273,7 @@ export function SequenceControlBar() {
             if (typeof unsubStreamStore === "function") unsubStreamStore();
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isSequencing, fetchedSequence, layout, assignCameraToSlot, clearSlot, availableSequences, selectedSequenceId]);
+    }, [isSequencing, fetchedSequence, assignCameraToSlot, clearSlot, availableSequences, selectedSequenceId]);
 
     return (
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
@@ -320,7 +352,7 @@ export function SequenceControlBar() {
                 {/* Right Side Tools */}
                 <div className="flex items-center px-2 border-l border-slate-100 h-full ml-1">
                     <div className="flex items-center gap-1">
-                        <button 
+                        <button
                             className="p-1 hover:bg-slate-100 rounded-lg text-[#A3A3A3] hover:text-[#0A0A0A] transition-all active:scale-90"
                             onClick={handlePreviousSequence}
                         >
@@ -335,7 +367,7 @@ export function SequenceControlBar() {
                         >
                             {isSequencing ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" />}
                         </button>
-                        <button 
+                        <button
                             className="p-1 hover:bg-slate-100 rounded-lg text-[#A3A3A3] hover:text-[#0A0A0A] transition-all active:scale-90"
                             onClick={handleNextSequence}
                         >

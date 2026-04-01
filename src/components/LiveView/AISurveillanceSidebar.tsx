@@ -63,6 +63,7 @@ import {
   BehavioralIcons,
 } from "@/components/Icons/Svg/liveViewIcons";
 import { AddCamerasDialog } from "./AddCamerasDialog";
+import { AddViewsDialog } from "./AddViewsDialog";
 import { Device } from "./DeviceTypes";
 import { SidebarCameraStore, SequencingDevice } from "@/Store/SidebarCameraStore";
 
@@ -182,27 +183,42 @@ export function AISurveillanceSidebar({ selectedCamera, selectedSlotIndex, mainS
 
     setIsSaving(true);
     try {
-      const payload = {
-        sequenceName: sequenceName || "Untitled Sequence",
-        sequenceType: "CAMERA",
-        repeatSequence: loopMode,
-        cameraItems: playlist.map((camera, index) => {
-          let durStr = camera.duration || "10s";
-          let durSeconds = 10;
-          if (durStr.endsWith("m")) {
-            durSeconds = parseInt(durStr) * 60;
-          } else {
-            durSeconds = parseInt(durStr);
-          }
-          if (isNaN(durSeconds)) durSeconds = 10;
+      const commonItems = playlist.map((camera, index) => {
+        let durStr = camera.duration || "10s";
+        let durSeconds = 10;
+        if (durStr.endsWith("m")) {
+          durSeconds = parseInt(durStr) * 60;
+        } else {
+          durSeconds = parseInt(durStr);
+        }
+        if (isNaN(durSeconds)) durSeconds = 10;
 
-          return {
-            cameraId: Number(camera.cameraId),
-            order: index + 1,
-            duration: durSeconds
-          };
-        })
+        return {
+          id: Number(camera.cameraId),
+          order: index + 1,
+          duration: durSeconds
+        };
+      });
+
+      const payload: any = {
+        sequenceName: sequenceName || (activeSequencingSubTab === "view" ? "Untitled View Sequence" : "Untitled Sequence"),
+        sequenceType: activeSequencingSubTab === "view" ? "VIEW" : "CAMERA",
+        repeatSequence: loopMode,
       };
+
+      if (activeSequencingSubTab === "view") {
+        payload.viewItems = commonItems.map(item => ({
+          viewId: item.id,
+          order: item.order,
+          duration: item.duration
+        }));
+      } else {
+        payload.cameraItems = commonItems.map(item => ({
+          cameraId: item.id,
+          order: item.order,
+          duration: item.duration
+        }));
+      }
 
       const isUpdating = !!activeSequence?.sequenceId;
       const url = isUpdating
@@ -574,7 +590,7 @@ export function AISurveillanceSidebar({ selectedCamera, selectedSlotIndex, mainS
               onClick={handleAddNewSequence}
               className="w-full bg-[#f8fafc] border border-slate-200 text-slate-700 font-bold hover:bg-slate-100 rounded-xl h-11 mb-2 shrink-0 flex items-center justify-center gap-2 shadow-sm"
             >
-              <Plus size={16} strokeWidth={2.5} /> Add new sequence
+              <Plus size={16} strokeWidth={2.5} /> Add new {activeSequencingSubTab === "view" ? "view" : "sequence"}
             </Button>
           )}
 
@@ -591,13 +607,13 @@ export function AISurveillanceSidebar({ selectedCamera, selectedSlotIndex, mainS
                 <div className="w-14 h-14 bg-slate-200 border border-slate-300 rounded-xl flex items-center justify-center mb-6">
                   <SwitchCamera className="text-slate-500" strokeWidth={2.5} />
                 </div>
-                <h3 className="text-[15px] font-bold text-slate-800 mb-2">No sequences created yet.</h3>
-                <p className="text-[12px] text-slate-500 mb-8 max-w-[200px] font-roboto">Create your first sequence to rotate cameras automatically.</p>
+                <h3 className="text-[15px] font-bold text-slate-800 mb-2">No {activeSequencingSubTab === "view" ? "views" : "sequences"} created yet.</h3>
+                <p className="text-[12px] text-slate-500 mb-8 max-w-[200px] font-roboto">Create your first {activeSequencingSubTab === "view" ? "view" : "sequence"} to rotate {activeSequencingSubTab === "view" ? "views" : "cameras"} automatically.</p>
                 <Button
                   onClick={() => setIsCreatingSequence(true)}
                   className="w-full bg-[#1d4ed8] hover:bg-blue-700 text-white rounded-xl h-12 flex items-center justify-center gap-2 text-sm font-bold transition-all active:scale-[0.98]"
                 >
-                  <Plus size={18} strokeWidth={3} /> Create first sequence.
+                  <Plus size={18} strokeWidth={3} /> Create first {activeSequencingSubTab === "view" ? "view" : "sequence"}.
                 </Button>
               </div>
             ) : isCreatingSequence ? (
@@ -619,7 +635,7 @@ export function AISurveillanceSidebar({ selectedCamera, selectedSlotIndex, mainS
                     {/* Cameras Section */}
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <label className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">Cameras in Sequence</label>
+                        <label className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">{activeSequencingSubTab === "view" ? "Views" : "Cameras"} in Sequence</label>
                         <Badge variant="outline" className="bg-[#fff7e6] text-[#fa8c16] border-[#ffe7ba] font-bold text-[10px] px-2.5 py-0.5 rounded-full uppercase">Unsaved</Badge>
                       </div>
 
@@ -627,7 +643,7 @@ export function AISurveillanceSidebar({ selectedCamera, selectedSlotIndex, mainS
                       <div className="flex items-center justify-between p-4 rounded-2xl bg-[#f8fafc] border border-slate-100 shadow-inner">
                         <div className="space-y-1 flex-1 pr-2">
                           <p className="text-xs font-bold text-slate-700">Custom Duration</p>
-                          <p className="text-[10px] text-slate-400 font-roboto italic leading-tight">Per-camera durations configured.</p>
+                          <p className="text-[10px] text-slate-400 font-roboto italic leading-tight">Per-{activeSequencingSubTab === "view" ? "view" : "camera"} durations configured.</p>
                         </div>
                         <Switch
                           checked={customDuration}
@@ -644,8 +660,8 @@ export function AISurveillanceSidebar({ selectedCamera, selectedSlotIndex, mainS
                         <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center mb-3 shadow-sm">
                           <Plus size={20} className="text-slate-500" strokeWidth={2.5} />
                         </div>
-                        <p className="text-sm font-bold text-slate-700 mb-1">Add cameras</p>
-                        <p className="text-[11px] text-slate-400 font-roboto">Click to add cameras from left panel.</p>
+                        <p className="text-sm font-bold text-slate-700 mb-1">Add {activeSequencingSubTab === "view" ? "views" : "cameras"}</p>
+                        <p className="text-[11px] text-slate-400 font-roboto">Click to add {activeSequencingSubTab === "view" ? "views" : "cameras"} to the sequence.</p>
                       </div>
 
                       {/* Selected Cameras List */}
@@ -731,7 +747,7 @@ export function AISurveillanceSidebar({ selectedCamera, selectedSlotIndex, mainS
                     {/* Cameras Section */}
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <label className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">Cameras in Sequence</label>
+                        <label className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">{activeSequencingSubTab === "view" ? "Views" : "Cameras"} in Sequence</label>
                         <span className="text-[11px] text-slate-500 font-roboto">{activeSequence.playlist.length} items</span>
                       </div>
 
@@ -739,7 +755,7 @@ export function AISurveillanceSidebar({ selectedCamera, selectedSlotIndex, mainS
                       <div className="flex items-center justify-between p-4 rounded-2xl bg-[#f8fafc] border border-slate-100 shadow-inner">
                         <div className="space-y-1 flex-1 pr-2">
                           <p className="text-xs font-bold text-slate-700">Custom Duration</p>
-                          <p className="text-[10px] text-slate-400 font-roboto italic leading-tight">Per-camera durations configured.</p>
+                          <p className="text-[10px] text-slate-400 font-roboto italic leading-tight">Per-{activeSequencingSubTab === "view" ? "view" : "camera"} durations configured.</p>
                         </div>
                         <Switch checked={activeSequence.customDuration} disabled className="data-[state=checked]:bg-blue-600 h-6 w-11 opacity-100" />
                       </div>
@@ -784,12 +800,21 @@ export function AISurveillanceSidebar({ selectedCamera, selectedSlotIndex, mainS
           </div>
         </TabsContent>
 
-        <AddCamerasDialog
-          isOpen={isAddCamerasDialogOpen}
-          onOpenChange={setIsAddCamerasDialogOpen}
-          onAdd={setPlaylist}
-          existingCameraIds={playlist.map((c) => c.cameraId)}
-        />
+        {activeSequencingSubTab === "view" ? (
+          <AddViewsDialog
+            isOpen={isAddCamerasDialogOpen}
+            onOpenChange={setIsAddCamerasDialogOpen}
+            onAdd={setPlaylist}
+            existingViewIds={playlist.map((c) => c.cameraId)}
+          />
+        ) : (
+          <AddCamerasDialog
+            isOpen={isAddCamerasDialogOpen}
+            onOpenChange={setIsAddCamerasDialogOpen}
+            onAdd={setPlaylist}
+            existingCameraIds={playlist.map((c) => c.cameraId)}
+          />
+        )}
 
         {/* Delete Confirmation Dialog */}
         <Dialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>

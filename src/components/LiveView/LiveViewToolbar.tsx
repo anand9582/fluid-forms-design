@@ -92,9 +92,16 @@ export function LiveViewToolbar({
     fetchViews();
   }, [fetchViews]);
 
+  const handleGridChange = (rows: number, cols: number) => {
+    setLayout(rows, cols);
+    useGridStore.getState().clearAllSlots();
+    setActiveViewId(null);
+    setSelectedView(`${rows}×${cols}`);
+  };
+
   const handleCustomGridConfirm = (layoutStr: string) => {
     const [rows, cols] = layoutStr.split("x").map(Number);
-    setLayout(rows, cols);
+    handleGridChange(rows, cols);
     setShowGridBuilder(false);
   };
 
@@ -118,10 +125,18 @@ export function LiveViewToolbar({
     }
   };
 
+  const handleCreateNewView = () => {
+    setSelectedView(currentGridLabel);
+    setActiveViewId(null);
+    setViewsDropdownOpen(false);
+    useGridStore.getState().clearAllSlots();
+  };
+
   const handleApplyView = (view: any) => {
     setSelectedView(view.name);
     setActiveViewId(view.id);
     setViewsDropdownOpen(false);
+    useGridStore.getState().clearAllSlots();
 
     // If view has cellMapping, apply it
     if (view.cellMapping) {
@@ -188,6 +203,15 @@ export function LiveViewToolbar({
                 </div>
               </div>
 
+              {/* Create New View */}
+              <div
+                className="flex items-center gap-2 px-3 py-2.5 cursor-pointer hover:bg-accent transition-colors bg-white border-b"
+                onClick={handleCreateNewView}
+              >
+                <Plus className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium text-primary">Create new view</span>
+              </div>
+
               {/* Views List */}
               <div className="py-1 max-h-[240px] overflow-y-auto">
                 {savedViews.map((view) => (
@@ -228,7 +252,7 @@ export function LiveViewToolbar({
                 "h-7 w-7",
                 layout.rows === 2 ? "bg-white shadow" : "hover:bg-slate-200"
               )}
-              onClick={() => setLayout(2, 2)}
+              onClick={() => handleGridChange(2, 2)}
             >
               <Grid2X2 className="h-4 w-4 text-gray-600" />
             </Button>
@@ -239,7 +263,7 @@ export function LiveViewToolbar({
                 "h-7 w-7",
                 layout.rows === 3 ? "bg-white shadow" : "hover:bg-slate-200"
               )}
-              onClick={() => setLayout(3, 3)}
+              onClick={() => handleGridChange(3, 3)}
             >
               <Grid3X3 className="h-4 w-4 text-gray-600" />
             </Button>
@@ -250,7 +274,7 @@ export function LiveViewToolbar({
                 "h-7 w-7",
                 layout.rows === 5 ? "bg-white shadow" : "hover:bg-slate-200"
               )}
-              onClick={() => setLayout(5, 5)}
+              onClick={() => handleGridChange(5, 5)}
             >
               <Tablecells className="h-4 w-4 text-gray-600" />
             </Button>
@@ -261,7 +285,7 @@ export function LiveViewToolbar({
                 "h-7 w-7",
                 layout.rows === 1 ? "bg-white shadow" : "hover:bg-slate-200"
               )}
-              onClick={() => setLayout(1, 1)}
+              onClick={() => handleGridChange(1, 1)}
             >
               <Squaredot className="h-4 w-4 text-gray-600" />
             </Button>
