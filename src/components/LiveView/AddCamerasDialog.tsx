@@ -162,6 +162,7 @@ export function AddCamerasDialog({
                                                         <Checkbox
                                                             checked={selectedIds.includes(camera.cameraId)}
                                                             onCheckedChange={() => toggleCamera(camera.cameraId)}
+                                                            onClick={(e) => e.stopPropagation()}
                                                             className="rounded border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                                                         />
                                                         <Video size={16} className={cn("text-slate-400", selectedIds.includes(camera.cameraId) && "text-blue-500")} />

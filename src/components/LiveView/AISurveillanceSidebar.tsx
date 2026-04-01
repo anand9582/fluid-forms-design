@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { API_VIVEK_URL } from "@/components/Config/api";
+import { API_VIVEK_URL, API_VAISHALI_URL, API_URLS, getAuthHeaders } from "@/components/Config/api";
 import {
   Move,
   Camera,
@@ -42,6 +42,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Dialog,
   DialogContent,
@@ -105,6 +106,7 @@ export function AISurveillanceSidebar({ selectedCamera, selectedSlotIndex, mainS
   const [activeSequencingSubTab, setActiveSequencingSubTab] = useState<"camera" | "view">("camera");
   const [isAddCamerasDialogOpen, setIsAddCamerasDialogOpen] = useState(false);
   const { sequencingPlaylist: playlist, setSequencingPlaylist: setPlaylist, updateDeviceDuration } = SidebarCameraStore();
+  const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
   const [streamQuality, setStreamQuality] = useState("4k");
   const [features, setFeatures] = useState(aiFeatures);
   const [zoomLevel, setZoomLevel] = useState([50]);
@@ -112,6 +114,7 @@ export function AISurveillanceSidebar({ selectedCamera, selectedSlotIndex, mainS
   const [loopMode, setLoopMode] = useState(false);
   const [alertPriority, setAlertPriority] = useState(false);
   const [availableSequences, setAvailableSequences] = useState<any[]>([]);
+  const [availableViews, setAvailableViews] = useState<any[]>([]);
   console.log("availableSequences", availableSequences);
   const [loadingSequences, setLoadingSequences] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
@@ -127,6 +130,22 @@ export function AISurveillanceSidebar({ selectedCamera, selectedSlotIndex, mainS
     setLoadingSequences(true);
     try {
       const type = activeSequencingSubTab.toUpperCase();
+
+      let currentViews = availableViews;
+      if (type === "VIEW" && availableViews.length === 0) {
+        const response = await fetch(`${API_VAISHALI_URL}${API_URLS.get_all_views}`, {
+          headers: getAuthHeaders(),
+        });
+        if (response.ok) {
+          const json = await response.json();
+          currentViews = json?.data?.map((v: any) => ({
+            id: String(v.id),
+            name: v.viewName,
+          })) || [];
+          setAvailableViews(currentViews);
+        }
+      }
+
       const res = await axios.get(`${API_VIVEK_URL}/api/getAllSequencesBySequenceType/${type}`);
       if (res.data?.success) {
         const sequences = res.data.data || [];
@@ -135,7 +154,7 @@ export function AISurveillanceSidebar({ selectedCamera, selectedSlotIndex, mainS
         if (sequences.length > 0 && !activeSequence && !isCreatingSequence) {
           // Auto-select the first sequence if nothing is active
           const firstSeq = sequences[0];
-          mapSequenceToState(firstSeq);
+          mapSequenceToState(firstSeq, currentViews);
         }
       }
     } catch (error) {
@@ -145,13 +164,27 @@ export function AISurveillanceSidebar({ selectedCamera, selectedSlotIndex, mainS
     }
   };
 
-  const mapSequenceToState = (seq: any) => {
+  const mapSequenceToState = (seq: any, optViews?: any[]) => {
     const allCameras = SidebarCameraStore.getState().cameras;
-    const mappedPlaylist = seq.items.map((item: any) => {
-      const cam = allCameras.find(c => Number(c.cameraId) === item.cameraId);
+    const viewsList = optViews || availableViews;
+    
+    const items = seq.items || [];
+    const isView = seq.sequenceType === "VIEW";
+
+    const mappedPlaylist = items.map((item: any) => {
+      const itemId = isView ? item.viewId : item.cameraId;
+      
+      let cam;
+      if (isView) {
+          cam = viewsList.find(v => Number(v.id) === Number(itemId));
+      } else {
+          cam = allCameras.find(c => Number(c.cameraId) === Number(itemId));
+      }
+
       return {
         ...cam,
-        cameraId: String(item.cameraId),
+        cameraId: String(itemId),
+        name: cam ? (cam.name || cam.viewName) : (isView ? `View ${itemId}` : `Camera ${itemId}`),
         duration: `${item.duration}s`,
         order: item.order
       };
@@ -161,13 +194,15 @@ export function AISurveillanceSidebar({ selectedCamera, selectedSlotIndex, mainS
       sequenceId: seq.sequenceId,
       sequenceName: seq.sequenceName,
       playlist: mappedPlaylist,
-      customDuration: seq.items.some((item: any) => item.duration !== 10), // Heuristic or check for duration variations
+      customDuration: items.some((item: any) => item.duration !== 10),
       loopMode: seq.repeatSequence,
+      sequenceType: seq.sequenceType,
     };
 
     setActiveSequence(seqData);
     setPlaylist(mappedPlaylist);
     setSequenceName(seq.sequenceName);
+    setCustomDuration(seqData.customDuration);
     setLoopMode(seq.repeatSequence);
     SidebarCameraStore.getState().setIsSequencing(true);
   };
@@ -301,6 +336,20 @@ export function AISurveillanceSidebar({ selectedCamera, selectedSlotIndex, mainS
       toast.error(error.response?.data?.message || "Failed to delete sequence");
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleSubTabChange = (targetTab: "camera" | "view") => {
+    if (activeSequencingSubTab !== targetTab) {
+      setActiveSequence(null);
+      setPlaylist([]);
+      setSequenceName("");
+      setCustomDuration(false);
+      setLoopMode(false);
+      setIsCreatingSequence(false);
+      setAvailableSequences([]);
+      SidebarCameraStore.getState().setIsSequencing(false);
+      setActiveSequencingSubTab(targetTab);
     }
   };
 
@@ -563,7 +612,7 @@ export function AISurveillanceSidebar({ selectedCamera, selectedSlotIndex, mainS
           {/* Sub Tabs: Camera / View (Fixed) */}
           <div className="flex bg-[#f1f5f9] p-0 rounded-xl mb-2 mt-1 h-10 w-full border border-slate-200/50 shrink-0">
             <button
-              onClick={() => setActiveSequencingSubTab("camera")}
+              onClick={() => handleSubTabChange("camera")}
               className={cn(
                 "flex-1 text-sm font-roboto font-medium rounded-lg transition-all",
                 activeSequencingSubTab === "camera" ? "bg-white shadow-sm text-slate-800" : "text-slate-500 hover:text-slate-700"
@@ -572,7 +621,7 @@ export function AISurveillanceSidebar({ selectedCamera, selectedSlotIndex, mainS
               Camera
             </button>
             <button
-              onClick={() => setActiveSequencingSubTab("view")}
+              onClick={() => handleSubTabChange("view")}
               className={cn(
                 "flex-1 text-sm font-roboto font-medium rounded-lg transition-all",
                 activeSequencingSubTab === "view" ? "bg-white shadow-sm text-slate-800" : "text-slate-500 hover:text-slate-700"
@@ -666,28 +715,69 @@ export function AISurveillanceSidebar({ selectedCamera, selectedSlotIndex, mainS
 
                       {/* Selected Cameras List */}
                       {playlist.length > 0 && (
-                        <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1 scrollbar-hide">
-                          {playlist.map((camera) => (
-                            <div key={camera.cameraId} className="flex items-center justify-between p-2 rounded-xl bg-white border border-slate-100 shadow-sm group hover:border-blue-200 transition-all">
-                              <div className="flex items-center gap-2 min-w-0 flex-1">
-                                <GripVertical size={14} className="text-slate-300 cursor-grab" />
-                                <span className="text-[13px] font-bold text-slate-700 truncate font-roboto">{camera.name}</span>
+                        <div className="flex flex-col gap-2 max-h-[300px] overflow-hidden">
+                          <div className="space-y-2 overflow-y-auto pr-1 scrollbar-hide">
+                            {playlist.map((camera, index) => (
+                              <div
+                                key={camera.cameraId}
+                                draggable
+                                onDragStart={(e) => {
+                                  setDraggedIdx(index);
+                                  e.dataTransfer.effectAllowed = "move";
+                                  e.dataTransfer.setData("text/plain", `${index}`);
+                                }}
+                                onDragOver={(e) => {
+                                  e.preventDefault();
+                                  e.dataTransfer.dropEffect = "move";
+                                }}
+                                onDrop={(e) => {
+                                  e.preventDefault();
+                                  if (draggedIdx === null || draggedIdx === index) return;
+                                  const newPlaylist = [...playlist];
+                                  const draggedItem = newPlaylist.splice(draggedIdx, 1)[0];
+                                  newPlaylist.splice(index, 0, draggedItem);
+                                  setPlaylist(newPlaylist);
+                                  setDraggedIdx(null);
+                                }}
+                                onDragEnd={() => setDraggedIdx(null)}
+                                className={cn(
+                                  "flex items-center justify-between p-2 rounded-xl bg-white border border-slate-100 shadow-sm group hover:border-blue-200 transition-all cursor-grab active:cursor-grabbing",
+                                  draggedIdx === index ? "opacity-50 border-blue-300 ring-2 ring-blue-100" : ""
+                                )}
+                              >
+                                <div className="flex items-center gap-2 min-w-0 flex-1">
+                                  <GripVertical size={16} className="text-slate-300 group-hover:text-blue-400 transition-colors" />
+                                  <span className="text-[13px] font-bold text-slate-700 truncate font-roboto select-none">{camera.name}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <TooltipProvider delayDuration={100}>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <div className="cursor-not-allowed">
+                                          <Select disabled={!customDuration} value={camera.duration || "10s"} onValueChange={(val) => updateDeviceDuration(camera.cameraId, val)}>
+                                            <SelectTrigger className={cn("h-7 w-[65px] text-[11px] font-bold bg-slate-50 border-none rounded-lg px-2 focus:ring-0", !customDuration && "opacity-50 pointer-events-none")}>
+                                              <SelectValue placeholder="10s" />
+                                            </SelectTrigger>
+                                            <SelectContent className="min-w-[70px]">
+                                              {["5s", "10s", "15s", "30s", "1m"].map(d => <SelectItem key={d} value={d} className="text-xs">{d}</SelectItem>)}
+                                            </SelectContent>
+                                          </Select>
+                                        </div>
+                                      </TooltipTrigger>
+                                      {!customDuration && (
+                                        <TooltipContent side="top" sideOffset={6} className="bg-slate-800/95 text-white text-[11px] px-3 py-2 rounded-lg shadow-xl border-slate-700/50">
+                                          Enable <strong className="font-semibold text-blue-300">Custom Duration</strong> to unlock timings.
+                                        </TooltipContent>
+                                      )}
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                  <button onClick={() => setPlaylist(playlist.filter(c => c.cameraId !== camera.cameraId))} className="p-1.5 hover:bg-red-50 rounded-lg text-slate-300 hover:text-red-500 transition-colors">
+                                    <Trash2 size={14} />
+                                  </button>
+                                </div>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <Select value={camera.duration || "10s"} onValueChange={(val) => updateDeviceDuration(camera.cameraId, val)}>
-                                  <SelectTrigger className="h-7 w-[65px] text-[11px] font-bold bg-slate-50 border-none rounded-lg px-2 focus:ring-0">
-                                    <SelectValue placeholder="10s" />
-                                  </SelectTrigger>
-                                  <SelectContent className="min-w-[70px]">
-                                    {["5s", "10s", "15s", "30s", "1m"].map(d => <SelectItem key={d} value={d} className="text-xs">{d}</SelectItem>)}
-                                  </SelectContent>
-                                </Select>
-                                <button onClick={() => setPlaylist(playlist.filter(c => c.cameraId !== camera.cameraId))} className="p-1.5 hover:bg-red-50 rounded-lg text-slate-300 hover:text-red-500 transition-colors">
-                                  <Trash2 size={14} />
-                                </button>
-                              </div>
-                            </div>
-                          ))}
+                            ))}
+                          </div>
                         </div>
                       )}
 

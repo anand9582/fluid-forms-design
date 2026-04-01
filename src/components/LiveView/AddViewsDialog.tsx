@@ -152,6 +152,7 @@ export function AddViewsDialog({
                                             <Checkbox
                                                 checked={selectedIds.includes(view.id)}
                                                 onCheckedChange={() => toggleView(view.id)}
+                                                onClick={(e) => e.stopPropagation()}
                                                 className="rounded border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                                             />
                                             <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
