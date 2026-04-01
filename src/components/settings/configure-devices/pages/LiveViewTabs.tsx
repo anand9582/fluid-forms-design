@@ -130,7 +130,7 @@ export default function LiveViewTabs({ deviceId }: LiveViewTabsProps) {
     fetchOSDSettings();
 
     // Hardcoding id 1 and stream=MAIN for now as per user request for stream info testing
-    const idToFetch = 1;
+    const idToFetch = deviceId || 1;
     const streamType = "MAIN";
 
     const fetchStreamInfo = async () => {
@@ -629,10 +629,9 @@ export default function LiveViewTabs({ deviceId }: LiveViewTabsProps) {
           </div>
         </ConfigSection>
 
-
+        {/* 
         <ConfigSection icon={<SettingIcons className="h-4 w-4" />} title="Other Settings">
           <div className="space-y-4">
-            {/* Checkbox Grid */}
             <div className="grid grid-cols-2 gap-4">
               <label className="flex items-center justify-between gap-3 p-2 border rounded-sm cursor-pointer  hover:bg-muted/50 transition-colors shadow-sm">
                 <div className="flex gap-2">
@@ -677,15 +676,15 @@ export default function LiveViewTabs({ deviceId }: LiveViewTabsProps) {
           <p className="text-sm text-center text-slate-700">
             Clears all RTSP/HTTP sessions from hardware.
           </p>
-        </ConfigSection>
+        </ConfigSection> */}
 
-        <ConfigSection icon={<AlertIcons className="h-4 w-4" />} title="Network Module Alerts" defaultOpen>
+        {/* <ConfigSection icon={<AlertIcons className="h-4 w-4" />} title="Network Module Alerts" defaultOpen>
           <AlertsTable
             alerts={alerts}
             setAlerts={setAlerts}
             channels={CHANNELS}
           />
-        </ConfigSection>
+        </ConfigSection> */}
 
       </div>
     </Form>

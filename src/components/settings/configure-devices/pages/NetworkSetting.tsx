@@ -43,7 +43,7 @@ export default function NetworkSetting({ deviceId }: NetworkSettingProps) {
 
   useEffect(() => {
     // Hardcoding 6 as per user request for testing, ignoring deviceId guard for now
-    const idToFetch = 1;
+    const idToFetch = deviceId || 1;
 
     const fetchDeviceInfo = async () => {
       console.log(`DEBUG: Fetching device info for ID: ${idToFetch}`);
