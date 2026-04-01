@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { FormikProps } from "formik";
+import { AddUserFormValues } from "../AddUserSheet";
 import { X, CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -94,22 +96,15 @@ function TagInput({
 interface RestrictionsStepProps {
   currentStep: number;
   totalSteps: number;
+  formik: FormikProps<AddUserFormValues>;
 }
 
 export function RestrictionsStep({
   currentStep,
   totalSteps,
+  formik,
 }: RestrictionsStepProps) {
-  const [macAddresses, setMacAddresses] = useState<string[]>([
-    "00:1A:2B:3C:4D:5E",
-  ]);
-  const [deviceUIDs, setDeviceUIDs] = useState<string[]>(["D-99283-X"]);
-  const [expiryDate, setExpiryDate] = useState<Date>();
-  const [inactivityTimeout, setInactivityTimeout] = useState("");
-  const [allowedIPStart, setAllowedIPStart] = useState("192.168.1.1");
-  const [allowedIPEnd, setAllowedIPEnd] = useState("192.168.1.255");
-  const [maxLogins, setMaxLogins] = useState("2");
-  const [loginAllowed, setLoginAllowed] = useState(false);
+  const expiryDate = formik.values.accountExpiryDate ? new Date(formik.values.accountExpiryDate) : undefined;
 
   return (
     <div className="space-y-6">
@@ -118,10 +113,10 @@ export function RestrictionsStep({
         Step {currentStep + 1} of {totalSteps}
       </p>
 
-      {/* MAC ADDRESSES */}
+      {/* ALLOWED IP ADDRESSES */}
       <TagInput
-        tags={macAddresses}
-        onTagsChange={setMacAddresses}
+        tags={formik.values.allowedIpAddresses || []}
+        onTagsChange={(tags) => formik.setFieldValue("allowedIpAddresses", tags)}
         placeholder="Add Ip address..."
         label="Allowed Ip Addresses"
       />
@@ -150,7 +145,7 @@ export function RestrictionsStep({
               <Calendar
                 mode="single"
                 selected={expiryDate}
-                onSelect={setExpiryDate}
+                onSelect={(d) => formik.setFieldValue("accountExpiryDate", d ? d.toISOString() : null)}
                 initialFocus
               />
             </PopoverContent>
@@ -160,10 +155,11 @@ export function RestrictionsStep({
         <div className="space-y-2">
           <Label>Inactivity Timeout (minutes)</Label>
           <Input
-            value={inactivityTimeout}
-            onChange={(e) => setInactivityTimeout(e.target.value)}
+            value={formik.values.inactivityTimeoutMinutes}
+            onChange={(e) => formik.setFieldValue("inactivityTimeoutMinutes", e.target.value)}
             placeholder="Value"
             className="h-[42px]"
+            type="number"
           />
         </div>
       </div>
@@ -171,7 +167,10 @@ export function RestrictionsStep({
       {/* MAX LOGINS */}
       <div className="max-w-sm">
         <Label>Max Simultaneous Logins</Label>
-        <Select value={maxLogins} onValueChange={setMaxLogins}>
+        <Select 
+          value={String(formik.values.maxLoginLimit)} 
+          onValueChange={(val) => formik.setFieldValue("maxLoginLimit", Number(val))}
+        >
           <SelectTrigger className="h-[42px]">
             <SelectValue />
           </SelectTrigger>
@@ -189,8 +188,8 @@ export function RestrictionsStep({
       {/* LOGIN ALLOWED */}
       <div className="flex items-center gap-3 pt-2">
         <Checkbox
-          checked={loginAllowed}
-          onCheckedChange={(v) => setLoginAllowed(v === true)}
+          checked={formik.values.loginTimeRestriction.enabled}
+          onCheckedChange={(v) => formik.setFieldValue("loginTimeRestriction.enabled", v === true)}
           className="h-4 w-4 rounded border-2 border-muted-foreground data-[state=checked]:border-primary data-[state=checked]:bg-primary"
         />
         <Label>User login allowed</Label>
