@@ -50,7 +50,7 @@ export function AutoDiscoveryTab() {
             type: d.deviceType || "N/A",
             username: d.username || "",
             password: d.password || "",
-            group: "N/A",
+            groupName: d.groupName || "N/A",
           })
         );
         setDevices(discovered);

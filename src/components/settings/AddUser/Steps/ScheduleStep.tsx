@@ -12,44 +12,18 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
-interface DaySchedule {
-  day: string;
-  startTime: string;
-  endTime: string;
-  enabled: boolean;
-  isClosed?: boolean;
-}
-
-interface EventType {
-  id: string;
-  name: string;
-  description: string;
-  severity: "low" | "medium" | "high";
-  enabled: boolean;
-}
+import { FormikProps } from "formik";
+import { AddUserFormValues, DaySchedule, ScheduleEventPolicy } from "../AddUserSheet";
 
 interface ScheduleEventsStepProps {
   currentStep: number;
   totalSteps: number;
-  scheduleData?: DaySchedule[];
-  eventTypes?: EventType[];
-  onScheduleChange?: (data: DaySchedule[]) => void;
-  onEventTypesChange?: (data: EventType[]) => void;
+  formik: FormikProps<AddUserFormValues>;
 }
 
-const defaultSchedule: DaySchedule[] = [
-  { day: "Monday", startTime: "09:00", endTime: "18:00", enabled: true },
-  { day: "Tuesday", startTime: "09:00", endTime: "18:00", enabled: true },
-  { day: "Wednesday", startTime: "09:00", endTime: "18:00", enabled: true },
-  { day: "Thursday", startTime: "09:00", endTime: "18:00", enabled: true },
-  { day: "Friday", startTime: "09:00", endTime: "18:00", enabled: true },
-  { day: "Saturday", startTime: "10:00", endTime: "16:00", enabled: true },
-  { day: "Sunday", startTime: "09:00", endTime: "18:00", enabled: true, isClosed: true },
-];
-
-const defaultEventTypes: EventType[] = [
-  { id: "motion", name: "Motion detection", description: "Detects movement in defined areas", severity: "low", enabled: true },
-  { id: "line-crossing", name: "Line crossing", description: "Operator L1", severity: "medium", enabled: false },
+const eventTypeMeta = [
+  { id: "MOTION", name: "Motion detection", description: "Detects movement in defined areas" },
+  { id: "LINE_CROSSING", name: "Line crossing", description: "Operator L1" },
 ];
 
 const timeOptions = [
@@ -60,15 +34,12 @@ const timeOptions = [
   "Closed"
 ];
 export function ScheduleStep({
-   currentStep,
+  currentStep,
   totalSteps,
-  scheduleData: externalScheduleData,
-  eventTypes: externalEventTypes,
-  onScheduleChange,
-  onEventTypesChange,
+  formik,
 }: ScheduleEventsStepProps) {
-  const [scheduleData, setScheduleData] = useState<DaySchedule[]>(externalScheduleData || defaultSchedule);
-  const [eventTypes, setEventTypes] = useState<EventType[]>(externalEventTypes || defaultEventTypes);
+  const scheduleData = formik.values.loginTimeRestriction.schedules;
+  const eventTypes = formik.values.eventPolicies;
 
   const handleScheduleChange = (index: number, field: "startTime" | "endTime" | "enabled", value: string | boolean) => {
     const newSchedule = [...scheduleData];
@@ -81,28 +52,25 @@ export function ScheduleStep({
     } else if (field === "enabled" && typeof value === "boolean") {
       newSchedule[index] = { ...newSchedule[index], enabled: value };
     }
-    setScheduleData(newSchedule);
-    onScheduleChange?.(newSchedule);
+    formik.setFieldValue("loginTimeRestriction.schedules", newSchedule);
   };
 
   const handleEventToggle = (id: string) => {
     const newEventTypes = eventTypes.map(event => 
-      event.id === id ? { ...event, enabled: !event.enabled } : event
+      event.eventType === id ? { ...event, enabled: !event.enabled } : event
     );
-    setEventTypes(newEventTypes);
-    onEventTypesChange?.(newEventTypes);
+    formik.setFieldValue("eventPolicies", newEventTypes);
   };
 
-  const handleSeverityChange = (id: string, severity: "low" | "medium" | "high") => {
+  const handleSeverityChange = (id: string, severity: string) => {
     const newEventTypes = eventTypes.map(event => 
-      event.id === id ? { ...event, severity } : event
+      event.eventType === id ? { ...event, severity } : event
     );
-    setEventTypes(newEventTypes);
-    onEventTypesChange?.(newEventTypes);
+    formik.setFieldValue("eventPolicies", newEventTypes);
   };
 
-  const getSeverityStyles = (severity: "low" | "medium" | "high") => {
-    switch (severity) {
+  const getSeverityStyles = (severity: string) => {
+    switch (severity?.toLowerCase()) {
       case "low":
         return "bg-green-50 text-blue-600 border-green-200";
       case "medium":
@@ -137,10 +105,10 @@ export function ScheduleStep({
         <div className="space-y-3 border bg-gray-50 p-3 rounded-md">
           {scheduleData.map((day, index) => (
             <div
-              key={day.day}
+              key={day.dayOfWeek}
               className="flex items-center gap-4"
             >
-              <span className="text-sm text-foreground w-24 flex-shrink-0">{day.day}</span>
+              <span className="text-sm text-foreground w-24 flex-shrink-0 capitalize">{day.dayOfWeek.toLowerCase()}</span>
               
               <Select
                 value={day.isClosed ? "Closed" : day.startTime}
@@ -202,45 +170,48 @@ export function ScheduleStep({
             </div>
             
             {/* Event Rows */}
-            {eventTypes.map((event) => (
+            {eventTypeMeta.map((meta) => {
+              const eventPolicy = eventTypes.find(e => e.eventType === meta.id);
+              if (!eventPolicy) return null;
+              return (
               <div
-                key={event.id}
+                key={meta.id}
                 className="grid grid-cols-[200px_1fr_180px] gap-4 py-3 items-center border-b border-border last:border-b-0 p-3"
               >
                 <div className="flex items-center gap-3">
                   <Checkbox
-                    checked={event.enabled}
-                    onCheckedChange={() => handleEventToggle(event.id)}
+                    checked={eventPolicy.enabled}
+                    onCheckedChange={() => handleEventToggle(meta.id)}
                     className="h-4 w-4 rounded border-2 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                   />
                   <span className={cn(
                     "text-sm",
-                    event.enabled ? "text-primary font-medium" : "text-muted-foreground"
+                    eventPolicy.enabled ? "text-primary font-medium" : "text-muted-foreground"
                   )}>
-                    {event.name}
+                    {meta.name}
                   </span>
                 </div>
                 
-                <span className="text-sm text-gray-500 font-normal">{event.description}</span>
+                <span className="text-sm text-gray-500 font-normal">{meta.description}</span>
                 
                 <Select
-                  value={event.severity}
-                  onValueChange={(value) => handleSeverityChange(event.id, value as "low" | "medium" | "high")}
+                  value={eventPolicy.severity}
+                  onValueChange={(value) => handleSeverityChange(meta.id, value)}
                 >
                   <SelectTrigger className={cn(
                     "w-full h-9 text-sm border rounded-md",
-                    getSeverityStyles(event.severity)
+                    getSeverityStyles(eventPolicy.severity)
                   )}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-background border border-border">
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="LOW">Low</SelectItem>
+                    <SelectItem value="MEDIUM">Medium</SelectItem>
+                    <SelectItem value="HIGH">High</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-            ))}
+            )})}
           </div>
         </div>
     </div>

@@ -23,12 +23,12 @@ interface RoleAssignmentStepProps {
 
 const roles = [
   {
-    value: "super_admin",
+    value: 1,
     title: "Super Admin",
     description: "Full access to all system settings, users, and devices.",
   },
   {
-    value: "super_admin_2",
+    value: 2,
     title: "Super Admin 2",
     description: "Full access to all system settings, users, and devices.",
   },
@@ -50,12 +50,7 @@ export function RoleAssignmentStep({
      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
   <div className="col-span-1">
     <Label className="block mb-2">Role Type</Label>
-    <Select
-      value={formik.values.roleType}
-      onValueChange={(value) =>
-        formik.setFieldValue("roleType", value)
-      }
-    >
+    <Select defaultValue="administrator">
       <SelectTrigger>
         <SelectValue placeholder="Select role type" />
       </SelectTrigger>
@@ -64,7 +59,6 @@ export function RoleAssignmentStep({
       </SelectContent>
     </Select>
   </div>
-
 </div>
 
       {/* Available Roles */}
@@ -72,22 +66,21 @@ export function RoleAssignmentStep({
         <Label>Available Roles</Label>
 
         <RadioGroup
-          value={formik.values.role}
+          value={formik.values.roleId ? String(formik.values.roleId) : undefined}
           onValueChange={(value) =>
-            formik.setFieldValue("role", value)
+            formik.setFieldValue("roleId", Number(value))
           }
           className="grid grid-cols-1 md:grid-cols-2 gap-4"
         >
           {roles.map((role) => {
-            const selected = formik.values.role === role.value;
+            const selected = formik.values.roleId === role.value;
 
             return (
               <label
                 key={role.value}
-                className={`flex gap-3 rounded-lg border p-4 cursor-pointer transition items-center
-                `}
+                className={`flex gap-3 rounded-lg border p-4 cursor-pointer transition items-center pt-[1.125rem]`}
               >
-                <RadioGroupItem value={role.value} className="border-gray-400" />
+                <RadioGroupItem value={String(role.value)} className="border-gray-400" />
 
                 <div className="space-y-1">
                   <p className="text-sm font-medium">
@@ -101,6 +94,9 @@ export function RoleAssignmentStep({
             );
           })}
         </RadioGroup>
+        {formik.touched.roleId && formik.errors.roleId && (
+          <p className="text-red-500 text-xs mt-1">{formik.errors.roleId}</p>
+        )}
       </div>
     </div>
   );

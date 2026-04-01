@@ -38,7 +38,7 @@ export interface DiscoveredDevice {
   type: string;
   username: string;
   password: string;
-  group: string;
+  groupName: string;
 }
 
 interface DevicesDataTableProps {
@@ -312,9 +312,9 @@ export function DevicesDataTable({
       },
     },
     {
-      accessorKey: "group",
+      accessorKey: "groupName",
       header: "Group",
-      cell: ({ row }) => <span className="text-tablecolor">{row.getValue("group")}</span>,
+      cell: ({ row }) => <span className="text-tablecolor">{row.getValue("groupName")}</span>,
     },
   ];
 

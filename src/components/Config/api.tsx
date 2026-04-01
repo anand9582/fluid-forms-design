@@ -39,6 +39,7 @@ export const API_URLS = {
   DeviceStatus: "metadata/status/all",
   AddDevices: "/devices/add-devices",
   Bookmark_List: "api/bookmarks/bookmarkList",
+  CREATE_USER: "api/v1/users/create-user",
 };
 
 export const getAuthHeaders = () => {

@@ -1,5 +1,6 @@
 import { DeviceTreeSelect, DeviceNode } from "@/components/ui/device-tree-select";
-import { useState } from "react";
+import { FormikProps } from "formik";
+import { AddUserFormValues } from "../AddUserSheet";
 
 /* ---------------- MOCK DATA ---------------- */
 
@@ -49,6 +50,7 @@ const mockDeviceData: DeviceNode[] = [
 interface CameraAssignmentStepProps {
   currentStep: number;
   totalSteps: number;
+  formik: FormikProps<AddUserFormValues>;
 }
 
 /* ---------------- COMPONENT ---------------- */
@@ -56,20 +58,19 @@ interface CameraAssignmentStepProps {
 export function CameraAssignmentStep({
   currentStep,
   totalSteps,
+  formik,
 }: CameraAssignmentStepProps) {
-  const initialFormData = {
-    selectedCameras: [] as string[],
+  const handleInputChange = (value: string[]) => {
+    formik.setFieldValue("cameraIds", value);
+    // Explicitly set field touched so validation kicks in on change if needed
+    formik.setFieldTouched("cameraIds", true, false);
   };
 
-  const [formData, setFormData] = useState(initialFormData);
+  const assignedCount = formik.values.cameraIds?.length || 0;
 
-  const handleInputChange = (
-    value: string[]
-  ) => {
-    setFormData({ selectedCameras: value });
-  };
 
-  const assignedCount = formData.selectedCameras.length;
+
+
 
   return (
     <div className="space-y-4">
@@ -91,11 +92,17 @@ export function CameraAssignmentStep({
 
       <DeviceTreeSelect
         data={mockDeviceData}
-        selectedIds={formData.selectedCameras}
+        selectedIds={formik.values.cameraIds || []}
         onSelectionChange={handleInputChange}
         searchPlaceholder="Search cameras, buildings or areas..."
         selectionLabel="Cameras Assigned"
       />
+      
+      {formik.touched.cameraIds && formik.errors.cameraIds && (
+         <p className="text-red-500 text-xs mt-1">
+           {typeof formik.errors.cameraIds === "string" ? formik.errors.cameraIds : "At least one camera must be selected"}
+         </p>
+      )}
     </div>
   );
 }

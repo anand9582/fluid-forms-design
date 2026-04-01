@@ -28,25 +28,45 @@ export function UserInfoStep({ formik, currentStep, totalSteps }: UserInfoStepPr
       <StepFormSection description={`Step ${currentStep + 1} of ${totalSteps}`}>
         <StepFormRow>
           <StepFormField>
-            <Label htmlFor="name">First Name</Label>
+            <Label htmlFor="firstName">First Name</Label>
             <Input
-              id="name"
-              name="name"
-              placeholder="Enter FirstName"
-              value={formik.values.name}
+              id="firstName"
+              name="firstName"
+              placeholder="Enter First Name"
+              value={formik.values.firstName}
               onChange={formik.handleChange}
             />
+            {formik.touched.firstName && formik.errors.firstName && (
+              <p className="text-red-500 text-xs mt-1">{formik.errors.firstName}</p>
+            )}
           </StepFormField>
 
           <StepFormField>
-            <Label htmlFor="LastName">Last Name</Label>
+            <Label htmlFor="lastName">Last Name</Label>
+            <Input
+              id="lastName"
+              name="lastName"
+              placeholder="Enter Last Name"
+              value={formik.values.lastName}
+              onChange={formik.handleChange}
+            />
+            {formik.touched.lastName && formik.errors.lastName && (
+              <p className="text-red-500 text-xs mt-1">{formik.errors.lastName}</p>
+            )}
+          </StepFormField>
+
+          <StepFormField>
+            <Label htmlFor="username">Username</Label>
             <Input
               id="username"
               name="username"
-              placeholder="Enter LastName"
+              placeholder="Enter Username"
               value={formik.values.username}
               onChange={formik.handleChange}
             />
+            {formik.touched.username && formik.errors.username && (
+              <p className="text-red-500 text-xs mt-1">{formik.errors.username}</p>
+            )}
           </StepFormField>
 
           <StepFormField>
@@ -58,17 +78,23 @@ export function UserInfoStep({ formik, currentStep, totalSteps }: UserInfoStepPr
               value={formik.values.email}
               onChange={formik.handleChange}
             />
+            {formik.touched.email && formik.errors.email && (
+              <p className="text-red-500 text-xs mt-1">{formik.errors.email}</p>
+            )}
           </StepFormField>
 
           <StepFormField>
-            <Label htmlFor="phone">Phone</Label>
+            <Label htmlFor="contactNo">Phone</Label>
             <Input
-              id="phone"
-              name="phone"
+              id="contactNo"
+              name="contactNo"
               placeholder="Enter Phone Number"
-              value={formik.values.phone}
+              value={formik.values.contactNo}
               onChange={formik.handleChange}
             />
+            {formik.touched.contactNo && formik.errors.contactNo && (
+              <p className="text-red-500 text-xs mt-1">{formik.errors.contactNo}</p>
+            )}
           </StepFormField>
         </StepFormRow>
 
@@ -143,15 +169,18 @@ export function UserInfoStep({ formik, currentStep, totalSteps }: UserInfoStepPr
         </div>
         <StepFormRow>
           <StepFormField>
-            <Label htmlFor="oldPassword">Password</Label>
+            <Label htmlFor="password">Password</Label>
             <Input
-              id="oldPassword"
-              name="oldPassword"
+              id="password"
+              name="password"
               type="password"
-              placeholder="Old Password"
-              value={formik.values.oldPassword}
+              placeholder="Password"
+              value={formik.values.password}
               onChange={formik.handleChange}
             />
+            {formik.touched.password && formik.errors.password && (
+              <p className="text-red-500 text-xs mt-1">{formik.errors.password}</p>
+            )}
           </StepFormField>
 
           <StepFormField>
@@ -164,6 +193,9 @@ export function UserInfoStep({ formik, currentStep, totalSteps }: UserInfoStepPr
               value={formik.values.confirmPassword}
               onChange={formik.handleChange}
             />
+            {formik.touched.confirmPassword && formik.errors.confirmPassword && (
+              <p className="text-red-500 text-xs mt-1">{formik.errors.confirmPassword}</p>
+            )}
           </StepFormField>
         </StepFormRow>
       </StepFormSection>
