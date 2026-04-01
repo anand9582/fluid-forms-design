@@ -39,6 +39,12 @@ export interface DiscoveredDevice {
   username: string;
   password: string;
   groupName: string;
+  groupId?: string | number;
+}
+
+export interface GroupOption {
+  id: number;
+  name: string;
 }
 
 interface DevicesDataTableProps {
@@ -46,6 +52,7 @@ interface DevicesDataTableProps {
   onSelectionChange: (count: number) => void;
   onSelectedDevicesChange: (devices: DiscoveredDevice[]) => void;
   onDataChange: (data: DiscoveredDevice[]) => void;
+  groups?: GroupOption[];
 }
 /* ---------------- EDITABLE CELL ---------------- */
 function EditableCell({
@@ -113,11 +120,64 @@ function EditableCell({
   );
 }
 
+function EditableSelectCell({
+  value,
+  onChange,
+  options,
+  className,
+}: {
+  value?: string | number;
+  onChange: (val: string | number) => void;
+  options: { label: string; value: string | number }[];
+  className?: string;
+}) {
+  const [editing, setEditing] = useState(false);
+
+  const displayLabel = options.find(o => String(o.value) === String(value))?.label || value || "N/A";
+
+  if (!editing) {
+    return (
+      <span
+        onDoubleClick={() => setEditing(true)}
+        className={cn("cursor-pointer text-sm px-1.5 py-0.5 rounded hover:bg-muted/40 transition-colors", className)}
+      >
+        {displayLabel}
+      </span>
+    );
+  }
+
+  return (
+    <Select
+      value={value ? String(value) : undefined}
+      onValueChange={(val) => {
+        onChange(val);
+        setEditing(false);
+      }}
+      defaultOpen
+      onOpenChange={(open) => {
+        if (!open) setEditing(false);
+      }}
+    >
+      <SelectTrigger className="h-7 min-w-[120px] text-sm py-0">
+        <SelectValue placeholder="Select group" />
+      </SelectTrigger>
+      <SelectContent>
+        {options.map((opt) => (
+          <SelectItem key={opt.value} value={String(opt.value)}>
+            {opt.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
 
 export function DevicesDataTable({
   data,
   onSelectionChange,
   onSelectedDevicesChange,
+  groups = [],
 }: DevicesDataTableProps) {
   const [rowSelection, setRowSelection] = useState({});
   const [visiblePasswords, setVisiblePasswords] = useState<Set<string>>(new Set());
@@ -312,9 +372,24 @@ export function DevicesDataTable({
       },
     },
     {
-      accessorKey: "groupName",
+      accessorKey: "groupId",
       header: "Group",
-      cell: ({ row }) => <span className="text-tablecolor">{row.getValue("groupName")}</span>,
+      cell: ({ row }) => (
+        <EditableSelectCell
+          value={row.original.groupId || row.original.groupName}
+          options={groups.map(g => ({ label: g.name, value: g.id }))}
+          onChange={(val) => {
+             const selectedGroup = groups.find(g => String(g.id) === String(val));
+             setTableData((prev) =>
+              prev.map((r) =>
+                r.id === row.original.id 
+                 ? { ...r, groupId: val, groupName: selectedGroup?.name || "N/A" } 
+                 : r
+              )
+            );
+          }}
+        />
+      ),
     },
   ];
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { Search, Plus, Loader2 } from "lucide-react";
 import { DevicesDataTable, DiscoveredDevice } from "@/components/settings/Added-Devices/Devices/DevicesDataTable";
@@ -18,6 +18,25 @@ export function AutoDiscoveryTab() {
     setActiveItem,
     setActiveRoute,
   } = useSettingsStore();
+
+  const [groups, setGroups] = useState<{ id: number; name: string }[]>([]);
+
+  useEffect(() => {
+    const fetchGroups = async () => {
+      try {
+        const res = await axios.get(
+          `${API_BASE_URL2}/groups/get-all-groups`,
+          { headers: getAuthHeaders() }
+        );
+        if (res.data.success) {
+          setGroups(res.data.data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch groups", err);
+      }
+    };
+    fetchGroups();
+  }, []);
 
   /* ---------------- SCAN DEVICES ---------------- */
   const handleStartScan = async () => {
@@ -70,6 +89,12 @@ export function AutoDiscoveryTab() {
 
   /* ---------------- ADD SELECTED ---------------- */
   const handleAddSelected = async () => {
+    const unassignedDevices = selectedDevices.filter(d => !d.groupId);
+    if (unassignedDevices.length > 0) {
+       showAlert("Error", "Please select a group for all selected devices before adding.", "error");
+       return;
+    }
+
     try {
       const payload = selectedDevices.map((d) => ({
         name: d.name,
@@ -80,6 +105,7 @@ export function AutoDiscoveryTab() {
         make: d.make,
         model: d.model,
         authType: "DIGEST",
+        groupId: Number(d.groupId)
       }));
 
       const response = await axios.post(
@@ -168,6 +194,7 @@ export function AutoDiscoveryTab() {
             onSelectionChange={setSelectedCount}
             onSelectedDevicesChange={setSelectedDevices}
             onDataChange={setDevices}
+            groups={groups}
           />
         </div>
       </div>
