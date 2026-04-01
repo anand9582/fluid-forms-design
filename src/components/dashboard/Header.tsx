@@ -66,7 +66,7 @@ export function Header() {
             <img
               src={Logo}
               alt="CamPulse Logo"
-              className="h-8 w-auto object-contain"
+              className="h-10 w-auto object-contain"
             />
           </span>
         </button>

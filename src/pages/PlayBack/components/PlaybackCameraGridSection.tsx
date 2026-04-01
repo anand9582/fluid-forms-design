@@ -14,6 +14,7 @@ interface PlaybackCameraGridSectionProps {
   rawSegmentsPerSlot: Record<number, RawSegment[]>;
   slotErrors: Record<number, string>;
   showCameraList: boolean;
+  onClearSlot: (slotIndex: number) => void;
 }
 
 export const PlaybackCameraGridSection = React.memo(
@@ -27,6 +28,7 @@ export const PlaybackCameraGridSection = React.memo(
     rawSegmentsPerSlot,
     slotErrors,
     showCameraList,
+    onClearSlot,
   }: PlaybackCameraGridSectionProps) => {
     return (
       <div className="flex flex-1 ml-[80px] gap-3 p-3 overflow-hidden">
@@ -39,6 +41,7 @@ export const PlaybackCameraGridSection = React.memo(
           isCameraLoading={isCameraLoading}
           rawSegmentsPerSlot={rawSegmentsPerSlot}
           slotErrors={slotErrors}
+          onClearSlot={onClearSlot}
         />
       </div>
     );

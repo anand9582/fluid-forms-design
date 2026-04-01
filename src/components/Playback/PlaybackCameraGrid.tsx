@@ -15,6 +15,7 @@ interface Props {
   isCameraLoading: (slotIndex: number) => boolean;
   rawSegmentsPerSlot: Record<number, RawSegment[]>;
   slotErrors?: Record<number, string>;
+  onClearSlot: (slotIndex: number) => void;
 }
 
 export function PlaybackCameraGrid({
@@ -25,6 +26,7 @@ export function PlaybackCameraGrid({
   isCameraLoading,
   rawSegmentsPerSlot,
   slotErrors = {},
+  onClearSlot,
 }: Props) {
   const { layout, slotAssignments } = usePlaybackGridStore();
   const totalSlots = layout.rows * layout.cols;
@@ -61,6 +63,7 @@ export function PlaybackCameraGrid({
             isCameraLoading={isCameraLoading}
             rawSegmentsPerSlot={rawSegmentsPerSlot}
             errorMessage={slotErrors[index]}
+            onClearSlot={onClearSlot}
           />
         ))}
       </div>

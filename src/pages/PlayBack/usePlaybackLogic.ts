@@ -204,7 +204,7 @@ export function usePlaybackLogic(
 
   // Start camera for a slot
   const startCamera = useCallback(
-    async (cameraId: string, slotIndex: number): Promise<string | null> => {
+    async (cameraId: string, slotIndex: number): Promise<{ blobUrl: string; sessionId: string } | null> => {
       setLoadingSlots((prev) => new Set(prev).add(slotIndex));
       setSlotErrors((prev) => ({ ...prev, [slotIndex]: "" }));
 
@@ -238,7 +238,7 @@ export function usePlaybackLogic(
           },
         ]);
 
-        return blobUrl;
+        return { blobUrl, sessionId: json.data.sessionId };
       } catch (err: any) {
         setSlotErrors((prev) => ({
           ...prev,
@@ -274,19 +274,21 @@ export function usePlaybackLogic(
 
     const segments = await fetchTimelineForSlot(slotIndex, cameraId);
 
-    const blobUrl = await startCamera(cameraId, slotIndex);
-    if (!blobUrl) return;
+    const cameraStartResult = await startCamera(cameraId, slotIndex);
+    if (!cameraStartResult) return;
 
     // Check if there are already other playing cameras
     const isFirstCamera = players.length === 0;
 
+    // Actually, startCamera already sets the player state, so we don't strictly 
+    // need this setPlayers call, but if we want to ensure it's in sync we use the returned values.
     setPlayers((prev) => [
       ...prev.filter((p) => p.slotIndex !== slotIndex),
       {
         slotIndex,
         cameraId,
-        blobUrl,
-        sessionId: "",
+        blobUrl: cameraStartResult.blobUrl,
+        sessionId: cameraStartResult.sessionId,
         date: selectedDate,
       },
     ]);
@@ -314,8 +316,7 @@ export function usePlaybackLogic(
   // Handle camera click (double click)
   const handleCameraClick = async (cameraId: string) => {
     const freeIndex = slotAssignments.findIndex((s) => s === null);
-    if (freeIndex === -1) return; // Grid is full
-
+    if (freeIndex === -1) return;
     await handleCameraDrop(cameraId, freeIndex);
   };
 
@@ -370,6 +371,38 @@ export function usePlaybackLogic(
       playback.seekTo(date, selectedSlot ?? undefined);
     },
     [selectedDate, selectedSlot, playback]
+  );
+
+  // Stop playback session API
+  const stopPlaybackSession = useCallback(
+    async (slotIndex?: number) => {
+      const targets = slotIndex !== undefined ? players.filter(p => p.slotIndex === slotIndex) : players;
+
+      for (const p of targets) {
+        if (p.sessionId) {
+          try {
+            await fetch(`${PLAYBACK_API}/hls/stop/${p.sessionId}`, {
+              method: "POST",
+            });
+          } catch (err) {
+            console.error("Failed to stop playback session", err);
+          }
+        }
+      }
+    },
+    [players]
+  );
+
+  // Handle clear slot
+  const handleClearSlot = useCallback(
+    async (slotIndex: number) => {
+      await stopPlaybackSession(slotIndex);
+      gridStore.clearSlot(slotIndex);
+
+      // Optionally remove from players state directly so it doesn't linger
+      setPlayers((prev) => prev.filter((p) => p.slotIndex !== slotIndex));
+    },
+    [stopPlaybackSession, gridStore]
   );
 
   // Handle jump to bookmark
@@ -499,8 +532,8 @@ export function usePlaybackLogic(
         console.log("🔄 Reloading slot", slotIndex, "for date", selectedDate);
 
         const segments = await fetchTimelineForSlot(slotIndex, cameraId);
-        const blobUrl = await startCamera(cameraId, slotIndex);
-        if (!blobUrl) continue;
+        const cameraStartResult = await startCamera(cameraId, slotIndex);
+        if (!cameraStartResult) continue;
 
         // No need to seek to firstRecording. The store's globalTime / cameraTime 
         // is already updated by handleSeekToDate, so useHlsWithStore will automatically sync to it!
@@ -508,8 +541,8 @@ export function usePlaybackLogic(
         newPlayers.push({
           slotIndex,
           cameraId,
-          blobUrl,
-          sessionId: "",
+          blobUrl: cameraStartResult.blobUrl,
+          sessionId: cameraStartResult.sessionId,
           date: new Date(selectedDate),
         });
       }
@@ -621,6 +654,8 @@ export function usePlaybackLogic(
     handleTimelineRemoveBookmark,
     handleLayoutChange: setSelectedLayout,
     handleToggleCameraList: () => setShowCameraList((prev) => !prev),
+    handleClearSlot,
+    stopPlaybackSession,
 
     // Helpers
     getVideoSrc,

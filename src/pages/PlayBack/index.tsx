@@ -31,12 +31,20 @@ export default function Index() {
     handleToggleCameraList,
     getVideoSrc,
     cameraNames,
+    stopPlaybackSession,
+    handleClearSlot,
   } = usePlaybackLogic(getAuthHeaders);
 
   // Memoized stop handler
   const handleStop = useCallback(() => {
+    console.log("hello");
     playback.stop();
-  }, [playback]);
+    if (!playback.isSync && state.selectedSlot !== null) {
+      handleClearSlot(state.selectedSlot);
+    } else {
+      state.players.forEach((p) => handleClearSlot(p.slotIndex));
+    }
+  }, [playback, state.selectedSlot, state.players, handleClearSlot]);
 
   // Memoized bookmark add handler
   const handleBookmarkAdd = useCallback(
@@ -73,6 +81,7 @@ export default function Index() {
         rawSegmentsPerSlot={state.rawSegmentsPerSlot}
         slotErrors={state.slotErrors}
         showCameraList={state.showCameraList}
+        onClearSlot={handleClearSlot}
       />
 
       {/* Timeline & Controls */}

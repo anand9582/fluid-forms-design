@@ -19,10 +19,11 @@ interface Props {
   selected: boolean;
   onSelect: () => void;
   onCameraDrop: (cameraId: string, slotIndex: number) => void;
-  getVideoSrc: (slotIndex: number) => string; // ✅ FIXED
+  getVideoSrc: (slotIndex: number) => string;
   isCameraLoading: (slotIndex: number) => boolean;
   rawSegmentsPerSlot: Record<number, RawSegment[]>;
   errorMessage?: string;
+  onClearSlot: (slotIndex: number) => void;
 }
 
 export function PlaybackCameraSlot({
@@ -35,10 +36,10 @@ export function PlaybackCameraSlot({
   isCameraLoading,
   rawSegmentsPerSlot = {},
   errorMessage,
+  onClearSlot,
 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const playback = usePlaybackStore();
-  const clearSlot = usePlaybackGridStore((s) => s.clearSlot);
   
   const [refreshKey, setRefreshKey] = useState(0);
   const [isMuted, setIsMuted] = useState(true);
@@ -48,17 +49,23 @@ export function PlaybackCameraSlot({
   const handleRefresh = (e: React.MouseEvent) => {
     e.stopPropagation();
     setRefreshKey((prev) => prev + 1);
-    
+
     // Seek to first recording segment start time
     const firstSegment = segments.find((s: any) => s.type === "recording") || segments[0];
     if (firstSegment) {
-       playback.seekTo(new Date(firstSegment.startTime), index);
+      playback.seekTo(new Date(firstSegment.startTime), index);
     }
   };
 
   const handleMuteToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsMuted((prev) => !prev);
+
+    if (!videoRef.current) return;
+
+    const video = videoRef.current;
+    video.muted = !video.muted;
+
+    setIsMuted(video.muted);
   };
 
   const handleSnapshot = (e: React.MouseEvent) => {
@@ -88,7 +95,7 @@ export function PlaybackCameraSlot({
 
   const handleClearSlot = (e: React.MouseEvent) => {
     e.stopPropagation();
-    clearSlot(index);
+    onClearSlot(index);
   };
 
   /* ---------------- DROP ---------------- */
@@ -112,7 +119,7 @@ export function PlaybackCameraSlot({
     cameraId,
     segments,
     slotIndex: index,
-    isMaster: true, 
+    isMaster: true,
     refreshKey,
   });
 
@@ -124,7 +131,7 @@ export function PlaybackCameraSlot({
     if (document.fullscreenElement) {
       document.exitFullscreen();
     } else {
-      el.requestFullscreen().catch(() => {});
+      el.requestFullscreen().catch(() => { });
     }
   };
 
@@ -207,7 +214,7 @@ export function PlaybackCameraSlot({
         >
           <button
             className="p-1.5 bg-black/70 hover:bg-black rounded text-white/90 transition-colors"
-            title="Refresh Stream"
+            title="Refresh Playback Stream"
             onClick={handleRefresh}
           >
             <RefershIcons size={12} />

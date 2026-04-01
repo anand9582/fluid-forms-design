@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Hls from "hls.js";
-import { Segment, usePlaybackStore } from "@/Store/playbackStore";
+import { usePlaybackStore } from "@/Store/playbackStore";
+
+export interface Segment {
+  startTime: Date;
+  endTime: Date;
+  type?: string;
+}
 
 interface Props {
   src: string;
@@ -108,8 +114,8 @@ export function useHlsWithStore({ src, cameraId, segments, slotIndex }: Props) {
     const maxDrift = Math.abs(playbackSpeed) > 2 ? 0.6 : 0.15;
 
     // Keep video in sync with global logical timeline
-    const needsSync = currentSlotPlaying 
-      ? (diff > maxDrift || playbackSpeed < 0) 
+    const needsSync = currentSlotPlaying
+      ? (diff > maxDrift || playbackSpeed < 0)
       : isUserSeeking;
 
     if (needsSync) {
