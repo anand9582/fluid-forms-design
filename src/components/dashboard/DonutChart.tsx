@@ -53,11 +53,11 @@ const DonutChart = ({ total, online, offline, label }: DonutChartProps) => {
           </>
         ) : (
           <span className="text-[10px] font-medium text-slate-400 leading-tight">
-            No device data available
+            No device data <br />available
           </span>
         )}
       </div>
-    </div>
+    </div >
   );
 };
 

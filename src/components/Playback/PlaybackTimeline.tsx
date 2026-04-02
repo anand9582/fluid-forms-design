@@ -296,10 +296,9 @@ export function PlaybackTimeline({
   };
 
   return (
-    <div
-      className="border-t"
-
-    >
+    <div className="border-t" style={{
+      maxHeight: isExpanded ? slotCount * 26 + 50 : 0,
+    }}>
       {/* HEADER */}
       <div className="flex border-b items-center">
         <div style={{ width: CAMERA_COL_WIDTH }} className="mr-3 min-w-0">

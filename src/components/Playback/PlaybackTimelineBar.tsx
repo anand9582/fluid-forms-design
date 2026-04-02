@@ -13,12 +13,15 @@ import {
   ChevronDown,
   Mountain,
   Filter,
-  Bookmark,
+  Lock,
+  Unlock,
   Download,
   Scissors,
   MoreHorizontal,
   ChevronLeft,
   ChevronRight,
+  Info,
+  X,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -40,6 +43,7 @@ import axios from "axios";
 import { APISERVERURL, API_URLS, getAuthHeaders } from "@/components/Config/api";
 import { PlaybackBookmarkPopover, PlaybackBookmark } from "@/components/Playback/PlaybackBookmarkPopover";
 import { DatePickerIcon } from "@/components/Icons/Svg/PlaybackIcons";
+import { ExportVideoDialog } from "./ExportVideoDialog";
 
 interface Props {
   cameraId?: string;
@@ -87,6 +91,9 @@ export function PlaybackTimelineBar({
   const [selectedDate, setSelectedDate] = useState<Date>(globalTime);
   const [calendarMonth, setCalendarMonth] = useState<Date>(globalTime);
   const [availableDates, setAvailableDates] = useState<number[]>([]);
+  const [isLocked, setIsLocked] = useState(false);
+  const [showLockBanner, setShowLockBanner] = useState(false);
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!pickerOpen || !cameraId) return;
@@ -127,8 +134,8 @@ export function PlaybackTimelineBar({
   const [bookmarks, setBookmarks] = useState<PlaybackBookmark[]>([]);
   const zoomPercent = ((zoomLevel - 1) / 9) * 100;
 
-  const currentSlotPlaying = (!isSync && selectedSlot !== null) 
-    ? !!slotPlaying[selectedSlot] 
+  const currentSlotPlaying = (!isSync && selectedSlot !== null)
+    ? !!slotPlaying[selectedSlot]
     : isPlaying;
 
   const togglePlay = () => {
@@ -260,10 +267,14 @@ export function PlaybackTimelineBar({
   };
 
   return (
-    <div className="flex items-center h-9 px-2 py-3 gap-4 border-t text-[11px]
-  bg-gradient-to-r 
-  from-[#F8FAFC] to-[#E2E8F0] 
-  dark:from-[#0F172A] dark:to-[#1E293B]">
+    <div className="flex items-center h-9 px-2 py-2 gap-4 border-b text-[11px]
+      bg-gradient-to-b
+      from-white
+      to-[rgba(203,213,225,0.33)]
+      dark:from-[#0F172A]
+      dark:to-[#1E293B]
+      border-slate-300"
+    >
       {/* LEFT: Clock + Timeline label */}
       <div className="flex items-center gap-1 text-muted-foreground">
         <Clock className="h-4 w-4" />
@@ -275,12 +286,12 @@ export function PlaybackTimelineBar({
         <AppTooltip label="Select Date & Time" side="top">
           <button
             onClick={() => handleOpenPicker(!pickerOpen)}
-            className="flex items-center gap-1 px-2 py-[2px] rounded "
+            className="flex items-center gap-1 px-2 py-[2px] rounded"
           >
-            <div className="w-4 h-4 bg-slate-200 rounded-[3px] flex items-center justify-center">
-              <DatePickerIcon size={12} />
+            <div className="h-5 w-5 rounded transition-colors bg-slate-300 rounded-[3px] flex items-center justify-center">
+              <DatePickerIcon />
             </div>
-            <span className="font-roboto  font-semibold text-slate-900">
+            <span className="font-roboto text-[10px]  font-bold text-slate-900">
               {formatIST(displayTime)}
             </span>
           </button>
@@ -361,38 +372,81 @@ export function PlaybackTimelineBar({
           </div>
         )}
       </div>
+      {/* Lock/Unlock */}
+      <div className="relative flex items-center">
 
-      {/* SYNC SWITCH */}
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div className="ml-1 flex items-center gap-2 rounded-md bg-muted px-2 py-1">
-              <Switch
-                checked={isSync}
-                onCheckedChange={(v) => setSynced(v)}
-                className="h-4 w-7 data-[state=checked]:bg-primary"
-              />
+        <AppTooltip label={isLocked ? "Unlock Timeline" : "Lock Timeline"} side="top">
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn(
+              "h-5 w-5 rounded transition-colors bg-slate-300",
+              isLocked
+                ? "bg-blue-600 text-white hover:bg-blue-700 hover:text-white"
+                : "text-muted-foreground"
+            )}
+            onClick={() => {
+              setIsLocked(!isLocked);
+              if (!isLocked) setShowLockBanner(true);
+            }}
+          >
+            {isLocked ? (
+              <Unlock className="h-2 w-2" size={12} />
+            ) : (
+              <Lock className="h-2 w-2" size={12} />
+            )}
+          </Button>
+        </AppTooltip>
 
-              <span className="text-[11px] font-medium text-foreground">
-                Synced
-              </span>
-            </div>
-          </TooltipTrigger>
+        {/* LOCK BANNER */}
+        {isLocked && showLockBanner && (
+          <div className="absolute bottom-[calc(100%+8px)] left-0 z-50
+          flex items-center gap-1.5 whitespace-nowrap
+          rounded-sm border border-blue-200 bg-blue-50
+          px-3 py-1 text-xs text-blue-600 shadow-md"
+          >
+            <Info className="h-3.5 w-3.5 text-blue-600" />
 
-          <TooltipContent side="top">
-            <p>
-              {isSync
-                ? "All cameras seek together"
-                : "Seek selected camera only"}
-            </p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+            <span className="text-blue-700 font-roboto font-medium text-xs tracking-tight">
+              Actions are hidden because you have enabled Lock button
+            </span>
+
+            <button
+              onClick={() => setShowLockBanner(false)}
+              className="ml-0.5 rounded-full p-0.5 hover:bg-blue-50 text-blue-600 cursor-pointer"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
+      </div>
+
+      {!isLocked && (
+        <AppTooltip
+          label={
+            isSync
+              ? "All cameras seek together"
+              : "Seek selected camera only"
+          }
+          side="top"
+        >
+          <div className="ml-1 flex items-center gap-2 px-2 py-1">
+            <Switch
+              checked={isSync}
+              onCheckedChange={(v) => setSynced(v)}
+              className="h-5 w-8 data-[state=checked]:bg-primary"
+            />
+            <span className="text-[12px] font-roboto font-regular text-foreground">
+              Synced
+            </span>
+          </div>
+        </AppTooltip>
+      )}
 
       <div className="flex-1" />
 
       {/* ZOOM CONTROLS */}
-      <div className="flex items-center gap-2 bg-timelinebg rounded text-slate-600">
+      <div className={cn("flex items-center gap-2 bg-timelinebg rounded text-slate-600", isLocked && "invisible")}>
 
         {/* Zoom Out */}
         <AppTooltip label="Zoom Out" side="top">
@@ -434,115 +488,119 @@ export function PlaybackTimelineBar({
       </div>
 
       {/* PLAYBACK CONTROLS */}
-      <div className="flex items-center gap-3 bg-muted/60 px-1 rounded">
-        <PlaybackControlButton label="Previous Frame" onClick={onSkipBack}>
-          <SkipBack className="h-3 w-3" />
-        </PlaybackControlButton>
-        <PlaybackControlButton
-          label={currentSlotPlaying ? "Pause" : "Play"}
-          onClick={togglePlay}
-        >
-          {currentSlotPlaying ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
-        </PlaybackControlButton>
-        <PlaybackControlButton label="Stop" onClick={onStop}>
-          <Square className="h-3 w-3" />
-        </PlaybackControlButton>
-        <PlaybackControlButton label="Next Frame" onClick={onSkipForward}>
-          <SkipForward className="h-3 w-3" />
-        </PlaybackControlButton>
+      <div className={cn("flex items-center gap-3 px-1 rounded", !isLocked && "bg-muted/60")}>
+        <div className={cn("flex items-center gap-3", isLocked && "invisible")}>
+          <PlaybackControlButton label="Previous Frame" onClick={onSkipBack}>
+            <SkipBack className="h-3 w-3" />
+          </PlaybackControlButton>
+          <PlaybackControlButton
+            label={currentSlotPlaying ? "Pause" : "Play"}
+            onClick={togglePlay}
+          >
+            {currentSlotPlaying ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
+          </PlaybackControlButton>
+          <PlaybackControlButton label="Stop" onClick={onStop}>
+            <Square className="h-3 w-3" />
+          </PlaybackControlButton>
+          <PlaybackControlButton label="Next Frame" onClick={onSkipForward}>
+            <SkipForward className="h-3 w-3" />
+          </PlaybackControlButton>
 
-        {/* SPEED CONTROLS */}
-        <div className="flex items-center bg-timelinebg rounded-full text-slate-600">
-          <div className="relative border-r border-slate-300">
-            <PlaybackControlButton
-              label="Reverse Speed"
-              className="rounded-full w-9"
-              active={playbackSpeed < 0}
-              onClick={() => setReverseSpeedOpen((v) => !v)}
-            >
-              <Rewind className="h-3 w-3" />
-            </PlaybackControlButton>
+          {/* SPEED CONTROLS */}
+          <div className="flex items-center bg-timelinebg rounded-full text-slate-600">
+            <div className="relative border-r border-slate-300">
+              <PlaybackControlButton
+                label="Reverse Speed"
+                className="rounded-full w-9"
+                active={playbackSpeed < 0}
+                onClick={() => setReverseSpeedOpen((v) => !v)}
+              >
+                <Rewind className="h-3 w-3" />
+              </PlaybackControlButton>
 
-            {reverseSpeedOpen && (
-              <div className="absolute bottom-full left-0 mb-1 bg-background border rounded shadow-md">
-                {[-1, -2, -4, -8, -16, -32].map((speed) => (
-                  <button
-                    key={speed}
-                    onClick={() => handleReverseSpeedSelect(speed)}
-                    className={cn(
-                      "block w-12 px-2 py-1 text-left hover:bg-muted text-xs",
-                      playbackSpeed === speed && "bg-primary text-white rounded-full"
-                    )}
-                  >
-                    {speed}×
-                  </button>
-                ))}
-              </div>
-            )}
+              {reverseSpeedOpen && (
+                <div className="absolute bottom-full left-0 mb-1 bg-background border rounded shadow-md">
+                  {[-1, -2, -4, -8, -16, -32].map((speed) => (
+                    <button
+                      key={speed}
+                      onClick={() => handleReverseSpeedSelect(speed)}
+                      className={cn(
+                        "block w-12 px-2 py-1 text-left hover:bg-muted text-xs",
+                        playbackSpeed === speed && "bg-primary text-white rounded-full"
+                      )}
+                    >
+                      {speed}×
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="relative">
+              <PlaybackControlButton
+                label="Fast Forward Speed"
+                active={playbackSpeed > 0}
+                className="rounded-full w-9"
+                onClick={() => setForwardSpeedOpen((v) => !v)}
+              >
+                <FastForward className="h-3 w-3" />
+              </PlaybackControlButton>
+
+              {forwardSpeedOpen && (
+                <div className="absolute bottom-full right-0 mb-1 bg-background border rounded-md shadow-md">
+                  {[1, 2, 4, 8, 16, 32].map((speed) => (
+                    <button
+                      key={speed}
+                      onClick={() => handleForwardSpeedSelect(speed)}
+                      className={cn(
+                        "block w-12 px-2 py-1 text-left hover:bg-muted text-xs",
+                        playbackSpeed === speed && "bg-primary text-white rounded"
+                      )}
+                    >
+                      {speed}×
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="relative">
-            <PlaybackControlButton
-              label="Fast Forward Speed"
-              active={playbackSpeed > 0}
-              className="rounded-full w-9"
-              onClick={() => setForwardSpeedOpen((v) => !v)}
-            >
-              <FastForward className="h-3 w-3" />
-            </PlaybackControlButton>
+          {/* OTHER ACTIONS */}
+          <PlaybackControlButton label="Filter">
+            <Filter className="h-3 w-3" />
+          </PlaybackControlButton>
 
-            {forwardSpeedOpen && (
-              <div className="absolute bottom-full right-0 mb-1 bg-background border rounded-md shadow-md">
-                {[1, 2, 4, 8, 16, 32].map((speed) => (
-                  <button
-                    key={speed}
-                    onClick={() => handleForwardSpeedSelect(speed)}
-                    className={cn(
-                      "block w-12 px-2 py-1 text-left hover:bg-muted text-xs",
-                      playbackSpeed === speed && "bg-primary text-white rounded"
-                    )}
-                  >
-                    {speed}×
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          {/* BOOKMARK POPOVER */}
+          <PlaybackBookmarkPopover
+            bookmarks={bookmarks}
+            currentPosition={(lastSeekTime || globalTime).getTime()}
+            currentTimestamp={
+              lastSeekTime
+                ? toISTISOString(lastSeekTime)
+                : toISTISOString(globalTime)
+            }
+            cameraId={cameraId || ""}
+            onAddBookmark={handleAddBookmark}
+            onRemoveBookmark={handleRemoveBookmark}
+            onJumpToBookmark={handleJumpToBookmark}
+          />
+
+          <PlaybackControlButton label="Clip">
+            <Scissors className="h-3 w-3" />
+          </PlaybackControlButton>
+          <PlaybackControlButton label="More Options">
+            <MoreHorizontal className="h-3 w-3" />
+          </PlaybackControlButton>
         </div>
-
-        {/* OTHER ACTIONS */}
-        <PlaybackControlButton label="Filter">
-          <Filter className="h-3 w-3" />
-        </PlaybackControlButton>
-
-        {/* BOOKMARK POPOVER */}
-        <PlaybackBookmarkPopover
-          bookmarks={bookmarks}
-          currentPosition={(lastSeekTime || globalTime).getTime()}
-          currentTimestamp={
-            lastSeekTime
-              ? toISTISOString(lastSeekTime)
-              : toISTISOString(globalTime)
-          }
-          cameraId={cameraId || ""}
-          onAddBookmark={handleAddBookmark}
-          onRemoveBookmark={handleRemoveBookmark}
-          onJumpToBookmark={handleJumpToBookmark}
-        />
-
-        <PlaybackControlButton label="Clip">
-          <Scissors className="h-3 w-3" />
-        </PlaybackControlButton>
-        <PlaybackControlButton label="More Options">
-          <MoreHorizontal className="h-3 w-3" />
-        </PlaybackControlButton>
-
         <Button
           size="sm"
           className="h-7 text-xs px-3 bg-primary font-roboto font-medium rounded flex items-center gap-1"
+          onClick={() => setIsExportDialogOpen(true)}
         >
-          <Download className="h-3 w-3" /> Export
+          <Download className="h-3 w-3" />
+          Export
         </Button>
+
       </div>
 
       {/* EXPAND */}
@@ -559,6 +617,12 @@ export function PlaybackTimelineBar({
           />
         </Button>
       </AppTooltip>
+
+      {/* Export Dialog */}
+      <ExportVideoDialog
+        open={isExportDialogOpen}
+        onOpenChange={setIsExportDialogOpen}
+      />
     </div>
   );
 }

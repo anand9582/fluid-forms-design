@@ -24,11 +24,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   Plus, Search, Filter, Download, Trash2, Eye, Camera,
-  ArrowUpDown,  AlertCircle, CheckCircle2, XCircle, ChevronLeft, ChevronRight
+  ArrowUpDown, AlertCircle, CheckCircle2, XCircle, ChevronLeft, ChevronRight
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { TotalDeviceIcons} from "@/components/Icons/Svg/AddedDevicesIcons";
-import { API_BASE_URL2, API_URLS ,getAuthHeaders } from "@/components/Config/api";
+import { TotalDeviceIcons } from "@/components/Icons/Svg/AddedDevicesIcons";
+import { API_BASE_URL2, API_URLS, getAuthHeaders } from "@/components/Config/api";
 import { useNavigate } from "react-router-dom";
 
 interface Device {
@@ -42,7 +42,7 @@ interface Device {
   status: "online" | "offline" | "maintenance";
   type: string;
   group: string;
-  authType: string; 
+  authType: string;
 }
 
 const statusStyles: Record<string, { bg: string; text: string; dot: string; border: string }> = {
@@ -59,56 +59,95 @@ export function AddDevicesPage() {
   const [rowSelection, setRowSelection] = useState({});
   const [filterOpen, setFilterOpen] = useState(false);
   const { setActiveRoute, setActiveItem } = useSettingsStore();
-const navigate = useNavigate();
+  const navigate = useNavigate();
 
   // Fetch devices from API
-    useEffect(() => {
-          axios.get(`${API_BASE_URL2}${API_URLS.GetAllDevice}`, {
-          })
-        .then((res) => {
-          if (res.data.success && res.data.data) {
-            const mappedData = res.data.data.map((d: any, i: number) => ({
-                id: d.id,
-                name: d.name,
-                ipAddress: d.ipAddress,
-                username: d.username,
-                password: d.password,
-                make: d.make,
-                model: d.model,
-                status: ["online", "offline", "maintenance"][i % 3], 
-                type: d.model,
-                group: "Default",
-                authType: d.authType,
-            }));
-            setDevicesData(mappedData);
-          }
+  useEffect(() => {
+    axios.get(`${API_BASE_URL2}${API_URLS.GetAllDevice}`, {
+    })
+      .then((res) => {
+        if (res.data.success && res.data.data) {
+          const mappedData = res.data.data.map((d: any, i: number) => ({
+            id: d.id,
+            name: d.name,
+            ipAddress: d.ipAddress,
+            username: d.username,
+            password: d.password,
+            make: d.make,
+            model: d.model,
+            status: ["online", "offline", "maintenance"][i % 3],
+            type: d.model,
+            group: "Default",
+            authType: d.authType,
+          }));
+          setDevicesData(mappedData);
+        }
+      })
+      .catch((err) => console.error("Error fetching devices:", err));
+  }, []);
+
+  const deleteDevice = async (deviceId: number) => {
+    if (!window.confirm("Are you sure you want to delete this device?")) return;
+
+    try {
+      const res = await axios.delete(`${API_BASE_URL2}${API_URLS.DeleteDeviceById}/${deviceId}`, {
+        headers: getAuthHeaders(),
+      });
+
+      if ((res.status >= 200 && res.status < 300) || res.data?.success) {
+        // Remove device from table state instantly
+        setDevicesData((prev) => prev.filter((d) => d.id !== deviceId));
+        // Clear any selection that might include this device
+        setRowSelection({});
+        console.log("Device deleted successfully");
+      } else {
+        console.error("Failed to delete device:", res?.data?.message || "Unknown error");
+      }
+    } catch (err) {
+      console.error("Error deleting device:", err);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+
+    if (!window.confirm(`Are you sure you want to delete ${selectedRows.length} selected devices?`)) return;
+
+    const idsToDelete = selectedRows.map((row) => row.original.id);
+    let successCount = 0;
+
+    try {
+      const deletePromises = idsToDelete.map(id =>
+        axios.delete(`${API_BASE_URL2}${API_URLS.DeleteDeviceById}/${id}`, {
+          headers: getAuthHeaders(),
         })
-        .catch((err) => console.error("Error fetching devices:", err));
-    }, []);
+      );
 
-    // delete Devices 
-      const deleteDevice = async (deviceId: number) => {
-            if (!window.confirm("Are you sure you want to delete this device?")) return;
+      const results = await Promise.allSettled(deletePromises);
+      const successfulIds = new Set<number>();
 
-            try {
-              const res = await axios.delete(`${API_BASE_URL2}${API_URLS.DeleteDeviceById}/${deviceId}`, {
-                headers: getAuthHeaders(),
-              });
+      results.forEach((res, index) => {
+        if (res.status === 'fulfilled' && ((res.value.status >= 200 && res.value.status < 300) || res.value.data?.success)) {
+          successfulIds.add(idsToDelete[index]);
+          successCount++;
+        }
+      });
 
-              if (res.data.success) {
-                // Remove device from table state
-                setDevicesData((prev) => prev.filter((d) => d.id !== deviceId));
-                console.log("Device deleted successfully");
-              } else {
-                console.error("Failed to delete device:", res.data.message);
-              }
-            } catch (err) {
-              console.error("Error deleting device:", err);
-            }
-          };
+      if (successCount > 0) {
+        setDevicesData((prev) => prev.filter((d) => !successfulIds.has(d.id)));
+        setRowSelection({});
+        console.log(`Successfully deleted ${successCount} devices`);
+      } else {
+        console.error("Failed to delete any selected devices");
+      }
+    } catch (err) {
+      console.error("Error bulk deleting devices:", err);
+    }
+  };
 
 
-  
+
   // Stats
   const totalDevices = devicesData.length;
   const onlineDevices = devicesData.filter((d) => d.status === "online").length;
@@ -129,12 +168,12 @@ const navigate = useNavigate();
     console.log("Reset filters");
   };
 
-    const exportToCSV = () => {
+  const exportToCSV = () => {
     if (!devicesData.length) return;
 
     // Define CSV headers
     const headers = ["Name", "IP Address", "Make", "Model", "Username", "Password", "Status", "Type", "Group"];
-    
+
     // Map device data to CSV rows
     const rows = devicesData.map(d => [
       d.name,
@@ -162,18 +201,18 @@ const navigate = useNavigate();
     link.click();
   };
 
-function PasswordCell({ password }: { password: string }) {
-  const [show, setShow] = useState(false);
-  return (
-    <div className="flex items-center gap-2">
-      <span className="text-muted-foreground">{show ? password : "••••••••"}</span>
-      <Eye
-        className="h-4 w-4 cursor-pointer text-gray-600"
-        onClick={() => setShow(!show)}
-      />
-    </div>
-  );
-}
+  function PasswordCell({ password }: { password: string }) {
+    const [show, setShow] = useState(false);
+    return (
+      <div className="flex items-center gap-2">
+        <span className="text-muted-foreground">{show ? password : "••••••••"}</span>
+        <Eye
+          className="h-4 w-4 cursor-pointer text-gray-600"
+          onClick={() => setShow(!show)}
+        />
+      </div>
+    );
+  }
 
 
 
@@ -197,87 +236,88 @@ function PasswordCell({ password }: { password: string }) {
         ),
       }),
       columnHelper.accessor("name", {
-              header: ({ column }) => (
-    <div
-      className="flex items-center gap-1 cursor-pointer"
-      onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-    >
-      Device Name
-        <ArrowUpDown className="h-3 w-3" />
-      </div>
-    ),
-    cell: (info) => {
-      const status = info.row.original.status;
-      const statusStyle = statusStyles[status];
+        header: ({ column }) => (
+          <div
+            className="flex items-center gap-1 cursor-pointer"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Device Name
+            <ArrowUpDown className="h-3 w-3" />
+          </div>
+        ),
+        cell: (info) => {
+          const status = info.row.original.status;
+          const statusStyle = statusStyles[status];
 
-      return (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div className="flex items-center gap-3 cursor-pointer max-w-[180px]">
-              <div className="flex h-6 w-6 items-center justify-center rounded-sm bg-gray-200">
-                 <Camera className="h-4 w-4 text-gray-600" />
-              </div>
-              <div className="w-1/3">
-                <p className="text-md font-medium text-foreground max-w-[180px]">{info.getValue()}</p>
-              </div>
-            </div>
-          </TooltipTrigger>
-          <TooltipContent className="bg-gray-800 text-white text-xs p-2 rounded shadow-md">
-              <div>Status: <span className="capitalize">{status}</span></div>
-              <div>IP: {info.row.original.ipAddress}</div>
-              <div>Type: {info.row.original.type}</div>
-          </TooltipContent>
-        </Tooltip>
-      );
-    },
-    }),
+          return (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-3 cursor-pointer max-w-[180px]">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-sm bg-gray-200">
+                    <Camera className="h-4 w-4 text-gray-600" />
+                  </div>
+                  <div className="w-1/3">
+                    <p className="text-md font-medium text-foreground max-w-[180px]">{info.getValue()}</p>
+                  </div>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent className="bg-gray-800 text-white text-xs p-2 rounded shadow-md">
+                <div>Status: <span className="capitalize">{status}</span></div>
+                <div>IP: {info.row.original.ipAddress}</div>
+                <div>Type: {info.row.original.type}</div>
+              </TooltipContent>
+            </Tooltip>
+          );
+        },
+      }),
       columnHelper.accessor("ipAddress", { header: "IP Address", cell: (info) => <span>{info.getValue()}</span> }),
       columnHelper.accessor("make", {
-          header: "Make/Model",
-          cell: (info) => (
-            <div>
-              <div className="font-roboto font-medium mb-1">{info.getValue()}</div>
-              <div>{info.row.original.model}</div>
-            </div>
-          ),
-        }),
-      columnHelper.accessor("username", { header: "Username", cell: (info) => 
-        <div >
-          {info.getValue()}
-        </div> 
-     }),
-     columnHelper.accessor("password", {
+        header: "Make/Model",
+        cell: (info) => (
+          <div>
+            <div className="font-roboto font-medium mb-1">{info.getValue()}</div>
+            <div>{info.row.original.model}</div>
+          </div>
+        ),
+      }),
+      columnHelper.accessor("username", {
+        header: "Username", cell: (info) =>
+          <div >
+            {info.getValue()}
+          </div>
+      }),
+      columnHelper.accessor("password", {
         header: "Password",
         cell: (info) => <PasswordCell password={info.getValue()} />,
       }),
-    columnHelper.accessor("authType", {
-      header: "Auth Type",
-      cell: (info) => {
-        const value = info.getValue();
+      columnHelper.accessor("authType", {
+        header: "Auth Type",
+        cell: (info) => {
+          const value = info.getValue();
 
-        return (
-          <div className="text-sm font-medium text-foreground">
-            {formatLabel(value)}
-          </div>
-        );
-      },
-    }),
+          return (
+            <div className="text-sm font-medium text-foreground">
+              {formatLabel(value)}
+            </div>
+          );
+        },
+      }),
       columnHelper.display({
         id: "actions",
         header: "Actions",
-       cell: ({ row }) => (
-            <div className="flex items-center justify-center gap-1">
-              {/* <Button variant="ghost" size="icon" className="h-8 w-8">
+        cell: ({ row }) => (
+          <div className="flex items-center justify-center gap-1">
+            {/* <Button variant="ghost" size="icon" className="h-8 w-8">
                 <EditIcons className="h-4 w-4" />
               </Button> */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-gray-600 hover:text-destructive"
-                  onClick={() => deleteDevice(row.original.id)} 
-                >
-                  <Trash2 className="h-4 w-4" />
-              </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-gray-600 hover:text-destructive"
+              onClick={() => deleteDevice(row.original.id)}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
           </div>
         ),
       }),
@@ -303,8 +343,8 @@ function PasswordCell({ password }: { password: string }) {
   const totalRows = table.getFilteredRowModel().rows.length;
   const pageCount = table.getPageCount();
   const currentPage = table.getState().pagination.pageIndex + 1;
-   const formatLabel = (value: string) =>
-  value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+  const formatLabel = (value: string) =>
+    value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
 
   return (
     <>
@@ -379,7 +419,8 @@ function PasswordCell({ password }: { password: string }) {
                 <Filter />
               </Button>
               <Button variant="outline" className="gap-2" onClick={exportToCSV}>
-                <Download className="h-4 w-4" /> Export
+                <Download className="h-4 w-4" />
+                Export
               </Button>
             </div>
           </div>
@@ -405,7 +446,7 @@ function PasswordCell({ password }: { password: string }) {
                   <TableRow key={row.id} className="border-b border-border last:border-b-0 hover:bg-muted/30">
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id} className="py-4 ">
-                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>
                     ))}
                   </TableRow>
@@ -422,35 +463,35 @@ function PasswordCell({ password }: { password: string }) {
 
           {/* Pagination */}
           <div className="flex items-center justify-between px-4 py-3 border-t border-border">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                Showing {table.getRowModel().rows.length} of {totalRows} results.
-                  <Select
-                    value={String(table.getState().pagination.pageSize)}
-                    onValueChange={(value) => table.setPageSize(Number(value))}
-                  >
-                    <SelectTrigger className="w-16 h-8">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {[5, 10, 20, 50].map((size) => (
-                        <SelectItem key={size} value={String(size)}>
-                          {size}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-              </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              Showing {table.getRowModel().rows.length} of {totalRows} results.
+              <Select
+                value={String(table.getState().pagination.pageSize)}
+                onValueChange={(value) => table.setPageSize(Number(value))}
+              >
+                <SelectTrigger className="w-16 h-8">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {[5, 10, 20, 50].map((size) => (
+                    <SelectItem key={size} value={String(size)}>
+                      {size}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="flex items-center gap-1">
               <Button variant="ghost" size="sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()} className="gap-1">
                 <ChevronLeft className="h-4 w-4" />
-                 Previous
+                Previous
               </Button>
               {[...Array(pageCount)].map((_, i) => {
                 const page = i + 1;
                 const isActive = currentPage === page;
                 return (
                   <Button key={page} variant="ghost" size="sm" onClick={() => table.setPageIndex(page - 1)}
-                          className={cn("w-8 h-8 p-0", isActive && "border border-gray shadow-sm bg-transparent text-black font-medium")}>
+                    className={cn("w-8 h-8 p-0", isActive && "border border-gray shadow-sm bg-transparent text-black font-medium")}>
                     {page}
                   </Button>
                 );
@@ -461,7 +502,7 @@ function PasswordCell({ password }: { password: string }) {
             </div>
           </div>
 
-          
+
         </div>
 
         {/* Bulk Action Bar */}
@@ -477,7 +518,9 @@ function PasswordCell({ password }: { password: string }) {
               <Button variant="secondary" size="sm" className="bg-white hover:bg-gray-100 text-slate-800 border shadow-sm">
                 Assign to Group
               </Button>
-              <Button variant="destructive" size="sm">Remove Selected</Button>
+              <Button variant="destructive" size="sm" onClick={handleBulkDelete}>
+                Remove Selected
+              </Button>
             </div>
           </div>
         )}
@@ -485,7 +528,7 @@ function PasswordCell({ password }: { password: string }) {
 
       {/* Advanced Filters Drawer */}
       <DynamicFilterDrawer open={filterOpen} onOpenChange={setFilterOpen} title="Advanced Filters" onApply={applyFilters} onReset={resetFilters} width="w-[460px]">
-          <DeviceFilterContent />
+        <DeviceFilterContent />
       </DynamicFilterDrawer>
     </>
   );
